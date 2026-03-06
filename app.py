@@ -27,8 +27,7 @@ DB_PATH = os.path.join(BASE_DIR, "shinemaster.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
+    c = conn.cursor()   # ✅ THIS LINE WAS MISSING
 
 
     # Orders table
