@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Shine Master POS</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#111;
+color:white;
+}
+
+.container{
+padding:20px;
+}
+
+input,select{
+padding:8px;
+width:200px;
+margin:5px;
+}
+
+button{
+padding:10px;
+background:yellow;
+border:none;
+font-weight:bold;
+}
+
+table{
+width:100%;
+margin-top:20px;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #333;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Shine Master POS</h2>
+
+<form method="POST" action="/create_order">
+Car Plate<br>
+<input name="car_plate" required><br>
+
+Car Type<br>
+<select name="car_type" id="car_type" onchange="calculatePrice()" required>
+<option value="Sedan">Sedan</option>
+<option value="SUV_MPV">SUV/MPV</option>
+<option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
+</select><br>
+
+Service<br>
+<select name="service_type" id="service_type" onchange="calculatePrice()" required>
+
+<option value="">--Select Service--</option>
+
+<optgroup label="CAR WASH">
+<option value="wash_basic">CAR WASH - BASIC</option>
+<option value="wash_special">CAR WASH - SPECIAL</option>
+<option value="wash_maintain">CAR WASH - MAINTAINANCE</option>
+</optgroup>
+
+<optgroup label="POLISHING">
+<option value="coat1">COATING - 1 YEAR</option>
+<option value="coat2">COATING - 2 YEAR</option>
+<option value="coat3">COATING - 3 YEAR</option>
+
+<option value="disp2">DISPOSABLE - 2 YEAR</option>
+<option value="disp3">DISPOSABLE - 3 YEAR</option>
+
+<option value="wax">WAXING</option>
+</optgroup>
+
+<optgroup label="INTERIOR">
+<option value="int_detail">INTERIOR DETAILING</option>
+<option value="int_coat">INTERIOR COATING</option>
+</optgroup>
+
+</select><br>
+
+Payment<br>
+<select name="payment_method" id="payment_method" required>
+    <option value="Cash">Cash</option>
+    <option value="QR">QR/E-wallet/TNG</option>
+    <option value="Card">Card</option>
+</select><br>
+
+<div class="price-box">
+    RM <span id="price_display">0.00</span>
+</div>
+<input type="hidden" name="price" id="price" value="0">
+
+<button type="submit">Create Bill</button>
+
+</form>
+
+<h3>Recent Sales</h3>
+
+<table>
+
+<tr>
+<th>Plate</th>
+<th>Service</th>
+<th>Price</th>
+</tr>
+
+{% for sale in sales %}
+
+<tr>
+<td>{{sale[1]}}</td>
+<td>{{sale[3]}}</td>
+<td>RM{{sale[5]}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<script>
+const priceTable = {
+
+wash_basic: {Sedan:20, SUV_MPV:24, "LARGE-MPV_4X4":28},
+wash_special: {Sedan:48, SUV_MPV:58, "LARGE-MPV_4X4":68},
+wash_maintain: {Sedan:98, SUV_MPV:108, "LARGE-MPV_4X4":118},
+
+coat1: {Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688},
+coat2: {Sedan:688, SUV_MPV:788, "LARGE-MPV_4X4":888},
+coat3: {Sedan:888, SUV_MPV:988, "LARGE-MPV_4X4":1088},
+
+disp2: {Sedan:588, SUV_MPV:688, "LARGE-MPV_4X4":788},
+disp3: {Sedan:788, SUV_MPV:888, "LARGE-MPV_4X4":988},
+
+wax: {Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488},
+
+int_detail: {Sedan:188, SUV_MPV:288, "LARGE-MPV_4X4":388},
+int_coat: {Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488}
+
+}
+
+function calculatePrice(){
+    let car = document.getElementById("car_type").value;
+    let service = document.getElementById("service_type").value;
+
+    if(service === "") {
+        document.getElementById("price_display").innerText = "0.00";
+        document.getElementById("price").value = 0;
+        return;
+    }
+
+    let price = priceTable[service][car];
+
+    document.getElementById("price_display").innerText = price.toFixed(2);
+    document.getElementById("price").value = price;
+}
+
+// Optional: calculate on page load if service selected
+window.onload = function(){
+    calculatePrice();
+};
+
+</script>
+
+</body>
+</html>

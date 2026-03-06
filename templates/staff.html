@@ -1,0 +1,40 @@
+<h2>Staff Management</h2>
+
+<form method="POST" action="/add_staff">
+
+Username<br>
+<input name="username"><br>
+
+Password<br>
+<input name="password"><br>
+
+Role<br>
+<select name="role">
+<option value="cashier">Cashier</option>
+<option value="admin">Admin</option>
+</select>
+
+<br><br>
+<button type="submit">Add Staff</button>
+
+</form>
+
+<hr>
+
+<table border="1">
+
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Role</th>
+</tr>
+
+{% for u in users %}
+<tr>
+<td>{{u.id}}</td>
+<td>{{u.username}}</td>
+<td>{{u.role}}</td>
+</tr>
+{% endfor %}
+
+</table>

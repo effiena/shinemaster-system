@@ -1,0 +1,12 @@
+<nav>
+  {% if session.role == 'admin' %}
+    <a href="/dashboard">Dashboard</a>
+    <a href="/inventory">Inventory</a>
+    <a href="/staff">Staff</a>
+    <a href="/pos">POS</a>
+    <a href="/logout">Logout</a>
+  {% elif session.role == 'cashier' %}
+    <a href="/pos">POS</a>
+    <a href="/logout">Logout</a>
+  {% endif %}
+</nav>

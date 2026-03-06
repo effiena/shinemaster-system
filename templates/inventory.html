@@ -1,0 +1,69 @@
+<h2>Inventory Management</h2>
+
+<h3>Add Item</h3>
+
+<form method="POST" action="/add_inventory">
+
+Item<br>
+<input type="text" name="item" required><br>
+
+Company<br>
+<input type="text" name="company"><br>
+
+Phone<br>
+<input type="text" name="phone"><br>
+
+Address<br>
+<input type="text" name="address"><br>
+
+Purchase Date<br>
+<input type="date" name="purchase_date"><br>
+
+Quantity<br>
+<input type="number" name="quantity"><br>
+
+Price<br>
+<input type="number" step="0.01" name="price"><br><br>
+
+<button type="submit">Add Item</button>
+
+</form>
+
+<hr>
+
+<h3>Inventory List</h3>
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Line</th>
+            <th>Purchase Date</th>
+            <th>Serial Number</th>
+            <th>Item</th>
+            <th>Company</th>
+            <th>Address</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ loop.index }}</td>  <!-- This creates a line number -->
+            <td>{{ item.purchase_date }}</td>
+            <td>{{ item.serial_number }}</td>
+            <td>{{ item.item }}</td>
+            <td>{{ item.company }}</td>
+            <td>{{ item.address }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.price }}</td>
+            <td>
+                <a href="/delete_inventory/{{ item.id }}">
+                    <button>Delete</button>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
