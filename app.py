@@ -65,7 +65,8 @@ def home():
     return render_template("new_order.html")
 
 #login route
-@app.route("/", methods=["GET","POST"])
+@app.route("/")
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
