@@ -25,9 +25,6 @@ def get_db_connection():
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "shinemaster.db")
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()   # ✅ THIS LINE WAS MISSING
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -101,7 +98,7 @@ def login():
     return render_template("login.html")
 
 def get_latest_sales():
-    conn = sqlite3.connect('../shinemaster/shinemaster.db')
+    conn = sqlite3.connect('shinemaster.db')
     conn.row_factory = sqlite3.Row
     sales = conn.execute("SELECT * FROM sales ORDER BY date DESC, time DESC").fetchall()
     conn.close()
@@ -109,6 +106,35 @@ def get_latest_sales():
 
 # POS page
 @app.route("/pos", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect("shine.db")
+        user = conn.execute(
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (username, password)
+        ).fetchone()
+        conn.close()
+
+        if user:
+            role = user[3]  # assuming 4th column is role
+
+            # set session here
+            session["username"] = username
+            session["role"] = role
+
+            if role == "admin":
+                return redirect("/dashboard")
+            elif role == "cashier":
+                return redirect("/pos")
+        else:
+            return "Invalid username or password"
+
+    return render_template("login.html")
+
+
 def pos():
     if "username" not in session:
         return redirect("/login")
