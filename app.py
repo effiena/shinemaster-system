@@ -53,6 +53,15 @@ def init_db():
             paid_count INTEGER
         )
     """)
+    # Services table
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -430,6 +439,10 @@ def finance():
     week=week or 0,
     month=month or 0)
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
