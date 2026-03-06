@@ -29,7 +29,9 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()   # ✅ THIS LINE WAS MISSING
 
-
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
     # Orders table
     c.execute("""
         CREATE TABLE IF NOT EXISTS orders (
