@@ -16,17 +16,21 @@ def get_system_db_connection():
 
 def get_db_connection():
     # Adjust path relative to shine-system folder
-    conn = sqlite3.connect('../shinemaster/shinemaster.db')
+    conn = sqlite3.connect('shinemaster.db')
     conn.row_factory = sqlite3.Row
     return conn
 # -----------------------------
 # Initialize Database
 # -----------------------------
-DB_PATH = os.path.join(os.path.dirname(__file__), "../shinemaster/shinemaster.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "shinemaster.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    cursor = conn.cursor()
+
+
+
     # Orders table
     c.execute("""
         CREATE TABLE IF NOT EXISTS orders (
