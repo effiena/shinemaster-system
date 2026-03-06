@@ -106,35 +106,6 @@ def get_latest_sales():
 
 # POS page
 @app.route("/pos", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        conn = sqlite3.connect("shine.db")
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (username, password)
-        ).fetchone()
-        conn.close()
-
-        if user:
-            role = user[3]  # assuming 4th column is role
-
-            # set session here
-            session["username"] = username
-            session["role"] = role
-
-            if role == "admin":
-                return redirect("/dashboard")
-            elif role == "cashier":
-                return redirect("/pos")
-        else:
-            return "Invalid username or password"
-
-    return render_template("login.html")
-
-
 def pos():
     if "username" not in session:
         return redirect("/login")
