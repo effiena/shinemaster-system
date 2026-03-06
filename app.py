@@ -112,8 +112,6 @@ def pos():
         return redirect("/login")
 
     conn = get_db_connection()
-
-    # If you have a services table in shinemaster
     services = conn.execute("SELECT * FROM services").fetchall()
 
     if request.method == "POST":
@@ -126,8 +124,6 @@ def pos():
         date = datetime.now().strftime("%Y-%m-%d")
         time = datetime.now().strftime("%H:%M:%S")
 
-        conn = sqlite3.connect('../shinemaster/shinemaster.db')
-        conn.row_factory = sqlite3.Row
         conn.execute("""
             INSERT INTO sales (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -135,13 +131,11 @@ def pos():
 
         conn.commit()
         conn.close()
-    
+
         socketio.emit("update_dashboard")
         return redirect(f"/receipt/{invoice}")
 
-    # For GET requests, just render the form
     return render_template("new_order.html", services=services)
-
 # -----------------------------
 # Loyalty Logic
 # -----------------------------
