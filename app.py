@@ -8,6 +8,16 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 socketio = SocketIO(app)
 
+COMPANY_INFO = {
+    "name": "SHINEMASTER AUTO",
+    "address": "No.68 JALAN PUTRA 1, TAMAN TAN SRI YAACOB, 81300 SKUDAI, JOHOR BAHRU",
+    "contact": "018-2096907"
+}
+
+@app.context_processor
+def inject_company():
+    return dict(company=COMPANY_INFO)
+
 # ===== DATABASE CONNECTIONS =====
 def get_system_db_connection():
     conn = get_db_connection()
@@ -437,28 +447,48 @@ def add_staff():
 def finance():
 
     if session.get("role") != "admin":
-        return "Admin only"
+        return redirect("/pos")
 
-    conn = get_db_connection()
+    conn = sqlite3.connect("shine.db")
+    conn.row_factory = sqlite3.Row
 
-    today = conn.execute(
-    "SELECT SUM(price) FROM sales WHERE date=date('now')"
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # Daily orders
+    daily_orders = conn.execute(
+        "SELECT COUNT(*) FROM sales WHERE date=?",
+        (today,)
     ).fetchone()[0]
 
-    week = conn.execute(
-    "SELECT SUM(price) FROM sales WHERE date >= date('now','-7 day')"
+    # Daily revenue
+    daily_revenue = conn.execute(
+        "SELECT COALESCE(SUM(price),0) FROM sales WHERE date=?",
+        (today,)
     ).fetchone()[0]
 
-    month = conn.execute(
-    "SELECT SUM(price) FROM sales WHERE date >= date('now','-30 day')"
+    # Revenue by payment method
+    by_method = conn.execute("""
+        SELECT payment_method, COALESCE(SUM(price),0)
+        FROM sales
+        GROUP BY payment_method
+    """).fetchall()
+
+    # Total revenue
+    total_revenue = conn.execute(
+        "SELECT COALESCE(SUM(price),0) FROM sales"
     ).fetchone()[0]
 
     conn.close()
 
-    return render_template("finance.html",
-    today=today or 0,
-    week=week or 0,
-    month=month or 0)
+    report = {
+        "report_date": today,
+        "daily_orders": daily_orders,
+        "daily_revenue": daily_revenue,
+        "by_method": by_method,
+        "total_revenue": total_revenue
+    }
+
+    return render_template("finance.html", report=report)
 
 @app.route("/logout")
 def logout():

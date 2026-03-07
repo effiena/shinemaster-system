@@ -1,10 +1,34 @@
-<h2>Financial Report</h2>
+{% extends "base.html" %}
+{% block title %}Payment Report{% endblock %}
 
-<h3>Today Revenue</h3>
-RM {{today}}
+{% block content %}
 
-<h3>Weekly Revenue</h3>
-RM {{week}}
+<h3>Payment Report</h3>
+<p><strong>Report Date:</strong> {{ report.report_date }}</p>
 
-<h3>Monthly Revenue</h3>
-RM {{month}}
+<h4>Daily Summary</h4>
+<p><strong>Daily Orders:</strong> {{ report.daily_orders }}</p>
+<p><strong>Daily Revenue:</strong> RM {{ "%.2f"|format(report.daily_revenue) }}</p>
+
+<h4>Revenue by Payment Method</h4>
+
+<table>
+    <tr>
+        <th>Payment Method</th>
+        <th class="right">Total (RM)</th>
+    </tr>
+    {% for method, total in report.by_method %}
+    <tr>
+        <td>{{ method }}</td>
+        <td class="right">{{ "%.2f"|format(total) }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3 class="right">
+    Total Overall Revenue: RM {{ "%.2f"|format(report.total_revenue) }}
+</h3>
+
+<a href="{{ url_for('home') }}" class="btn">Back to Home</a>
+
+{% endblock %}
