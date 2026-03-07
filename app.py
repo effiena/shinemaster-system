@@ -10,21 +10,20 @@ socketio = SocketIO(app)
 
 # ===== DATABASE CONNECTIONS =====
 def get_system_db_connection():
-    conn = sqlite3.connect('shine.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     return conn
 
 def get_db_connection():
-    # Adjust path relative to shine-system folder
-    conn = sqlite3.connect('shine.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
 # -----------------------------
 # Initialize Database
 # -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "shine.db")
-
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -81,7 +80,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("shine.db")
+        conn = get_db_connection()
         user = conn.execute(
             "SELECT * FROM users WHERE username=? AND password=?",
             (username, password)
@@ -105,7 +104,7 @@ def login():
     return render_template("login.html")
 
 def get_latest_sales():
-    conn = sqlite3.connect('shinemaster.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     sales = conn.execute("SELECT * FROM sales ORDER BY date DESC, time DESC").fetchall()
     conn.close()
@@ -117,7 +116,7 @@ def pos():
     if "username" not in session:
         return redirect("/login")
 
-    conn = get_db_connection()
+    conn = sqlite3.connect(DB_PATH)
     services = conn.execute("SELECT * FROM services").fetchall()
 
     if request.method == "POST":
@@ -254,23 +253,45 @@ def dashboard():
         return redirect("/pos")
 
     conn = sqlite3.connect("shine.db")
+    conn.row_factory = sqlite3.Row
 
     today = datetime.now().strftime("%Y-%m-%d")
 
-    today_sales = conn.execute(
-    "SELECT SUM(price) FROM sales WHERE date=?",
-    (today,)).fetchone()[0]
+    today_revenue = conn.execute(
+        "SELECT SUM(price) FROM sales WHERE date=?",
+        (today,)
+    ).fetchone()[0]
 
     cars_today = conn.execute(
-    "SELECT COUNT(*) FROM sales WHERE date=?",
-    (today,)).fetchone()[0]
+        "SELECT COUNT(*) FROM sales WHERE date=?",
+        (today,)
+    ).fetchone()[0]
+
+    week_revenue = conn.execute(
+        "SELECT SUM(price) FROM sales WHERE date >= date('now','-7 day')"
+    ).fetchone()[0]
+
+    month_revenue = conn.execute(
+        "SELECT SUM(price) FROM sales WHERE date >= date('now','-30 day')"
+    ).fetchone()[0]
+
+    recent_sales = conn.execute("""
+        SELECT invoice, car_plate, service_type, price, time
+        FROM sales
+        ORDER BY id DESC
+        LIMIT 5
+    """).fetchall()
 
     conn.close()
 
     return render_template(
         "dashboard.html",
-        today_sales=today_sales or 0,
-        cars_today=cars_today
+        today_revenue=today_revenue or 0,
+        week_revenue=week_revenue or 0,
+        month_revenue=month_revenue or 0,
+        cars_today=cars_today,
+        recent_sales=recent_sales,
+        low_stock=[]
     )
 
 @app.route("/dashboard_data")
@@ -307,7 +328,7 @@ def dashboard_data():
 @app.route("/receipt/<invoice>")
 def receipt(invoice):
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     sale = conn.execute(
     "SELECT * FROM sales WHERE invoice=?",
@@ -331,7 +352,7 @@ def add_inventory():
     quantity = request.form["quantity"]
     price = request.form["price"]
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     conn.execute("""
     INSERT INTO inventory
@@ -350,7 +371,7 @@ def inventory():
         return redirect("/")  # login required
 
     # Fetch all inventory items
-    conn = sqlite3.connect('shine.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM inventory")
@@ -366,7 +387,7 @@ def delete_inventory(id):
     if session.get("role") != "admin":
         return "Admin only"
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     conn.execute("DELETE FROM inventory WHERE id=?", (id,))
 
@@ -382,7 +403,7 @@ def staff():
     if session.get("role") != "admin":
         return redirect("/pos")
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     staff = conn.execute("SELECT * FROM staff").fetchall()
 
@@ -400,7 +421,7 @@ def add_staff():
     password = request.form["password"]
     role = request.form["role"]
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     conn.execute("""
     INSERT INTO users (username,password,role)
@@ -418,7 +439,7 @@ def finance():
     if session.get("role") != "admin":
         return "Admin only"
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
 
     today = conn.execute(
     "SELECT SUM(price) FROM sales WHERE date=date('now')"
