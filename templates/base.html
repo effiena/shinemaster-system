@@ -1,12 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}ShineMaster System{% endblock %}</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    background:#f4f6f9;
+}
+
+/* Top navigation bar */
+
+nav{
+    background:#2c3e50;
+    padding:14px 25px;
+    display:flex;
+    align-items:center;
+}
+
+nav a{
+    color:white;
+    margin-right:22px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+nav a:hover{
+    color:#1abc9c;
+}
+
+/* Page container */
+
+.container{
+    padding:30px;
+}
+
+/* Buttons */
+
+.btn{
+    background:#3498db;
+    color:white;
+    padding:8px 14px;
+    border-radius:5px;
+    text-decoration:none;
+}
+
+.btn:hover{
+    background:#2980b9;
+}
+
+/* Tables */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th,td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+
+th{
+    background:#ecf0f1;
+}
+
+.right{
+    text-align:right;
+}
+
+</style>
+
+</head>
+
+<body>
+
 <nav>
-  {% if session.role == 'admin' %}
-    <a href="/dashboard">Dashboard</a>
-    <a href="/inventory">Inventory</a>
-    <a href="/staff">Staff</a>
-    <a href="/pos">POS</a>
-    <a href="/logout">Logout</a>
-  {% elif session.role == 'cashier' %}
-    <a href="/pos">POS</a>
-    <a href="/logout">Logout</a>
-  {% endif %}
+
+{% if session.get('role') == 'admin' %}
+
+<a href="/dashboard">Dashboard</a> <a href="/pos">POS</a> <a href="/inventory">Inventory</a> <a href="/staff">Staff</a> <a href="/finance">Financial</a> <a href="/logout">Logout</a>
+
+{% elif session.get('role') == 'cashier' %}
+
+<a href="/pos">POS</a> <a href="/logout">Logout</a>
+
+{% endif %}
+
 </nav>
+
+<div class="container">
+
+{% block content %}
+{% endblock %}
+
+</div>
+
+</body>
+</html>
