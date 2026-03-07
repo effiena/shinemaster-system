@@ -75,7 +75,7 @@ font-size:28px;
 background:#1c1c1c;
 padding:20px;
 border-radius:10px;
-margin-bot#ffd800tom:25px;
+margin-bottom:25px;
 }
 
 .section h3{
@@ -145,7 +145,7 @@ color:#aaa;
 
 <div class="card">
 <h3>Today Revenue</h3>
-<h1>RM {{today_revenue}}</h1>
+<h1 id="todayRevenue">RM {{today_revenue}}</h1>
 </div>
 
 <div class="card">
@@ -160,7 +160,7 @@ color:#aaa;
 
 <div class="card">
 <h3>Cars Today</h3>
-<h1>{{cars_today}}</h1>
+<h1 id="carsToday">{{cars_today}}</h1>
 </div>
 
 </div>
@@ -205,6 +205,9 @@ color:#aaa;
 <th>Time</th>
 </tr>
 
+
+<tbody id="recentSales">
+
 {% for sale in recent_sales %}
 
 <tr>
@@ -216,6 +219,8 @@ color:#aaa;
 </tr>
 
 {% endfor %}
+
+</tbody>
 
 </table>
 
@@ -254,19 +259,12 @@ document.getElementById("time").innerText = time;
 setInterval(updateClock,1000);
 updateClock();
 
-
-
-var socket = io();
-
-socket.on("update_dashboard", function() {
-    location.reload();
-});
-
 const socket = io();
 
 socket.on("update_dashboard", function() {
     loadDashboard();
 });
+
 
 function loadDashboard(){
 
