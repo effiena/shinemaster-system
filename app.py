@@ -143,7 +143,8 @@ def pos():
         time = datetime.now().strftime("%H:%M:%S")
 
         conn.execute("""
-            INSERT INTO sales (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
+            INSERT INTO sales
+            (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (invoice, car_plate, car_type, service_type, payment_method, price, date, time))
 
@@ -448,38 +449,45 @@ def add_staff():
 
 @app.route("/finance")
 def finance():
-
     if session.get("role") != "admin":
-        return redirect("/pos")
+        return "Admin only"
 
-    conn = sqlite3.connect("shine.db")
+    conn = sqlite3.connect('shine.db')
     conn.row_factory = sqlite3.Row
 
     today = datetime.now().strftime("%Y-%m-%d")
 
-    # Daily orders
+    # Daily summary
     daily_orders = conn.execute(
-        "SELECT COUNT(*) FROM sales WHERE date=?",
-        (today,)
+        "SELECT COUNT(*) FROM sales WHERE date=?", (today,)
     ).fetchone()[0]
 
-    # Daily revenue
     daily_revenue = conn.execute(
-        "SELECT COALESCE(SUM(price),0) FROM sales WHERE date=?",
-        (today,)
-    ).fetchone()[0]
+        "SELECT SUM(price) FROM sales WHERE date=?", (today,)
+    ).fetchone()[0] or 0.0
 
-    # Revenue by payment method
-    by_method = conn.execute("""
-        SELECT payment_method, COALESCE(SUM(price),0)
+
+    by_method = conn.execute(
+        """
+        SELECT payment_method, SUM(price) as total
         FROM sales
+        WHERE date=?
         GROUP BY payment_method
-    """).fetchall()
+        """, (today,)
+    ).fetchall()
 
-    # Total revenue
-    total_revenue = conn.execute(
-        "SELECT COALESCE(SUM(price),0) FROM sales"
-    ).fetchone()[0]
+    # Payment method breakdown
+    payment_methods = ["Cash", "Card", "QR", "E-Wallet"]  # list all expected
+    by_method = []
+
+    for method in payment_methods:
+        total = conn.execute(
+            "SELECT SUM(price) FROM sales WHERE date=? AND payment_method=?",
+            (today, method)
+        ).fetchone()[0] or 0.0
+        by_method.append((method, total))
+
+    total_revenue = sum([x[1] for x in by_method])
 
     conn.close()
 
