@@ -1,118 +1,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Receipt</title>
-    <style>
-        body {
-            font-family: monospace;
-            width: 300px;
-            margin: auto;
-        }
+<title>Receipt</title>
 
-        h2, p {
-            text-align: center;
-            margin: 2px 0;
-        }
+<style>
 
-        hr {
-            border: 1px dashed #000;
-        }
+body{
+    font-family: monospace;
+    width:210px;
+    margin:auto;
+    font-size:13px;
+}
 
-        .right {
-            text-align: right;
-        }
+.company-name{
+    font-size:18px;
+    font-weight:bold;
+    text-align:center;
+    margin-bottom:4px;
+}
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-            margin: 2px 0;
-        }
+.center{
+    text-align:center;
+}
 
-        .buttons {
-            text-align: center;
-            margin-top: 10px;
-        }
+.right{
+    text-align:right;
+}
 
-        /* Hide elements when printing */
-        @media print {
-            .no-print {
-                display: none;
-            }
-	.company-name{
-	    font-size:40px;
-	    font-weight:bold;
-	    letter-spacing:2px;
-	    text-align:center;
-	    margin-bottom:5px;
-        }
+.line{
+    width:100%;
+}
 
-    </style>
+.left{
+    float:left;
+}
+
+.righttext{
+    float:right;
+}
+
+.clear{
+    clear:both;
+}
+
+hr{
+    border-top:1px dashed black;
+    margin:6px 0;
+}
+
+p{
+    margin:3px 0;
+}
+
+.buttons{
+    text-align:center;
+    margin-top:10px;
+}
+
+@media print{
+
+    .no-print{
+        display:none;
+    }
+
+    body{
+        width:210px;
+    }
+
+}
+
+</style>
 </head>
+
 <body>
 
-<h2 class="company-name">SHINEMASTER AUTO</h2>
-<p>
-No.68 Jalan Putra 1,<br>
-Taman Tan Sri Yaacob, 81300 Skudai,<br>
-Johor Bahru<br>
-Contact: +6018-2096907
+<div class="center">
+
+<div class="company-name">SHINEMASTER AUTO</div>
+
+No.68 Jalan Putra 1<br>
+Taman Tan Sri Yaacob<br>
+81300 Skudai, Johor<br>
+Tel: +6018-2096907
+
+</div>
+
+<hr>
+
+<p><strong>Invoice:</strong> {{ order["invoice_no"] }}</p>
+<p><strong>Date:</strong> {{ order["date"] }}</p>
+<p><strong>Time:</strong> {{ order["time"] }}</p>
+<p><strong>Order:</strong> {{ order["id"] }}</p>
+
+<hr>
+
+<div class="line">
+<span class="left">Car Plate</span>
+<span class="righttext">{{ order["car_plate"] }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Car Type</span>
+<span class="righttext">{{ order.get("car_type","-") }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Service</span>
+<span class="righttext">{{ order["service_type"] }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Payment</span>
+<span class="righttext">{{ order["payment_method"] }}</span>
+<div class="clear"></div>
+</div>
+
+<hr>
+
+<p class="right">
+<strong>Total: RM {{ "%.2f"|format(order["price"]) }}</strong>
 </p>
 
 <hr>
 
-<p>Invoice No: {{ order["invoice_no"] }}</p>
-<p>Order No: {{ order["id"] }}</p>
+<p><strong>Loyalty Status:</strong></p>
+<p>
+{{ "Eligible for Free Wash 🎉" if order["loyalty_eligible"] else "Not Eligible Yet" }}
+</p>
 
-<div class="row">
-    <span>{{ order["day"] }}</span>
-    <span>{{ order["date"] }}</span>
-</div>
-<p class="right">{{ order["time"] }}</p>
+<p><strong>Paid Washes:</strong> {{ order["loyalty_count"] }} / 5</p>
 
-<hr>
-
-<div class="row">
-    <span>Car Plate:</span>
-    <span>{{ order["car_plate"] }}</span>
-</div>
-<div class="row">
-    <span>Car Type:</span>
-    <span>{{ order.get("car_type","-") }}</span>
-</div>
-<div class="row">
-    <span>Service:</span>
-    <span>{{ order["service_type"] }}</span>
-</div>
-<div class="row">
-    <span>Payment:</span>
-    <span>{{ order["payment_method"] }}</span>
-</div>
-<hr>
-
-<p class="right"><strong>Total: RM {{ "%.2f"|format(order["price"]) }}</strong></p>
-
-<hr>
-<hr>
-<p><strong>Loyalty Status:</strong> {{ "Eligible for Free Wash 🎉" if order["loyalty_eligible"] else "Not Eligible Yet" }}</p>
-<p><strong>Paid Washes Count:</strong> {{ order["loyalty_count"] }} / 5</p>
 {% if order["loyalty_free"] %}
-<p style="color: green;"><strong>This wash is FREE via loyalty program! 🚗✨</strong></p>
+<p class="center"><strong>FREE WASH USED 🚗</strong></p>
 {% endif %}
+
 <hr>
-<p class="center">Thank You For Visiting!Hope To See You Again 🚗✨</p>
+
+<p class="center">
+Thank You For Visiting!<br>
+Hope To See You Again 🚗
+</p>
 
 <div class="buttons no-print">
-    <button onclick="window.print()">PRINT</button><br><br>
+
+<button onclick="window.print()">PRINT</button>
+<br><br>
 
 <a href="{{ url_for('home') }}" style="
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-">New Order</a>
+padding:8px 15px;
+background:#4CAF50;
+color:white;
+text-decoration:none;
+border-radius:5px;
+font-weight:bold;
+">
+New Order
+</a>
 
 </div>
 
