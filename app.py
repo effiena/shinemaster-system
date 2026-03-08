@@ -10,6 +10,11 @@ import os
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 socketio = SocketIO(app)
+now = datetime.now()
+
+date = now.strftime("%Y-%m-%d")
+time = now.strftime("%H:%M:%S")
+
 
 COMPANY_INFO = {
     "name": "SHINEMASTER AUTO",
