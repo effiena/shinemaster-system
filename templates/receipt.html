@@ -120,21 +120,23 @@ Tel: +6018-2096907
 
 <hr>
 
-<p class="right">
-<strong>Total: RM {{ "%.2f"|format(order["price"]) }}</strong>
-</p>
-
-<hr>
-
-<p><strong>Loyalty Status:</strong></p>
-<p>
-{{ "Eligible for Free Wash 🎉" if order["loyalty_eligible"] else "Not Eligible Yet" }}
-</p>
-
-<p><strong>Paid Washes:</strong> {{ order["loyalty_count"] }} / 5</p>
-
 {% if order["loyalty_free"] %}
-<p class="center"><strong>FREE WASH USED 🚗</strong></p>
+<p><strong>Loyalty Status:</strong></p>
+<p class="center">
+🎉 Congratulations!<br>
+*** FREE WASH TODAY ***
+</p>
+<p class="center">Paid Washes: 0 / 5</p>
+
+{% elif order["loyalty_eligible"] %}
+<p><strong>Loyalty Status:</strong></p>
+<p>Eligible for Free Wash 🎉</p>
+<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
+
+{% else %}
+<p><strong>Loyalty Status:</strong></p>
+<p>Not Eligible Yet</p>
+<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
 {% endif %}
 
 <hr>
@@ -146,7 +148,12 @@ Hope To See You Again 🚗
 
 <div class="buttons no-print">
 
-<button onclick="window.print()">PRINT</button>
+<button onclick="printLocal()">Print (PC Printer)</button>
+
+<br><br>
+
+<button onclick="sendBluetooth()">Print (Bluetooth)</button>
+
 <br><br>
 
 <a href="{{ url_for('home') }}" style="
@@ -161,6 +168,73 @@ New Order
 </a>
 
 </div>
+
+<script>
+
+// ---------- LOCAL PRINTER ----------
+function printLocal(){
+    window.print();
+}
+
+
+// ---------- BLUETOOTH PRINTER ----------
+async function printBluetooth(receipt){
+
+    try{
+
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+        });
+
+        const server = await device.gatt.connect();
+
+        const service = await server.getPrimaryService(
+            '000018f0-0000-1000-8000-00805f9b34fb'
+        );
+
+        const characteristic = await service.getCharacteristic(
+            '00002af1-0000-1000-8000-00805f9b34fb'
+        );
+
+        const encoder = new TextEncoder();
+
+        await characteristic.writeValue(
+            encoder.encode(receipt)
+        );
+
+    }catch(error){
+        alert("Bluetooth printer failed: " + error);
+    }
+
+}
+
+
+function sendBluetooth(){
+
+let receipt = `
+SHINE MASTER SOLUTION
+----------------------
+Invoice: {{ order["invoice_no"] }}
+Date: {{ order["date"] }}
+Time: {{ order["time"] }}
+
+Car Plate: {{ order["car_plate"] }}
+Car Type: {{ order.get("car_type","-") }}
+Service: {{ order["service_type"] }}
+
+Payment: {{ order["payment_method"] }}
+Total: RM {{ "%.2f"|format(order["price"]) }}
+
+Paid Wash: {{ order["loyalty_count"] }}/5
+Thank You 🚗
+`;
+
+printBluetooth(receipt);
+
+}
+
+</script>
 
 </body>
 </html>
