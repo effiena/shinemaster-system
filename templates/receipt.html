@@ -212,8 +212,12 @@ async function printBluetooth(receipt){
 
 function sendBluetooth(){
 
-let receipt = `
+let receipt = '
 SHINE MASTER SOLUTION
+No.68 Jalan Putra 1,
+Taman Tan Sri Yaacob,
+81300 Skudai, Johor
+Tel/Whatsapp: +6018-2096907
 ----------------------
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
@@ -227,9 +231,12 @@ Payment: {{ order["payment_method"] }}
 Total: RM {{ "%.2f"|format(order["price"]) }}
 
 Paid Wash: {{ order["loyalty_count"] }}/5
-Thank You 🚗
-`;
 
+
+<p>For Every 5th Visit,Eligible for Free Wash 🎉</p>
+<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
+Thank You For Your Supports, Hope To See You Again!!
+`;
 printBluetooth(receipt);
 
 }
