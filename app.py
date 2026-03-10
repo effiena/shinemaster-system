@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, jsonify, session, u
 import sqlite3
 from flask_socketio import SocketIO, emit
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 app = Flask(__name__)
@@ -73,6 +74,20 @@ def init_db():
             name TEXT NOT NULL,
             price REAL NOT NULL
         )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            invoice TEXT,
+            car_plate TEXT,
+            car_type TEXT,
+            service_type TEXT,
+            payment_method TEXT,
+            price REAL,
+            date TEXT,
+            time TEXT
+       )
     """)
 
     conn.commit()
