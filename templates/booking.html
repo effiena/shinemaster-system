@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Wash</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #4b0082;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input[type=text], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .timeslots {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .timeslot {
+            padding: 10px 12px;
+            margin: 5px;
+            border-radius: 6px;
+            border: 1px solid #4b0082;
+            cursor: pointer;
+            color: #4b0082;
+            font-weight: bold;
+        }
+        .timeslot.selected {
+            background-color: #4b0082;
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #6a00b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Book Your Wash</h2>
+        <form action="/submit_booking" method="POST">
+            <label>Car Plate</label>
+            <input type="text" name="car_plate" value="{{ plate }}" readonly>
+
+            <label>Choose Service</label>
+            <select name="service_type" required>
+                {% for service in services %}
+                    <option value="{{ service['name'] }}">{{ service['name'] }} - RM {{ service['price'] }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Pick a Time Slot</label>
+            <div class="timeslots">
+                {% for slot in timeslots %}
+                    <div class="timeslot" onclick="selectSlot(this)">
+                        {{ slot }}
+                        <input type="radio" name="time_slot" value="{{ slot }}" style="display:none;" required>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit">Confirm Booking</button>
+        </form>
+    </div>
+
+    <script>
+        function selectSlot(element) {
+            document.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            element.querySelector('input[type=radio]').checked = true;
+        }
+    </script>
+</body>
+</html>
