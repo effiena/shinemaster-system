@@ -388,33 +388,40 @@ def get_revenue_data():
 
     today = datetime.now().strftime("%Y-%m-%d")
 
-    today_revenue = conn.execute(
-        "SELECT IFNULL(SUM(price),0) FROM sales WHERE date=?",
-        (today,)
-    ).fetchone()[0]
+    today_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0) 
+        FROM orders 
+        WHERE DATE(created_at)=?
+    """, (today,)).fetchone()[0]
 
     week_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM sales
-        WHERE strftime('%Y-%W', date)=strftime('%Y-%W','now')
-    """).fetchone()[0]
+        SELECT SUM(price)
+        FROM orders
+        WHERE DATE(created_at) >= DATE('now','-7 days')
+        AND payment_status = 'Paid'
+        """).fetchone()[0]
 
     month_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM sales
-        WHERE strftime('%Y-%m', date)=strftime('%Y-%m','now')
-    """).fetchone()[0]
+        SELECT SUM(price)
+        FROM orders
+        WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m','now')
+        AND payment_status = 'Paid'
+        """).fetchone()[0]
 
-    cars_today = conn.execute(
-        "SELECT COUNT(*) FROM sales WHERE date=?",
-        (today,)
-    ).fetchone()[0]
+
+    cars_today = conn.execute("""
+        SELECT COUNT(*)
+        FROM orders
+        WHERE DATE(created_at) = ?
+        AND payment_status = 'Paid'
+        """, (today,)).fetchone()[0]
 
     recent_sales = conn.execute("""
-        SELECT invoice, car_plate, service_type, price, time
-        FROM sales
-        ORDER BY id DESC
-        LIMIT 5
+        SELECT invoice_no, car_plate, service_type, price, created_at
+        FROM orders
+        WHERE payment_status = 'Paid'
+        ORDER BY created_at DESC
+        LIMIT 10
     """).fetchall()
 
     conn.close()
