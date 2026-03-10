@@ -128,7 +128,6 @@ def get_latest_sales():
 
 @app.route("/pos", methods=["GET", "POST"])
 def pos():
-
     if "username" not in session:
         return redirect("/login")
 
@@ -137,15 +136,20 @@ def pos():
     services = conn.execute("SELECT * FROM services").fetchall()
 
     if request.method == "POST":
+        # Get current date and time
+        now = datetime.now()
+        date = now.strftime("%Y-%m-%d")
+        time = now.strftime("%H:%M:%S")
 
-        invoice = f"INV{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        invoice = f"INV{now.strftime('%Y%m%d%H%M%S')}"
 
-        car_plate = request.form["car_plate"].replace(" ","").upper()
+        car_plate = request.form["car_plate"].replace(" ", "").upper()
         car_type = request.form["car_type"]
         service_type = request.form["service_type"]
         payment_method = request.form["payment_method"]
         price = float(request.form["price"])
 
+        # Create order dict
         order = {
             "car_plate": car_plate,
             "car_type": car_type,
@@ -154,9 +158,10 @@ def pos():
             "price": price
         }
 
-        # ⭐ Run loyalty system
+        # Apply loyalty system
         order = process_loyalty(order)
 
+        # Insert into sales table
         conn.execute("""
             INSERT INTO sales
             (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
@@ -171,10 +176,10 @@ def pos():
             date,
             time
         ))
-
         conn.commit()
         conn.close()
 
+        # Add extra info for receipt
         order["invoice_no"] = invoice
         order["date"] = date
         order["time"] = time
@@ -183,7 +188,6 @@ def pos():
 
         return render_template("receipt.html", order=order)
 
-    # ⭐ GET request loads POS page
     conn.close()
     return render_template("new_order.html", services=services)
 
@@ -195,13 +199,10 @@ def process_loyalty(order):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
+    # Get current paid count
     cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
     row = cur.fetchone()
-
-    if row:
-        paid_count = row[0] + 1
-    else:
-        paid_count = 1
+    paid_count = (row[0] if row else 0) + 1
 
     # Free wash on 6th visit
     if paid_count == 6:
@@ -215,23 +216,22 @@ def process_loyalty(order):
     order["loyalty_eligible"] = paid_count >= 5
     order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
 
-    if row:
-        cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (paid_count, car_plate))
-    else:
-        cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, paid_count))
+    # Safe upsert
+    cur.execute("""
+        INSERT INTO loyalty (car_plate, paid_count)
+        VALUES (?, ?)
+        ON CONFLICT(car_plate) DO UPDATE SET paid_count=excluded.paid_count
+    """, (car_plate, paid_count))
 
     conn.commit()
     conn.close()
-
     return order
-
 
 # -----------------------------
 # Create Order Route
 # -----------------------------
 @app.route("/create_order", methods=["POST"])
 def create_order():
-    from datetime import datetime
     now = datetime.now()
     date = now.strftime("%Y-%m-%d")
     time = now.strftime("%H:%M:%S")
@@ -242,7 +242,7 @@ def create_order():
     payment_method = request.form["payment_method"]
     price = float(request.form["price"])
 
-    # 1️⃣ Create base order dictionary
+    # 1️⃣ Create base order dict
     order = {
         "car_plate": car_plate,
         "car_type": car_type,
@@ -251,10 +251,10 @@ def create_order():
         "price": price
     }
 
-    # 2️⃣ Apply loyalty logic
+    # 2️⃣ Apply loyalty logic safely
     order = process_loyalty(order)
 
-    # 3️⃣ Insert order into database
+    # 3️⃣ Insert into orders table
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
@@ -269,7 +269,7 @@ def create_order():
         order["price"],
         order["payment_method"],
         "Paid",
-        order["loyalty_status"]  # ✅ guaranteed to exist
+        order["loyalty_status"]
     ))
     conn.commit()
     order_id = cur.lastrowid
@@ -287,6 +287,7 @@ def create_order():
     order["time"] = time
 
     return render_template("receipt.html", order=order)
+
 
 @app.route("/check_loyalty/<car_plate>")
 def check_loyalty(car_plate):
