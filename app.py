@@ -781,6 +781,20 @@ def finance():
 
     return render_template("finance.html", report=report)
 
+@app.route("/inventory_log")
+def inventory_log():
+    if session.get("role") != "admin":
+        return "Admin only"
+    
+    conn = get_db_connection()
+    logs = conn.execute("""
+        SELECT l.*, i.item
+        FROM inventory_log l
+        LEFT JOIN inventory i ON i.id = l.inventory_id
+        ORDER BY l.date DESC
+    """).fetchall()
+    conn.close()
+    return render_template("inventory_log.html", logs=logs)
 
 @app.route("/logout")
 def logout():
