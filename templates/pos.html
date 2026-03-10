@@ -1,66 +1,187 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>Shine Master POS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shine Master POS</title>
+    <style>
+        /* ===== Page Background ===== */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #9C27B0, #F3E5F5); /* soft grey → light purple */
+            color: #333333;
+            margin: 0;
+            padding: 0;
+        }
 
-<style>
+        /* ===== Container Card ===== */
+        .container {
+            max-width: 500px;
+            width: 90%;
+            margin: 20px auto;
+            padding: 25px;
+            background: #FFFFFF;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
 
-body{
-font-family:Arial;
-background:#111;
-color:white;
+.logo-container {
+    text-align: center;
+    margin-bottom: 15px;
 }
 
-.container{
-padding:20px;
+.logo {
+    width: 120px;          /* set width */
+    height: 120px;         /* set height to make it square */
+    border-radius: 50%;    /* makes it perfectly circular */
+    object-fit: cover;     /* ensures logo scales and fills the circle */
+    display: inline-block;
+    border: 2px solid #6A1B9A; /* optional: purple border for polish */
 }
 
-input,select{
-padding:8px;
-width:200px;
-margin:5px;
+        /* ===== Headings ===== */
+        h2 {
+            text-align: center;
+            color: #6A1B9A;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* ===== Labels ===== */
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* ===== Inputs & Selects ===== */
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.5;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        /* Car Plate input same height as select boxes */
+        #car_plate {
+            width: 60%;
+            padding: 10px;
+            display: inline-block;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* ===== Focus ===== */
+        input:focus,
+        select:focus {
+            border-color: #B39DDB;
+            box-shadow: 0 0 8px #B39DDB;
+        }
+
+        /* ===== Price Box ===== */
+        .price-box {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #6A1B9A;
+            text-align: center;
+            background-color: #F3E5F5;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* ===== Buttons ===== */
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #B39DDB, #9C27B0);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #9C27B0, #7B1FA2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 15px;
+            color: #777777;
+        }
+
+        /* ===== Responsive ===== */
+        @media screen and (max-width: 400px) {
+            h2 { font-size: 20px; }
+            input, select { font-size: 14px; padding: 12px; }
+            #car_plate { width: 100%; padding: 12px; }
+            button { font-size: 16px; padding: 12px; }
+            .price-box { font-size: 20px; padding: 10px; }
+        }
+
+/* ===== Tablet Full-Screen ===== */
+@media screen and (min-width: 401px) and (max-width: 1024px) {
+    .container {
+        width: 90% !important;   /* almost full width on tablets */
+        max-width: 95% !important;
+        margin: 10px auto;
+        padding: 20px;
+    }
 }
 
-button{
-padding:10px;
-background:yellow;
-border:none;
-font-weight:bold;
-}
+	#loyalty_status {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #B39DDB;
+    border-radius: 8px;
+    background-color: #F3E5F5;
+    font-weight: bold;
+    text-align: center;
+    color: #6A1B9A;
+}	
 
-table{
-width:100%;
-margin-top:20px;
-}
-
-th,td{
-padding:10px;
-border-bottom:1px solid #333;
-}
-
-</style>
-
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <!-- Logo placeholder -->
+        <div class="logo-container">
+    	   <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Shinemaster Logo" class="logo">
+        </div>
 
-<div class="container">
+        <h2>SHINE MASTER SOLUTION</h2>
 
-<h2>Shine Master POS</h2>
+        <form action="/pos" method="POST">
+            <label for="car_plate">Car Plate</label>
+	    <input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()">
+            <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
+	    <label for="car_type">Car Type</label>
+	    <select name="car_type" id="car_type" onchange="calculatePrice()" required>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV_MPV">SUV/MPV</option>
+                <option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
+            </select>
 
-<form method="POST" action="/pos">
-Car Plate<br>
-<input name="car_plate" required><br>
 
-Car Type<br>
-<select name="car_type" id="car_type" onchange="calculatePrice()" required>
-<option value="Sedan">Sedan</option>
-<option value="SUV_MPV">SUV/MPV</option>
-<option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
-</select><br>
-
-Service<br>
 <select name="service_type" id="service_type" onchange="calculatePrice()" required>
 
 <option value="">--Select Service--</option>
@@ -87,91 +208,150 @@ Service<br>
 <option value="int_coat">INTERIOR COATING</option>
 </optgroup>
 
-</select><br>
+</select>
 
-Payment<br>
-<select name="payment_method" id="payment_method" required>
-    <option value="Cash">Cash</option>
-    <option value="QR">QR/E-wallet/TNG</option>
-    <option value="Card">Card</option>
-</select><br>
 
 <div class="price-box">
     RM <span id="price_display">0.00</span>
 </div>
-<input type="hidden" name="price" id="price" value="0">
 
-<button type="submit">Create Bill</button>
+            <input type="hidden" name="price" id="price">
+            <label for="payment_method">Payment Method</label>
+            <select name="payment_method" id="payment_method" required>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="E-Wallet">E-Wallet</option>
+                <option value="QR Code">QR Code</option>
+            </select>
 
-</form>
+            <button type="submit">PAYMENT</button>
+        </form>
 
-<h3>Recent Sales</h3>
+        <div class="footer">
+            @SHINEMASTER AUTO. Powered By Asli.Tech
+        </div>
+    </div>
 
-<table>
-
-<tr>
-<th>Plate</th>
-<th>Service</th>
-<th>Price</th>
-</tr>
-
-{% for sale in sales %}
-
-<tr>
-<td>{{sale[1]}}</td>
-<td>{{sale[3]}}</td>
-<td>RM{{sale[5]}}</td>
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
-
-<script>
+    <script>
 const priceTable = {
 
-wash_basic: {Sedan:20, SUV_MPV:24, "LARGE-MPV_4X4":28},
-wash_special: {Sedan:48, SUV_MPV:58, "LARGE-MPV_4X4":68},
-wash_maintain: {Sedan:98, SUV_MPV:108, "LARGE-MPV_4X4":118},
+wash_basic: {
+    Sedan: 20,
+    SUV_MPV: 24,
+    "LARGE-MPV_4X4": 28
+},
 
-coat1: {Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688},
-coat2: {Sedan:688, SUV_MPV:788, "LARGE-MPV_4X4":888},
-coat3: {Sedan:888, SUV_MPV:988, "LARGE-MPV_4X4":1088},
+wash_special: {
+    Sedan: 48,
+    SUV_MPV: 58,
+    "LARGE-MPV_4X4": 68
+},
 
-disp2: {Sedan:588, SUV_MPV:688, "LARGE-MPV_4X4":788},
-disp3: {Sedan:788, SUV_MPV:888, "LARGE-MPV_4X4":988},
+wash_maintain: {
+    Sedan: 98,
+    SUV_MPV: 108,
+    "LARGE-MPV_4X4": 118
+},
 
-wax: {Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488},
+coat1: {
+    Sedan: 488,
+    SUV_MPV: 588,
+    "LARGE-MPV_4X4": 688
+},
 
-int_detail: {Sedan:188, SUV_MPV:288, "LARGE-MPV_4X4":388},
-int_coat: {Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488}
+coat2: {
+    Sedan: 688,
+    SUV_MPV: 788,
+    "LARGE-MPV_4X4": 888
+},
+
+coat3: {
+    Sedan: 888,
+    SUV_MPV: 988,
+    "LARGE-MPV_4X4": 1088
+},
+
+disp2: {
+    Sedan: 588,
+    SUV_MPV: 688,
+    "LARGE-MPV_4X4": 788
+},
+
+disp3: {
+    Sedan: 788,
+    SUV_MPV: 888,
+    "LARGE-MPV_4X4": 988
+},
+
+wax: {
+    Sedan: 288,
+    SUV_MPV: 388,
+    "LARGE-MPV_4X4": 488
+},
+
+int_detail: {
+    Sedan: 188,
+    SUV_MPV: 288,
+    "LARGE-MPV_4X4": 388
+},
+
+int_coat: {
+    Sedan: 288,
+    SUV_MPV: 388,
+    "LARGE-MPV_4X4": 488
+}
 
 }
 
-function calculatePrice(){
-    let car = document.getElementById("car_type").value;
-    let service = document.getElementById("service_type").value;
+function calculatePrice() {
+    const service = document.getElementById("service_type").value
+    const carType = document.getElementById("car_type").value
+    const priceDisplay = document.getElementById("price_display")
+    const hiddenPrice = document.getElementById("price")
 
-    if(service === "") {
-        document.getElementById("price_display").innerText = "0.00";
-        document.getElementById("price").value = 0;
-        return;
+    if(service && carType && priceTable[service]){
+        const price = priceTable[service][carType]
+        if(price !== undefined){
+            priceDisplay.textContent = price.toFixed(2)
+            hiddenPrice.value = price
+        } else {
+            priceDisplay.textContent = "0.00"
+            hiddenPrice.value = 0  // set default numeric value
+        }
+    } else {
+        priceDisplay.textContent = "0.00"
+        hiddenPrice.value = 0
+    }
+}
+
+async function checkLoyalty() {
+    const plate = document.getElementById("car_plate").value
+    const box = document.getElementById("loyalty_status")
+
+    if(plate.length < 3){
+        box.value = ""
+        box.style.background = "white"
+        return
     }
 
-    let price = priceTable[service][car];
+    const response = await fetch("/check_loyalty/" + plate)
+    const data = await response.json()
 
-    document.getElementById("price_display").innerText = price.toFixed(2);
-    document.getElementById("price").value = price;
+    if(data.eligible){
+        box.value = "Eligible for FREE Car Wash"
+        box.style.background = "#b8f5b1"
+    } else {
+        const remaining = 5 - data.paid
+        box.value = "Not Eligible (" + remaining + " more wash)"
+        box.style.background = "#ffd6d6"
+    }
 }
 
-// Optional: calculate on page load if service selected
-window.onload = function(){
-    calculatePrice();
-};
+document.addEventListener("DOMContentLoaded", function() {
+    calculatePrice();  // ensures hidden price has a numeric value on page load
+});
 
-</script>
+    </script>
 
 </body>
 </html>
