@@ -157,9 +157,6 @@ def pos():
         # ⭐ Run loyalty system
         order = process_loyalty(order)
 
-        date = datetime.now().strftime("%Y-%m-%d")
-        time = datetime.now().strftime("%H:%M:%S")
-
         conn.execute("""
             INSERT INTO sales
             (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
@@ -209,14 +206,14 @@ def process_loyalty(order):
     # Free wash on 6th visit
     if paid_count == 6:
         order["price"] = 0.0
-        order["loyalty_free"] = 1
+        order["loyalty_free"] = True
         paid_count = 0
     else:
-        order["loyalty_free"] = 0
+        order["loyalty_free"] = False
 
     order["loyalty_count"] = paid_count
-    order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
     order["loyalty_eligible"] = paid_count >= 5
+    order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
 
     if row:
         cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (paid_count, car_plate))
@@ -229,46 +226,38 @@ def process_loyalty(order):
     return order
 
 
+# -----------------------------
+# Create Order Route
+# -----------------------------
 @app.route("/create_order", methods=["POST"])
 def create_order():
-
     from datetime import datetime
+    now = datetime.now()
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
 
-    invoice = "INV" + datetime.now().strftime("%Y%m%d%H%M%S")
-
-    car_plate = request.form["car_plate"]
-    car_type = request.form.get("car_type","-")
+    car_plate = request.form["car_plate"].replace(" ", "").upper()
+    car_type = request.form.get("car_type", "-")
     service_type = request.form["service_type"]
     payment_method = request.form["payment_method"]
     price = float(request.form["price"])
 
-    now = datetime.now()
-    date = now.strftime("%d-%m-%Y")
-    time = now.strftime("%H:%M")
-
+    # 1️⃣ Create base order dictionary
     order = {
-        "invoice_no": invoice,
-        "date": date,
-        "time": time,
-        "id": 1,
         "car_plate": car_plate,
         "car_type": car_type,
         "service_type": service_type,
         "payment_method": payment_method,
-        "price": price,
-        "loyalty_count": 1,
-        "loyalty_eligible": False,
-        "loyalty_free": False
+        "price": price
     }
 
-    return render_template("receipt.html", order=order)
-
+    # 2️⃣ Apply loyalty logic
     order = process_loyalty(order)
 
+    # 3️⃣ Insert order into database
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    # Insert order
     cur.execute("""
         INSERT INTO orders
         (car_plate, car_type, service_type, price, payment_method, payment_status, loyalty_status)
@@ -280,22 +269,22 @@ def create_order():
         order["price"],
         order["payment_method"],
         "Paid",
-        order["loyalty_status"]
+        order["loyalty_status"]  # ✅ guaranteed to exist
     ))
-
     conn.commit()
     order_id = cur.lastrowid
 
-    # Generate invoice
-    today = datetime.now().strftime("%Y%m%d")
-    invoice_no = f"INV{today}{order_id:04d}"
-
+    # 4️⃣ Generate invoice number
+    invoice_no = f"INV{now.strftime('%Y%m%d')}{order_id:04d}"
     cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
     conn.commit()
     conn.close()
 
+    # 5️⃣ Add extra info for receipt
     order["invoice_no"] = invoice_no
     order["id"] = order_id
+    order["date"] = date
+    order["time"] = time
 
     return render_template("receipt.html", order=order)
 
