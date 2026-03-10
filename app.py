@@ -209,9 +209,6 @@ def pos():
 
         print("Saving sale:", invoice, car_plate, price, date)
 
-	# Example: deduct 1 unit of wax per car service
-        item_used_id = 1  # get the inventory id of the item used
-        update_inventory_stock(item_used_id, -1, ref=invoice, type="OUT")
 
         # Insert into sales table
         conn.execute("""
@@ -493,13 +490,11 @@ def inventory():
     items = cursor.fetchall()
     conn.close()
 
-    LOW_STOCK_THRESHOLD = 5
-    low_stock_items = [i for i in items if i["quantity"] <= LOW_STOCK_THRESHOLD]
 
-    return render_template("inventory.html", items=items, low_stock_items=low_stock_items)
 
-    # Render template with items
     return render_template("inventory.html", items=items)
+
+
 
 
 def init_inventory_db():
@@ -580,21 +575,6 @@ def delete_inventory(id):
 
     return redirect("/inventory")
 
-def update_inventory_stock(item_id, change, ref="", type="OUT"):
-    conn = get_db_connection()
-    conn.execute("""
-        INSERT INTO inventory_log (inventory_id, change, type, reference)
-        VALUES (?, ?, ?, ?)
-    """, (item_id, change, type, ref))
-    
-    # Update main inventory quantity
-    conn.execute("""
-        UPDATE inventory SET quantity = quantity + ?, last_updated=CURRENT_TIMESTAMP
-        WHERE id=?
-    """, (change, item_id))
-    
-    conn.commit()
-    conn.close()
 
 def generate_timeslots():
 
@@ -781,20 +761,6 @@ def finance():
 
     return render_template("finance.html", report=report)
 
-@app.route("/inventory_log")
-def inventory_log():
-    if session.get("role") != "admin":
-        return "Admin only"
-    
-    conn = get_db_connection()
-    logs = conn.execute("""
-        SELECT l.*, i.item
-        FROM inventory_log l
-        LEFT JOIN inventory i ON i.id = l.inventory_id
-        ORDER BY l.date DESC
-    """).fetchall()
-    conn.close()
-    return render_template("inventory_log.html", logs=logs)
 
 @app.route("/logout")
 def logout():
