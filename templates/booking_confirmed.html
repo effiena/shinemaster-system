@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Confirmed</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1a001a, #330033);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+.container {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    max-width: 400px;
+}
+h1 {
+    font-size: 28px;
+    color: #FFD700;
+    text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80;
+    margin-bottom: 20px;
+}
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+.card p {
+    margin: 10px 0;
+    font-size: 18px;
+}
+.checkmark {
+    font-size: 50px;
+    color: #FFD700;
+    text-shadow: 0 0 15px #FFD700;
+}
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #6A1B9A, #FFD700);
+    color: #fff;
+    cursor: pointer;
+}
+button:hover {
+    opacity: 0.9;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>CONFIRMED BOOKING</h1>
+    <div class="card">
+        <p><strong>Car Plate:</strong> {{ booking['car_plate'] }}</p>
+        <p><strong>Service:</strong> {{ booking['service'] }}</p>
+        <p><strong>Date:</strong> {{ booking['date'] }}</p>
+        <p><strong>Time:</strong> {{ booking['time'] }}</p>
+        <p><strong>Contact:</strong> {{ booking['contact'] }}</p>
+        <p><strong>Booking ID:</strong> {{ booking['booking_id'] }}</p>
+    </div>
+    <div class="checkmark">✔️</div>
+    <button onclick="window.location.href='/home'">Return Home</button>
+</div>
+</body>
+</html>
