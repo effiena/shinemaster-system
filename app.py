@@ -24,11 +24,6 @@ def inject_company():
     return dict(company=COMPANY_INFO)
 
 # ===== DATABASE CONNECTIONS =====
-def get_system_db_connection():
-    conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    return conn
-
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -87,7 +82,7 @@ def init_db():
             price REAL,
             date TEXT,
             time TEXT
-       )
+        )
     """)
 
     c.execute("""
@@ -100,7 +95,29 @@ def init_db():
             contact TEXT,
             status TEXT DEFAULT 'Booked',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-       )
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS inventory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item TEXT,
+            company TEXT,
+            phone TEXT,
+            address TEXT,
+            purchase_date TEXT,
+            quantity INTEGER,
+            price REAL
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            password TEXT,
+            role TEXT
+        )
     """)
 
     conn.commit()
@@ -340,15 +357,13 @@ def dashboard():
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime("%Y-%m-%d")
 
     today_revenue = conn.execute("""
-        SELECT IFNULL(SUM(total_amount),0)
-        FROM invoices
-        WHERE DATE(created_at) = ?
-    """, (today,)).fetchone()[0]
-
-    
+        SELECT IFNULL(SUM(price),0)
+        FROM sales
+        WHERE date = ?
+        """, (today,)).fetchone()[0]
 
     cars_today = conn.execute(
         "SELECT COUNT(*) FROM sales WHERE date=?",
@@ -357,13 +372,13 @@ def dashboard():
 
     week_revenue = conn.execute("""
         SELECT IFNULL(SUM(total_amount),0)
-        FROM invoices
+        FROM sales
         WHERE strftime('%W', created_at) = strftime('%W','now')
         """).fetchone()[0]
 
     month_revenue = conn.execute("""
         SELECT IFNULL(SUM(total_amount),0)
-        FROM invoices
+        FROM sales
         WHERE strftime('%m', created_at) = strftime('%m','now')
         """).fetchone()[0]
     
@@ -380,7 +395,9 @@ def dashboard():
         "dashboard.html",
         today_revenue=today_revenue,
         week_revenue=week_revenue,
-        month_revenue=month_revenue
+        month_revenue=month_revenue,
+        cars_today=cars_today,
+        recent_sales=recent_sales
     )
 
 @app.route("/dashboard_data")
@@ -591,7 +608,7 @@ def staff():
 
     conn = get_db_connection()
 
-    staff = conn.execute("SELECT * FROM staff").fetchall()
+    staff = conn.execute("SELECT * FROM users").fetchall()
 
     conn.close()
 
