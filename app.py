@@ -90,6 +90,19 @@ def init_db():
        )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_plate TEXT,
+            service_type TEXT,
+            booking_date TEXT,
+            booking_time TEXT,
+            contact TEXT,
+            status TEXT DEFAULT 'Booked',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -469,6 +482,81 @@ def delete_inventory(id):
     conn.close()
 
     return redirect("/inventory")
+
+
+def generate_timeslots():
+
+    slots = []
+    start = 9
+    end = 22
+
+    for hour in range(start, end):
+        slots.append(f"{hour:02d}:00")
+        slots.append(f"{hour:02d}:30")
+
+    return slots
+
+@app.route("/booking")
+def booking():
+
+    plate = request.args.get("plate","")
+
+    conn = get_db_connection()
+    services = conn.execute("SELECT * FROM services").fetchall()
+    conn.close()
+
+    timeslots = generate_timeslots()
+
+    return render_template(
+        "booking.html",
+        services=services,
+        timeslots=timeslots,
+        plate=plate
+    )
+
+@app.route("/create_booking", methods=["POST"])
+def create_booking():
+
+    car_plate = request.form["car_plate"].upper()
+    service = request.form["service_type"]
+    date = request.form["booking_date"]
+    time = request.form["booking_time"]
+    contact = request.form["contact"]
+
+    conn = get_db_connection()
+
+    # check if slot already taken
+    existing = conn.execute("""
+        SELECT COUNT(*) FROM bookings
+        WHERE booking_date=? AND booking_time=?
+    """,(date,time)).fetchone()[0]
+
+    if existing >= 3:   # limit 3 cars per slot
+        conn.close()
+        return "This time slot is full. Please choose another."
+
+    conn.execute("""
+        INSERT INTO bookings
+        (car_plate, service_type, booking_date, booking_time, contact)
+        VALUES (?,?,?,?,?)
+    """,(car_plate,service,date,time,contact))
+
+    conn.commit()
+    conn.close()
+
+    return "Booking Confirmed!"
+
+@app.route("/booking_admin")
+def booking_admin():
+
+    if session.get("role") != "admin":
+        return redirect("/pos")
+
+    conn = get_db_connection()
+    bookings = conn.execute("SELECT * FROM bookings ORDER BY booking_date, booking_time").fetchall()
+    conn.close()
+
+    return render_template("booking_admin.html", bookings=bookings)
 
 
 @app.route("/staff")
