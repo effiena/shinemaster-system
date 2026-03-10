@@ -175,13 +175,15 @@ body {
     font-size: 18px;
 }
 
-/* Make all text in the card white, including auto-detected phone links */
-.card, 
-.card p, 
-.card p a {
-    color: #ffffff !important;
-    text-decoration: none;  /* remove underline from phone links */
+.card p, .card p strong {
+    color: #fff !important; /* All text white */
 }
+
+.card p a {
+    color: #fff !important; /* Contact links white */
+    text-decoration: none;
+}
+
 /* ===== Glowing Checkmark ===== */
 .checkmark {
     font-size: 60px;
@@ -225,13 +227,7 @@ button:hover {
 </head>
 <body>
 <div class="container">
-/* Make all text in the card white, including auto-detected phone links */
-.card, 
-.card p, 
-.card p a {
-    color: #ffffff !important;
-    text-decoration: none;  /* remove underline from phone links */
-}    <h1>CONFIRMED BOOKING</h1>
+    <h1>CONFIRMED BOOKING</h1>
     <div class="card">
         <p><strong>Car Plate:</strong> {{ booking['car_plate'] }}</p>
         <p><strong>Service:</strong> {{ booking['service'] }}</p>
@@ -240,6 +236,8 @@ button:hover {
         <p><strong>Contact:</strong> {{ booking['contact'] }}</p>
         <p><strong>Booking ID:</strong> {{ booking['booking_id'] }}</p>
     </div>
+    <div class="checkmark">✔️</div>
+
 </div>
 </body>
 </html>
