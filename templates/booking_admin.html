@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Service Bookings</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#111;
+    color:white;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th,td{
+    padding:10px;
+    border:1px solid #444;
+    text-align:center;
+}
+
+th{
+    background:#6a0dad;
+}
+
+tr:nth-child(even){
+    background:#222;
+}
+
+h1{
+    color:#ffd700;
+}
+
+a{
+    color:#ffd700;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Service Booking Schedule</h1>
+
+<a href="/dashboard">← Back to Dashboard</a>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>Car Plate</th>
+<th>Service</th>
+<th>Date</th>
+<th>Time</th>
+<th>Contact</th>
+<th>Status</th>
+</tr>
+
+{% for b in bookings %}
+
+<tr>
+<td>{{b.id}}</td>
+<td>{{b.car_plate}}</td>
+<td>{{b.service_type}}</td>
+<td>{{b.booking_date}}</td>
+<td>{{b.booking_time}}</td>
+<td>{{b.contact}}</td>
+<td>{{b.status}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
