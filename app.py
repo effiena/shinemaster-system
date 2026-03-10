@@ -206,6 +206,9 @@ def pos():
         # Apply loyalty system
         order = process_loyalty(order)
 
+
+        print("Saving sale:", invoice, car_plate, price, date)
+
         # Insert into sales table
         conn.execute("""
             INSERT INTO sales
@@ -222,6 +225,7 @@ def pos():
             time
         ))
         conn.commit()
+        print("Sale saved successfully")
         conn.close()
 
         # Add extra info for receipt
@@ -354,54 +358,30 @@ def dashboard():
     if session.get("role") != "admin":
         return redirect("/pos")
 
-    conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-
-    today = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).strftime("%Y-%m-%d")
-
-    today_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM sales
-        WHERE date = ?
-        """, (today,)).fetchone()[0]
-
-    cars_today = conn.execute(
-        "SELECT COUNT(*) FROM sales WHERE date=?",
-        (today,)
-    ).fetchone()[0]
-
-    week_revenue = conn.execute("""
-        SELECT IFNULL(SUM(total_amount),0)
-        FROM sales
-        WHERE strftime('%W', created_at) = strftime('%W','now')
-        """).fetchone()[0]
-
-    month_revenue = conn.execute("""
-        SELECT IFNULL(SUM(total_amount),0)
-        FROM sales
-        WHERE strftime('%m', created_at) = strftime('%m','now')
-        """).fetchone()[0]
-    
-    recent_sales = conn.execute("""
-        SELECT invoice, car_plate, service_type, price, time
-        FROM sales
-        ORDER BY id DESC
-        LIMIT 5
-    """).fetchall()
-
-    conn.close()
+    data = get_revenue_data()
 
     return render_template(
         "dashboard.html",
-        today_revenue=today_revenue,
-        week_revenue=week_revenue,
-        month_revenue=month_revenue,
-        cars_today=cars_today,
-        recent_sales=recent_sales
+        today_revenue=data["today_revenue"],
+        week_revenue=data["week_revenue"],
+        month_revenue=data["month_revenue"],
+        cars_today=data["cars_today"],
+        recent_sales=data["recent_sales"]
     )
+
+    conn.commit()
+    conn.close()
+
+    socketio.emit("update_dashboard")
 
 @app.route("/dashboard_data")
 def dashboard_data():
+
+    data = get_revenue_data()
+
+    return jsonify(data)
+
+def get_revenue_data():
 
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -409,11 +389,25 @@ def dashboard_data():
     today = datetime.now().strftime("%Y-%m-%d")
 
     today_revenue = conn.execute(
-        "SELECT SUM(price) FROM sales WHERE date=?",(today,)
-    ).fetchone()[0] or 0
+        "SELECT IFNULL(SUM(price),0) FROM sales WHERE date=?",
+        (today,)
+    ).fetchone()[0]
+
+    week_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0)
+        FROM sales
+        WHERE strftime('%Y-%W', date)=strftime('%Y-%W','now')
+    """).fetchone()[0]
+
+    month_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0)
+        FROM sales
+        WHERE strftime('%Y-%m', date)=strftime('%Y-%m','now')
+    """).fetchone()[0]
 
     cars_today = conn.execute(
-        "SELECT COUNT(*) FROM sales WHERE date=?",(today,)
+        "SELECT COUNT(*) FROM sales WHERE date=?",
+        (today,)
     ).fetchone()[0]
 
     recent_sales = conn.execute("""
@@ -425,11 +419,13 @@ def dashboard_data():
 
     conn.close()
 
-    return jsonify({
+    return {
         "today_revenue": today_revenue,
+        "week_revenue": week_revenue,
+        "month_revenue": month_revenue,
         "cars_today": cars_today,
-        "recent_sales":[dict(x) for x in recent_sales]
-    })
+        "recent_sales": [dict(x) for x in recent_sales]
+    }
 
 @app.route("/receipt/<invoice>")
 def receipt(invoice):
