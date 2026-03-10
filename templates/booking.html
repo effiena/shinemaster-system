@@ -14,30 +14,30 @@
     }
 
 .glow-box {
+    display: inline-block;           /* box wraps tightly around text */
     text-align: center;
-    font-size: 28px;
+    font-size: 20px;                 /* adjust size as needed */
     font-weight: bold;
-    color: #fff;                     /* white text */
+    color: #fff;                      /* correct white text */
     background: #6A1B9A;             /* purple background */
-    padding: 15px 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px #fff, 0 0 20px #FFD700, 0 0 30px #6A1B9A, 0 0 40px #FFD700;
-    animation: pulseGlow 2s infinite alternate;
+    padding: 8px 16px;               /* smaller padding for compact look */
+    border-radius: 8px;              /* rounded corners */
+    box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
+    animation: pulseGlow 1.8s infinite alternate;
 }
 
 /* Glowing pulse animation */
 @keyframes pulseGlow {
     0% {
-        box-shadow: 0 0 10px #fff, 0 0 20px #FFD700, 0 0 30px #6A1B9A, 0 0 40px #FFD700;
+        box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
     }
     50% {
-        box-shadow: 0 0 15px #fff, 0 0 25px #FFD700, 0 0 35px #6A1B9A, 0 0 50px #FFD700;
+        box-shadow: 0 0 8px #fff, 0 0 16px #FFD700, 0 0 22px #6A1B9A;
     }
     100% {
-        box-shadow: 0 0 10px #fff, 0 0 20px #FFD700, 0 0 30px #6A1B9A, 0 0 40px #FFD700;
+        box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
     }
 }
-
     /* ===== Container Card ===== */
     .container {
         max-width: 480px;
