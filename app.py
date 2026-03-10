@@ -552,6 +552,18 @@ def create_booking():
 
     return "Booking Confirmed!"
 
+@app.route("/booking_confirmed")
+def booking_confirmed():
+    booking_data = {
+        "car_plate": "HKO90",
+        "service": "CAR WASH - BASIC",
+        "date": "2026-03-10",
+        "time": "10:30",
+        "contact": "018-2096907",
+        "booking_id": "BK20260310001"
+    }
+    return render_template("booking_confirmed.html", booking=booking_data)
+
 @app.route("/booking_admin")
 def booking_admin():
 
@@ -655,18 +667,6 @@ def finance():
 
     return render_template("finance.html", report=report)
 
-@app.route("/booking_confirmed")
-def booking_confirmed():
-    # Example booking data
-    booking_data = {
-        "car_plate": "ABC 1234",
-        "service": "Premium Wash",
-        "date": "April 25, 2024",
-        "time": "10:30 AM",
-        "contact": "012-3456789",
-        "booking_id": "SM123456"
-    }
-    return render_template("booking_confirmed.html", booking=booking_data)
 
 @app.route("/logout")
 def logout():
