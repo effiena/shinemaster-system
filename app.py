@@ -337,29 +337,36 @@ def dashboard():
     if session.get("role") != "admin":
         return redirect("/pos")
 
-    conn = sqlite3.connect("shine.db")
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
 
     today = datetime.now().strftime("%Y-%m-%d")
 
-    today_revenue = conn.execute(
-        "SELECT SUM(price) FROM sales WHERE date=?",
-        (today,)
-    ).fetchone()[0]
+    today_revenue = conn.execute("""
+        SELECT IFNULL(SUM(total_amount),0)
+        FROM invoices
+        WHERE DATE(created_at) = ?
+    """, (today,)).fetchone()[0]
+
+    
 
     cars_today = conn.execute(
         "SELECT COUNT(*) FROM sales WHERE date=?",
         (today,)
     ).fetchone()[0]
 
-    week_revenue = conn.execute(
-        "SELECT SUM(price) FROM sales WHERE date >= date('now','-7 day')"
-    ).fetchone()[0]
+    week_revenue = conn.execute("""
+        SELECT IFNULL(SUM(total_amount),0)
+        FROM invoices
+        WHERE strftime('%W', created_at) = strftime('%W','now')
+        """).fetchone()[0]
 
-    month_revenue = conn.execute(
-        "SELECT SUM(price) FROM sales WHERE date >= date('now','-30 day')"
-    ).fetchone()[0]
-
+    month_revenue = conn.execute("""
+        SELECT IFNULL(SUM(total_amount),0)
+        FROM invoices
+        WHERE strftime('%m', created_at) = strftime('%m','now')
+        """).fetchone()[0]
+    
     recent_sales = conn.execute("""
         SELECT invoice, car_plate, service_type, price, time
         FROM sales
@@ -371,12 +378,9 @@ def dashboard():
 
     return render_template(
         "dashboard.html",
-        today_revenue=today_revenue or 0,
-        week_revenue=week_revenue or 0,
-        month_revenue=month_revenue or 0,
-        cars_today=cars_today,
-        recent_sales=recent_sales,
-        low_stock=[]
+        today_revenue=today_revenue,
+        week_revenue=week_revenue,
+        month_revenue=month_revenue
     )
 
 @app.route("/dashboard_data")
