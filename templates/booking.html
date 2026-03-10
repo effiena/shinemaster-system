@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<y
+!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -13,49 +14,37 @@
         color: #fff;
     }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #111; /* dark background for contrast */
-    display: flex;
-    justify-content: center;  /* horizontal center */
-    align-items: flex-start;  /* vertical alignment at top */
-    min-height: 100vh;
-}
-
-.page-wrapper {
-    width: 100%;
-    max-width: 480px;     /* keeps form compact on large screens */
-    padding: 20px;
-    text-align: center;   /* centers text inside */
-}
-
-.glow-box-wrapper {
-    margin-top: 40px;    /* adds space at the top */
-    margin-bottom: 20px; /* keeps space below the box */
-}
-
 .glow-box {
-    display: inline-block;
-    text-align: center;
-    font-size: 20px;
+    display: inline-block;           /* box wraps tightly around text */
+    text-align: center;              /* center text */
+    font-size: 20px;                 /* adjust font size */
     font-weight: bold;
-    color: #fff;
-    background: rgba(106, 27, 154, 0.5); /* semi-transparent purple */
-    padding: 6px 16px;
-    border-radius: 8px;
-    box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
+    color: #fff;                     /* white font */
+    background: rgba(106, 27, 154, 0.5); /* semi-transparent purple (water-like) */
+    padding: 6px 16px;               /* smaller padding */
+    border-radius: 8px;              /* rounded corners */
+    box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A; /* glow */
     animation: pulseGlow 1.8s infinite alternate;
+    margin: 0 auto;                  /* center horizontally */
+}
+
+/* Center wrapper if needed */
+.glow-box-wrapper {
+    text-align: center;
 }
 
 /* Glowing pulse animation */
 @keyframes pulseGlow {
-    0% { box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A; }
-    50% { box-shadow: 0 0 8px #fff, 0 0 16px #FFD700, 0 0 22px #6A1B9A; }
-    100% { box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A; }
+    0% {
+        box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
+    }
+    50% {
+        box-shadow: 0 0 8px #fff, 0 0 16px #FFD700, 0 0 22px #6A1B9A;
+    }
+    100% {
+        box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
+    }
 }
-
 
 
 
