@@ -522,12 +522,12 @@ def booking():
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-
     car_plate = request.form["car_plate"].upper()
     service = request.form["service_type"]
     date = request.form["booking_date"]
     time = request.form["booking_time"]
     contact = request.form["contact"]
+    car_type = request.form.get("car_type", "-")
 
     conn = get_db_connection()
 
@@ -541,27 +541,29 @@ def create_booking():
         conn.close()
         return "This time slot is full. Please choose another."
 
-    conn.execute("""
+    # insert booking
+    cur = conn.cursor()
+    cur.execute("""
         INSERT INTO bookings
         (car_plate, service_type, booking_date, booking_time, contact)
         VALUES (?,?,?,?,?)
-    """,(car_plate,service,date,time,contact))
-
+    """,(car_plate, service, date, time, contact))
+    booking_id = cur.lastrowid  # get auto-increment ID
     conn.commit()
     conn.close()
 
-    return "Booking Confirmed!"
-
-@app.route("/booking_confirmed")
-def booking_confirmed():
+    # ✅ Prepare booking info dictionary
     booking_data = {
-        "car_plate": "HKO90",
-        "service": "CAR WASH - BASIC",
-        "date": "2026-03-10",
-        "time": "10:30",
-        "contact": "018-2096907",
-        "booking_id": "BK20260310001"
+        "car_plate": car_plate,
+        "service": service,
+        "car_type": car_type,
+        "date": date,
+        "time": time,
+        "contact": contact,
+        "booking_id": f"BK{datetime.now().strftime('%Y%m%d')}{booking_id:03d}"
     }
+
+    # Render the booking confirmed page
     return render_template("booking_confirmed.html", booking=booking_data)
 
 @app.route("/booking_admin")
