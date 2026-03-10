@@ -209,6 +209,10 @@ def pos():
 
         print("Saving sale:", invoice, car_plate, price, date)
 
+	# Example: deduct 1 unit of wax per car service
+        item_used_id = 1  # get the inventory id of the item used
+        update_inventory_stock(item_used_id, -1, ref=invoice, type="OUT")
+
         # Insert into sales table
         conn.execute("""
             INSERT INTO sales
@@ -489,8 +493,77 @@ def inventory():
     items = cursor.fetchall()
     conn.close()
 
+    LOW_STOCK_THRESHOLD = 5
+    low_stock_items = [i for i in items if i["quantity"] <= LOW_STOCK_THRESHOLD]
+
+    return render_template("inventory.html", items=items, low_stock_items=low_stock_items)
+
     # Render template with items
     return render_template("inventory.html", items=items)
+
+
+def init_inventory_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    
+    # Add new columns if not exist
+    try:
+        c.execute("ALTER TABLE inventory ADD COLUMN serial_number TEXT")
+        c.execute("ALTER TABLE inventory ADD COLUMN category TEXT")
+        c.execute("ALTER TABLE inventory ADD COLUMN unit TEXT")
+        c.execute("ALTER TABLE inventory ADD COLUMN last_updated TIMESTAMP")
+    except:
+        pass  # columns already exist
+    
+    # Create inventory log table
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS inventory_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            inventory_id INTEGER,
+            change INTEGER,
+            type TEXT,
+            reference TEXT,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    conn.commit()
+    conn.close()
+
+init_inventory_db()
+
+@app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
+def edit_inventory(id):
+    if session.get("role") != "admin":
+        return "Admin only"
+    
+    conn = get_db_connection()
+    item = conn.execute("SELECT * FROM inventory WHERE id=?", (id,)).fetchone()
+    
+    if request.method == "POST":
+        conn.execute("""
+            UPDATE inventory
+            SET item=?, company=?, phone=?, address=?, purchase_date=?,
+                quantity=?, price=?, category=?, unit=?, last_updated=CURRENT_TIMESTAMP
+            WHERE id=?
+        """, (
+            request.form["item"],
+            request.form["company"],
+            request.form["phone"],
+            request.form["address"],
+            request.form["purchase_date"],
+            request.form["quantity"],
+            request.form["price"],
+            request.form.get("category",""),
+            request.form.get("unit",""),
+            id
+        ))
+        conn.commit()
+        conn.close()
+        return redirect("/inventory")
+    
+    conn.close()
+    return render_template("edit_inventory.html", item=item)
 
 @app.route("/delete_inventory/<int:id>")
 def delete_inventory(id):
@@ -507,6 +580,21 @@ def delete_inventory(id):
 
     return redirect("/inventory")
 
+def update_inventory_stock(item_id, change, ref="", type="OUT"):
+    conn = get_db_connection()
+    conn.execute("""
+        INSERT INTO inventory_log (inventory_id, change, type, reference)
+        VALUES (?, ?, ?, ?)
+    """, (item_id, change, type, ref))
+    
+    # Update main inventory quantity
+    conn.execute("""
+        UPDATE inventory SET quantity = quantity + ?, last_updated=CURRENT_TIMESTAMP
+        WHERE id=?
+    """, (change, item_id))
+    
+    conn.commit()
+    conn.close()
 
 def generate_timeslots():
 
