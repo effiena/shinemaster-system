@@ -167,6 +167,20 @@ Thank You For Your Supports!<br>
 Hope To See You Again 🚗
 </p>
 
+<div style="text-align:center;margin-top:20px">
+
+<b>BOOK YOUR NEXT SERVICE</b><br>
+
+{% if order %}
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://shinemaster-system-production.up.railway.app/booking?plate={{order.car_plate}}">
+{% elif sale %}
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://shinemaster-system-production.up.railway.app/booking?plate={{sale.car_plate}}">
+{% endif %}
+
+<p>Scan to reserve your time slot 🚗</p>
+
+</div>
+
 <div class="buttons no-print">
 
 <button onclick="printLocal()">Print (PC)</button>
@@ -189,6 +203,7 @@ New Order
 </a>
 
 </div>
+
 
 <script>
 
