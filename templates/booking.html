@@ -72,9 +72,9 @@
 <body>
     <div class="container">
         <h2>Book Your Wash</h2>
-        <form action="/submit_booking" method="POST">
+            <form action="{{ url_for('create_booking') }}" method="POST">        
             <label>Car Plate</label>
-            <input type="text" name="car_plate" value="{{ plate }}" readonly>
+            <input type="text" name="car_plate" value="{{ plate }}" {% if plate %} readonly {% endif %} placeholder="Enter Car Plate" required>
 
             <label>Choose Service</label>
             <select name="service_type" required>
@@ -88,7 +88,7 @@
                 {% for slot in timeslots %}
                     <div class="timeslot" onclick="selectSlot(this)">
                         {{ slot }}
-                        <input type="radio" name="time_slot" value="{{ slot }}" style="display:none;" required>
+                    <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required>
                     </div>
                 {% endfor %}
             </div>
