@@ -223,6 +223,36 @@ button:hover {
     .checkmark { font-size: 50px; }
     button { font-size: 14px; padding: 10px; }
 }
+
+/* ===== Glowing Gold Checkmark ===== */
+.checkmark {
+    font-size: 120px; /* bigger */
+    color: #FFD700; /* gold */
+    text-shadow: 
+        0 0 20px #FFD700, 
+        0 0 40px #FFDF80, 
+        0 0 60px #FFD700, 
+        0 0 80px #FFD700, 
+        0 0 100px #FFD700;
+    animation: pulseCheck 2s infinite alternate, sparkle 3s infinite linear;
+    margin-bottom: 40px;
+}
+
+/* Pulse animation for glow */
+@keyframes pulseCheck {
+    0% { transform: scale(1); text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
+    50% { transform: scale(1.15); text-shadow: 0 0 40px #FFD700,0 0 80px #FFDF80,0 0 120px #FFD700; }
+    100% { transform: scale(1); text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
+}
+
+/* Optional subtle sparkle effect */
+@keyframes sparkle {
+    0%,100% { text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
+    25% { text-shadow: 0 0 30px #FFD700,0 0 60px #FFDF80,0 0 90px #FFD700; }
+    50% { text-shadow: 0 0 50px #FFD700,0 0 100px #FFDF80,0 0 150px #FFD700; }
+    75% { text-shadow: 0 0 30px #FFD700,0 0 60px #FFDF80,0 0 90px #FFD700; }
+}
+
 </style>
 </head>
 <body>
