@@ -10,10 +10,6 @@ import os
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 socketio = SocketIO(app)
-now = datetime.now()
-
-date = now.strftime("%Y-%m-%d")
-time = now.strftime("%H:%M:%S")
 
 
 COMPANY_INFO = {
@@ -129,21 +125,38 @@ def get_latest_sales():
     return sales
 
 # POS page
+
 @app.route("/pos", methods=["GET", "POST"])
 def pos():
+
     if "username" not in session:
         return redirect("/login")
 
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     services = conn.execute("SELECT * FROM services").fetchall()
 
     if request.method == "POST":
+
         invoice = f"INV{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        car_plate = request.form["car_plate"]
+
+        car_plate = request.form["car_plate"].replace(" ","").upper()
         car_type = request.form["car_type"]
         service_type = request.form["service_type"]
         payment_method = request.form["payment_method"]
         price = float(request.form["price"])
+
+        order = {
+            "car_plate": car_plate,
+            "car_type": car_type,
+            "service_type": service_type,
+            "payment_method": payment_method,
+            "price": price
+        }
+
+        # ⭐ Run loyalty system
+        order = process_loyalty(order)
+
         date = datetime.now().strftime("%Y-%m-%d")
         time = datetime.now().strftime("%H:%M:%S")
 
@@ -151,15 +164,32 @@ def pos():
             INSERT INTO sales
             (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (invoice, car_plate, car_type, service_type, payment_method, price, date, time))
+        """, (
+            invoice,
+            order["car_plate"],
+            order["car_type"],
+            order["service_type"],
+            order["payment_method"],
+            order["price"],
+            date,
+            time
+        ))
 
         conn.commit()
         conn.close()
 
-        socketio.emit("update_dashboard")
-        return redirect(f"/receipt/{invoice}")
+        order["invoice_no"] = invoice
+        order["date"] = date
+        order["time"] = time
 
+        socketio.emit("update_dashboard")
+
+        return render_template("receipt.html", order=order)
+
+    # ⭐ GET request loads POS page
+    conn.close()
     return render_template("new_order.html", services=services)
+
 # -----------------------------
 # Loyalty Logic
 # -----------------------------
@@ -198,22 +228,40 @@ def process_loyalty(order):
 
     return order
 
+
 @app.route("/create_order", methods=["POST"])
 def create_order():
-    car_plate = request.form["car_plate"].upper()
-    car_type = request.form.get("car_type", "-")
+
+    from datetime import datetime
+
+    invoice = "INV" + datetime.now().strftime("%Y%m%d%H%M%S")
+
+    car_plate = request.form["car_plate"]
+    car_type = request.form.get("car_type","-")
     service_type = request.form["service_type"]
-    price = float(request.form["price"])
     payment_method = request.form["payment_method"]
+    price = float(request.form["price"])
+
+    now = datetime.now()
+    date = now.strftime("%d-%m-%Y")
+    time = now.strftime("%H:%M")
 
     order = {
+        "invoice_no": invoice,
+        "date": date,
+        "time": time,
+        "id": 1,
         "car_plate": car_plate,
         "car_type": car_type,
         "service_type": service_type,
-        "price": price,
         "payment_method": payment_method,
-        "loyalty_status": "Not Eligible"
+        "price": price,
+        "loyalty_count": 1,
+        "loyalty_eligible": False,
+        "loyalty_free": False
     }
+
+    return render_template("receipt.html", order=order)
 
     order = process_loyalty(order)
 
@@ -348,7 +396,9 @@ def dashboard_data():
 def receipt(invoice):
 
     conn = get_db_connection()
-
+    now = datetime.now()
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
     sale = conn.execute(
     "SELECT * FROM sales WHERE invoice=?",
     (invoice,)).fetchone()
