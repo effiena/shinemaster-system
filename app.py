@@ -232,7 +232,7 @@ def process_loyalty(order):
 # -----------------------------
 @app.route("/create_order", methods=["POST"])
 def create_order():
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Asia/Kuala_Lumpur"))
     date = now.strftime("%Y-%m-%d")
     time = now.strftime("%H:%M:%S")
 
