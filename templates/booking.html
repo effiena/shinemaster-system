@@ -1,108 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Your Wash</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 480px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            color: #4b0082;
-        }
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        input[type=text], select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-        .timeslots {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-        .timeslot {
-            padding: 10px 12px;
-            margin: 5px;
-            border-radius: 6px;
-            border: 1px solid #4b0082;
-            cursor: pointer;
-            color: #4b0082;
-            font-weight: bold;
-        }
-        .timeslot.selected {
-            background-color: #4b0082;
-            color: white;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            background-color: #4b0082;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #6a00b8;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master Solution - Book Your Service</title>
+<style>
+    /* ===== Body & Background ===== */
+    body {
+        font-family: Arial, sans-serif;
+        background: #000; /* Black background */
+        margin:0; padding:0;
+        color: #fff;
+    }
+
+    /* ===== Container Card ===== */
+    .container {
+        max-width: 480px;
+        margin: 20px auto;
+        background:#1a1a1a; /* Dark grey/black card */
+        padding:20px;
+        border-radius:12px;
+        border: 2px solid #ffeb3b; /* Yellow border */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+        text-align:center;
+        color:#9c27b0; /* Shine Master purple */
+        margin-bottom:20px;
+    }
+
+    label {
+        display:block;
+        margin-top:15px;
+        font-weight:bold;
+        color:#ffeb3b; /* Yellow labels */
+    }
+
+    input[type=text], select {
+        width:100%;
+        padding:10px;
+        margin-top:5px;
+        border-radius:6px;
+        border:1px solid #9c27b0;
+        background: #222;
+        color: #fff;
+    }
+
+    input[type=text]::placeholder {
+        color: #ccc;
+    }
+
+    /* ===== Timeslots ===== */
+    .timeslots {
+        display:flex;
+        flex-wrap:wrap;
+        margin-top:10px;
+    }
+
+    .timeslot {
+        padding:10px 12px;
+        margin:5px;
+        border-radius:6px;
+        border:1px solid #9c27b0;
+        cursor:pointer;
+        color:#9c27b0;
+        font-weight:bold;
+    }
+
+    .timeslot.selected {
+        background-color:#9c27b0;
+        color:white;
+        border-color:#ffeb3b;
+    }
+
+    /* ===== Price Box ===== */
+    .price-box {
+        margin-top:20px;
+        font-size:24px;
+        font-weight:bold;
+        color:#ffeb3b;
+        text-align:center;
+        background-color:#222;
+        padding:12px;
+        border-radius:10px;
+        border:1px solid #9c27b0;
+    }
+
+    /* ===== Buttons ===== */
+    button {
+        width:100%;
+        padding:12px;
+        margin-top:20px;
+        background: linear-gradient(90deg,#9c27b0,#ffeb3b);
+        border:none;
+        border-radius:6px;
+        color:black;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+        transition:0.3s;
+    }
+
+    button:hover {
+        background: linear-gradient(90deg,#ffeb3b,#9c27b0);
+        transform: translateY(-2px);
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+        text-align:center;
+        font-size:12px;
+        margin-top:15px;
+        color:#ccc;
+    }
+
+</style>
 </head>
 <body>
-    <div class="container">
-        <h2>Book Your Wash</h2>
-            <form action="{{ url_for('create_booking') }}" method="POST">        
-            <label>Car Plate</label>
-            <input type="text" name="car_plate" value="{{ plate }}" {% if plate %} readonly {% endif %} placeholder="Enter Car Plate" required>
+<div class="container">
+<h2>Shine Master Solution</h2>
+<form action="/create_booking" method="POST">
 
-            <label>Choose Service</label>
-            <select name="service_type" required>
-                {% for service in services %}
-                    <option value="{{ service['name'] }}">{{ service['name'] }} - RM {{ service['price'] }}</option>
-                {% endfor %}
-            </select>
+    <label>Car Plate</label>
+    <input type="text" name="car_plate" value="{{ plate }}" required>
 
-            <label>Pick a Time Slot</label>
-            <div class="timeslots">
-                {% for slot in timeslots %}
-                    <div class="timeslot" onclick="selectSlot(this)">
-                        {{ slot }}
-                    <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required>
-                    </div>
-                {% endfor %}
+    <label>Car Type</label>
+    <select name="car_type" id="car_type" onchange="calculatePrice()" required>
+        <option value="Sedan">Sedan</option>
+        <option value="SUV_MPV">SUV / MPV</option>
+        <option value="LARGE-MPV_4X4">LARGE-MPV / 4X4</option>
+    </select>
+
+    <label>Service Type</label>
+    <select name="service_type" id="service_type" onchange="calculatePrice()" required>
+        <optgroup label="CAR WASH">
+            <option value="wash_basic">CAR WASH - BASIC</option>
+            <option value="wash_special">CAR WASH - SPECIAL</option>
+            <option value="wash_maintain">CAR WASH - MAINTENANCE</option>
+        </optgroup>
+        <optgroup label="POLISHING">
+            <option value="coat1">COATING - 1 YEAR</option>
+            <option value="coat2">COATING - 2 YEAR</option>
+            <option value="coat3">COATING - 3 YEAR</option>
+            <option value="disp2">DISPOSABLE - 2 YEAR</option>
+            <option value="disp3">DISPOSABLE - 3 YEAR</option>
+            <option value="wax">WAXING</option>
+        </optgroup>
+        <optgroup label="INTERIOR">
+            <option value="int_detail">INTERIOR DETAILING</option>
+            <option value="int_coat">INTERIOR COATING</option>
+        </optgroup>
+    </select>
+
+    <label>Pick a Date</label>
+    <input type="date" name="booking_date" required min="{{ current_date }}">
+
+    <label>Pick a Time Slot</label>
+    <div class="timeslots">
+        {% for slot in timeslots %}
+            <div class="timeslot" onclick="selectSlot(this)">
+                {{ slot }}
+                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required>
             </div>
-
-            <button type="submit">Confirm Booking</button>
-        </form>
+        {% endfor %}
     </div>
 
-    <script>
-        function selectSlot(element) {
-            document.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            element.querySelector('input[type=radio]').checked = true;
-        }
-    </script>
+    <label>Contact Number</label>
+    <input type="text" name="contact" placeholder="e.g 018-1234567" required>
+
+    <button type="submit">Confirm Booking</button>
+</form>
+
+<div class="footer">
+    @Shine Master Solution - Powered by AsliTech
+</div>
+</div>
+
+<script>
+const priceTable = {
+wash_basic: { Sedan:20, SUV_MPV:24, "LARGE-MPV_4X4":28 },
+wash_special: { Sedan:48, SUV_MPV:58, "LARGE-MPV_4X4":68 },
+wash_maintain: { Sedan:98, SUV_MPV:108, "LARGE-MPV_4X4":118 },
+coat1: { Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688 },
+coat2: { Sedan:688, SUV_MPV:788, "LARGE-MPV_4X4":888 },
+coat3: { Sedan:888, SUV_MPV:988, "LARGE-MPV_4X4":1088 },
+disp2: { Sedan:588, SUV_MPV:688, "LARGE-MPV_4X4":788 },
+disp3: { Sedan:788, SUV_MPV:888, "LARGE-MPV_4X4":988 },
+wax: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 },
+int_detail: { Sedan:188, SUV_MPV:288, "LARGE-MPV_4X4":388 },
+int_coat: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 }
+};
+
+function calculatePrice() {
+    const service = document.getElementById("service_type").value
+    const carType = document.getElementById("car_type").value
+    const priceDisplay = document.getElementById("price_display")
+    const hiddenPrice = document.getElementById("price")
+    if(service && carType && priceTable[service]){
+        const price = priceTable[service][carType]
+        priceDisplay.textContent = price.toFixed(2)
+        hiddenPrice.value = price
+    } else {
+        priceDisplay.textContent = "0.00"
+        hiddenPrice.value = 0
+    }
+}
+
+function selectSlot(el){
+    document.querySelectorAll('.timeslot').forEach(x => x.classList.remove('selected'))
+    el.classList.add('selected')
+    el.querySelector('input[type=radio]').checked = true
+}
+
+document.addEventListener("DOMContentLoaded", calculatePrice)
+</script>
 </body>
 </html>
