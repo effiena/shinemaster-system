@@ -1,5 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for
 import sqlite3
@@ -803,3 +801,14 @@ def logout():
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
+
+    # Use gevent for WebSocket support
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+
+    print("Starting Shine Master Solution server with Gevent...")
+    pywsgi.WSGIServer(
+        ("0.0.0.0", 8080), 
+        app, 
+        handler_class=WebSocketHandler
+    ).serve_forever()
