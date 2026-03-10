@@ -22,7 +22,7 @@ body {
 @keyframes shimmer {
     0% {background-position: -500px 0;}
     100% {background-position: 500px 0;}
-
+}
 body::before {
     content: '';
     position: absolute;
@@ -39,56 +39,13 @@ body::before {
     position: relative;
     z-index: 1;
     text-align: center;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
     padding: 30px 40px;
     border-radius: 20px;
-    max-width: 420px;
-    overflow: hidden;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+    max-width: 400px;
 }
-
-/* rotating glowing border */
-.container::before {
-    content: "";
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    top: -50%;
-    left: -50%;
-    background: conic-gradient(
-        transparent,
-        #FFD700,
-        transparent,
-        #6A1B9A,
-        transparent
-    );
-    animation: rotateBorder 6s linear infinite;
-}
-
-/* inner layer so content stays clean */
-.container::after {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    background: rgba(0,0,0,0.85);
-    border-radius: 18px;
-    z-index: -1;
-}
-
-/* animation */
-@keyframes rotateBorder {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-
-
-
-
 
 /* ===== Title ===== */
 h1 {
@@ -182,6 +139,7 @@ button:hover { opacity:0.9; transform:scale(1.05); }
         <p><strong>Booking ID:</strong> {{ booking['booking_id'] }}</p>
     </div>
     <div class="checkmark">✔️</div>
+    <button onclick="window.location.href='/home'">Return Home</button>
 </div>
 
 <!-- Fireworks container -->
