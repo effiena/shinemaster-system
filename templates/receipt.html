@@ -7,24 +7,19 @@
 
 body{
     font-family: monospace;
-    width:210px;
+    width:180px;
     margin:auto;
-    font-size:20px;
+    font-size:14px;
 }
 
-.company-name{
-    font-size:26px;
-    font-weight:bold;
+.company{
     text-align:center;
-    margin-bottom:4px;
+    font-weight:bold;
+    font-size:18px;
 }
 
 .center{
     text-align:center;
-}
-
-.right{
-    text-align:right;
 }
 
 .line{
@@ -35,7 +30,7 @@ body{
     float:left;
 }
 
-.righttext{
+.right{
     float:right;
 }
 
@@ -45,11 +40,6 @@ body{
 
 hr{
     border-top:1px dashed black;
-    margin:6px 0;
-}
-
-p{
-    margin:3px 0;
 }
 
 .buttons{
@@ -59,13 +49,13 @@ p{
 
 @media print{
 
-    .no-print{
-        display:none;
-    }
+.no-print{
+display:none;
+}
 
-    body{
-        width:210px;
-    }
+body{
+width:180px;
+}
 
 }
 
@@ -74,70 +64,101 @@ p{
 
 <body>
 
+<div class="company">
+SHINE MASTER SOLUTION<br>
+</div>
+
 <div class="center">
-
-<div class="company-name">SHINE MASTER SOLUTION</div>
-
+-----------------<br>
+Reg.no:202603063234<br>
+   (SA0650100-H)<br>
 No.68 Jalan Putra 1<br>
 Taman Tan Sri Yaacob<br>
 81300 Skudai, Johor<br>
 Tel: +6018-2096907
-
 </div>
 
 <hr>
 
-<p><strong>Invoice:</strong> {{ order["invoice_no"] }}</p>
-<p><strong>Date:</strong> {{ order["date"] }}</p>
-<p><strong>Time:</strong> {{ order["time"] }}</p>
-<p><strong>Order:</strong> {{ order["id"] }}</p>
+<div class="line">
+<span class="left">Invoice</span>
+<span class="right">{{ order["invoice_no"] }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Date</span>
+<span class="right">{{ order["date"] }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Time</span>
+<span class="right">{{ order["time"] }}</span>
+<div class="clear"></div>
+</div>
+
+<div class="line">
+<span class="left">Order</span>
+<span class="right">#00{{ order["id"] }}</span>
+<div class="clear"></div>
+</div>
 
 <hr>
 
 <div class="line">
 <span class="left">Car Plate</span>
-<span class="righttext">{{ order["car_plate"] }}</span>
+<span class="right">{{ order["car_plate"] }}</span>
 <div class="clear"></div>
 </div>
 
 <div class="line">
 <span class="left">Car Type</span>
-<span class="righttext">{{ order.get("car_type","-") }}</span>
+<span class="right">{{ order.get("car_type","-") }}</span>
 <div class="clear"></div>
 </div>
 
 <div class="line">
 <span class="left">Service</span>
-<span class="righttext">{{ order["service_type"] }}</span>
+<span class="right">{{ order["service_type"] }}</span>
 <div class="clear"></div>
 </div>
 
 <div class="line">
 <span class="left">Payment</span>
-<span class="righttext">{{ order["payment_method"] }}</span>
+<span class="right">{{ order["payment_method"] }}</span>
 <div class="clear"></div>
 </div>
 
 <hr>
 
+<div class="line">
+<span class="left"><strong>Total</strong></span>
+<span class="right"><strong>RM {{ "%.2f"|format(order["price"]) }}</strong></span>
+<div class="clear"></div>
+</div>
+
+<hr>
+
+<p><strong>Loyalty Status</strong></p>
+
 {% if order["loyalty_free"] %}
-<p><strong>Loyalty Status:</strong></p>
+
 <p class="center">
-🎉 Congratulations!<br>
-*** FREE WASH TODAY ***
+🎉 FREE WASH TODAY 🎉
 </p>
-<p class="center">Paid Washes: 0 / 5</p>
 
 {% elif order["loyalty_eligible"] %}
-<p><strong>Loyalty Status:</strong></p>
-<p>Eligible for Free Wash 🎉</p>
-<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
+
+<p>Eligible for Free Wash</p>
 
 {% else %}
-<p><strong>Loyalty Status:</strong></p>
+
 <p>Not Eligible Yet</p>
-<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
+
 {% endif %}
+
+<p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
 
 <hr>
 
@@ -148,11 +169,11 @@ Hope To See You Again 🚗
 
 <div class="buttons no-print">
 
-<button onclick="printLocal()">Print (PC Printer)</button>
+<button onclick="printLocal()">Print (PC)</button>
 
 <br><br>
 
-<button onclick="sendBluetooth()">Print (Bluetooth)</button>
+<button onclick="printBluetooth()">Bluetooth Print</button>
 
 <br><br>
 
@@ -171,73 +192,48 @@ New Order
 
 <script>
 
-// ---------- LOCAL PRINTER ----------
 function printLocal(){
     window.print();
 }
 
 
-// ---------- BLUETOOTH PRINTER ----------
-async function printBluetooth(receipt){
+// Simple Bluetooth print (Android)
 
-    try{
+function printBluetooth(){
 
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
-        });
-
-        const server = await device.gatt.connect();
-
-        const service = await server.getPrimaryService(
-            '000018f0-0000-1000-8000-00805f9b34fb'
-        );
-
-        const characteristic = await service.getCharacteristic(
-            '00002af1-0000-1000-8000-00805f9b34fb'
-        );
-
-        const encoder = new TextEncoder();
-
-        await characteristic.writeValue(
-            encoder.encode(receipt)
-        );
-
-    }catch(error){
-        alert("Bluetooth printer failed: " + error);
-    }
-
-}
-
-
-function sendBluetooth(){
-
-let receipt = '
+let receipt = `
 SHINE MASTER SOLUTION
-No.68 Jalan Putra 1,
-Taman Tan Sri Yaacob,
-81300 Skudai, Johor
-Tel/Whatsapp: +6018-2096907
-----------------------
+---------------------
+Reg.no:202603063234
+   (SA0650100-H)
+---------------------
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
 Time: {{ order["time"] }}
 
 Car Plate: {{ order["car_plate"] }}
-Car Type: {{ order.get("car_type","-") }}
 Service: {{ order["service_type"] }}
 
-Payment: {{ order["payment_method"] }}
 Total: RM {{ "%.2f"|format(order["price"]) }}
 
 Paid Wash: {{ order["loyalty_count"] }}/5
-
-
-For Every 5th Visit,Eligible for ** Free Wash **
-Paid Washes: {{ order["loyalty_count"] }} / 5
-Thank You For Your Supports, Hope To See You Again!!
+Thank You For Your Supports,Hope To See You Again, (^^,)b
 `;
-printBluetooth(receipt);
+
+let url = "rawbt://print?text=" + encodeURIComponent(receipt);
+
+window.location.href = url;
+
+}
+
+
+// Auto print when receipt opens
+
+window.onload = function(){
+
+setTimeout(function(){
+window.print();
+},500);
 
 }
 
