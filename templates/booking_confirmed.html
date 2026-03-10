@@ -18,7 +18,7 @@ body {
     overflow: hidden;
 }
 
-/* ===== Shimmer Animation for Background ===== */
+/* ===== Shimmer Animation ===== */
 @keyframes shimmer {
     0% {background-position: -500px 0;}
     100% {background-position: 500px 0;}
@@ -34,7 +34,7 @@ body::before {
     z-index:0;
 }
 
-/* ===== Main Container ===== */
+/* ===== Container ===== */
 .container {
     position: relative;
     z-index: 1;
@@ -47,119 +47,17 @@ body::before {
     max-width: 400px;
 }
 
-/* ===== Animated Glow Title ===== */
+/* ===== Title ===== */
 h1 {
-    font-size: 28px;
+    font-size: 32px;
     color: #FFD700;
     text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700;
     margin-bottom: 25px;
     animation: pulseTitle 2s infinite alternate;
 }
 @keyframes pulseTitle {
-    0% { text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700; }
-    100% { text-shadow: 0 0 20px #FFD700, 0 0 35px #FFDF80, 0 0 50px #FFD700; }
-}
-
-body {
-    overflow-y: auto;   /* allow vertical scrolling */
-}
-
-@media screen and (max-width: 480px) {
-    .container {
-        padding: 20px;
-        width: 90%;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .container {
-        padding: 20px;
-        width: 90%;
-    }
-}
-
-/* ===== Booking Card ===== */
-.card {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Booking Confirmed</title>
-<style>
-/* ===== Body Background ===== */
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1a001a, #330033);
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    overflow: hidden;
-}
-
-/* ===== Shimmer Animation for Background ===== */
-@keyframes shimmer {
-    0% {background-position: -500px 0;}
-    100% {background-position: 500px 0;}
-}
-body::before {
-    content: '';
-    position: absolute;
-    top:0; left:0;
-    width:100%; height:100%;
-    background: linear-gradient(120deg, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 70%);
-    background-size: 1000px 100%;
-    animation: shimmer 6s infinite linear;
-    z-index:0;
-}
-
-/* ===== Main Container ===== */
-.container {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    padding: 30px 40px;
-    border-radius: 20px;
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
-    max-width: 400px;
-}
-
-/* ===== Animated Glow Title ===== */
-h1 {
-    font-size: 28px;
-    color: #FFD700;
-    text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700;
-    margin-bottom: 25px;
-    animation: pulseTitle 2s infinite alternate;
-}
-@keyframes pulseTitle {
-    0% { text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700; }
-    100% { text-shadow: 0 0 20px #FFD700, 0 0 35px #FFDF80, 0 0 50px #FFD700; }
-}
-
-body {
-    overflow-y: auto;   /* allow vertical scrolling */
-}
-
-@media screen and (max-width: 480px) {
-    .container {
-        padding: 20px;
-        width: 90%;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .container {
-        padding: 20px;
-        width: 90%;
-    }
+    0% { text-shadow: 0 0 10px #FFD700,0 0 20px #FFDF80,0 0 30px #FFD700; }
+    100% { text-shadow: 0 0 20px #FFD700,0 0 35px #FFDF80,0 0 50px #FFD700; }
 }
 
 /* ===== Booking Card ===== */
@@ -170,32 +68,22 @@ body {
     margin-bottom: 25px;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
-.card p {
-    margin: 10px 0;
-    font-size: 18px;
+.card p, .card p strong, .card p a {
+    color: #fff !important;
 }
 
-.card p, .card p strong {
-    color: #fff !important; /* All text white */
-}
-
-.card p a {
-    color: #fff !important; /* Contact links white */
-    text-decoration: none;
-}
-
-/* ===== Glowing Checkmark ===== */
+/* ===== Checkmark ===== */
 .checkmark {
-    font-size: 60px;
+    font-size: 120px;
     color: #FFD700;
-    text-shadow: 0 0 15px #FFD700, 0 0 30px #FFDF80, 0 0 45px #FFD700;
-    animation: pulseCheck 1.8s infinite alternate;
-    margin-bottom: 25px;
+    text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700;
+    animation: pulseCheck 2s infinite alternate;
+    margin-bottom: 40px;
 }
 @keyframes pulseCheck {
-    0% { text-shadow: 0 0 15px #FFD700, 0 0 30px #FFDF80, 0 0 45px #FFD700; transform: scale(1); }
-    50% { text-shadow: 0 0 25px #FFD700, 0 0 50px #FFDF80, 0 0 70px #FFD700; transform: scale(1.1); }
-    100% { text-shadow: 0 0 15px #FFD700, 0 0 30px #FFDF80, 0 0 45px #FFD700; transform: scale(1); }
+    0% { transform: scale(1); text-shadow:0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
+    50% { transform: scale(1.2); text-shadow:0 0 40px #FFD700,0 0 80px #FFDF80,0 0 120px #FFD700; }
+    100% { transform: scale(1); text-shadow:0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
 }
 
 /* ===== Button ===== */
@@ -210,105 +98,36 @@ button {
     box-shadow: 0 0 10px #FFD700;
     transition: all 0.3s ease;
 }
-button:hover {
-    opacity: 0.9;
-    transform: scale(1.05);
-}
+button:hover { opacity:0.9; transform:scale(1.05); }
 
-/* ===== Responsive ===== */
-@media screen and (max-width: 400px) {
-    .container { padding: 25px; }
-    h1 { font-size: 24px; }
-    .card p { font-size: 16px; }
-    .checkmark { font-size: 50px; }
-    button { font-size: 14px; padding: 10px; }
-}
-
-/* ===== Glowing Gold Checkmark ===== */
-.checkmark {
-    font-size: 120px; /* bigger */
-    color: #FFD700; /* gold */
-    text-shadow: 
-        0 0 20px #FFD700, 
-        0 0 40px #FFDF80, 
-        0 0 60px #FFD700, 
-        0 0 80px #FFD700, 
-        0 0 100px #FFD700;
-    animation: pulseCheck 2s infinite alternate, sparkle 3s infinite linear;
-    margin-bottom: 40px;
-}
-
-/* Pulse animation for glow */
-@keyframes pulseCheck {
-    0% { transform: scale(1); text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
-    50% { transform: scale(1.15); text-shadow: 0 0 40px #FFD700,0 0 80px #FFDF80,0 0 120px #FFD700; }
-    100% { transform: scale(1); text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
-}
-
-/* Optional subtle sparkle effect */
-@keyframes sparkle {
-    0%,100% { text-shadow: 0 0 20px #FFD700,0 0 40px #FFDF80,0 0 60px #FFD700; }
-    25% { text-shadow: 0 0 30px #FFD700,0 0 60px #FFDF80,0 0 90px #FFD700; }
-    50% { text-shadow: 0 0 50px #FFD700,0 0 100px #FFDF80,0 0 150px #FFD700; }
-    75% { text-shadow: 0 0 30px #FFD700,0 0 60px #FFDF80,0 0 90px #FFD700; }
-}
-
-
-/* ===== Fireworks Animation ===== */
+/* ===== Fireworks ===== */
 .fireworks {
-    position: relative;
+    position: fixed;
+    top: 0; left: 0;
     width: 100%;
-    height: 200px;
-    margin-top: 20px;
-    overflow: visible;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
 }
 
 .firework {
     position: absolute;
-    bottom: 0;
-    left: 50%;
     width: 8px;
     height: 8px;
     background: gold;
     border-radius: 50%;
-    animation: explode 1.5s ease-out infinite;
+    animation: explode 1.5s ease-out forwards;
 }
 
-.firework:nth-child(1) { left: 20%; animation-delay: 0s; }
-.firework:nth-child(2) { left: 40%; animation-delay: 0.3s; }
-.firework:nth-child(3) { left: 60%; animation-delay: 0.6s; }
-.firework:nth-child(4) { left: 80%; animation-delay: 0.9s; }
-.firework:nth-child(5) { left: 50%; animation-delay: 1.2s; }
-
+/* Explosion animation will be handled via JS for random sparks */
 @keyframes explode {
-    0% {
-        transform: translateY(0) scale(0.5);
-        opacity: 1;
-        box-shadow: 0 0 0 gold, 0 0 0 gold, 0 0 0 gold;
-    }
-    50% {
-        transform: translateY(-100px) scale(1.5);
-        box-shadow:
-            0 -30px 4px gold,
-            20px -20px 4px gold,
-            -20px -20px 4px gold,
-            30px 0px 4px gold,
-            -30px 0px 4px gold,
-            20px 20px 4px gold,
-            -20px 20px 4px gold,
-            0 30px 4px gold;
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-150px) scale(0.5);
-        opacity: 0;
-        box-shadow: 0 0 0 gold, 0 0 0 gold, 0 0 0 gold;
-    }
+    0% { transform: translate(0,0) scale(0.5); opacity:1; }
+    100% { transform: translate(var(--x), var(--y)) scale(1.5); opacity:0; }
 }
-
 </style>
 </head>
 <body>
+
 <div class="container">
     <h1>CONFIRMED BOOKING</h1>
     <div class="card">
@@ -321,13 +140,38 @@ button:hover {
     </div>
     <div class="checkmark">✔️</div>
 </div>
-<!-- Fireworks effect -->
-<div class="fireworks">
-    <div class="firework"></div>
-    <div class="firework"></div>
-    <div class="firework"></div>
-    <div class="firework"></div>
-    <div class="firework"></div>
-</div>
+
+<!-- Fireworks container -->
+<div class="fireworks" id="fireworks"></div>
+
+<script>
+// ===== Fireworks JS =====
+function createFirework() {
+    const fw = document.createElement('div');
+    fw.classList.add('firework');
+
+    // Random starting position
+    const startX = Math.random() * window.innerWidth;
+    const startY = window.innerHeight;
+    fw.style.left = `${startX}px`;
+    fw.style.bottom = `0px`;
+
+    // Random explosion directions
+    const x = (Math.random()-0.5)*300; // random left/right
+    const y = - (100 + Math.random()*300); // upward
+
+    fw.style.setProperty('--x', `${x}px`);
+    fw.style.setProperty('--y', `${y}px`);
+
+    document.getElementById('fireworks').appendChild(fw);
+
+    // Remove after animation
+    setTimeout(() => fw.remove(), 1500);
+}
+
+// Spawn fireworks every 300ms
+setInterval(createFirework, 300);
+</script>
+
 </body>
 </html>
