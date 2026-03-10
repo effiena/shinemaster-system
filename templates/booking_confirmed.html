@@ -82,6 +82,90 @@ body {
 .card {
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Confirmed</title>
+<style>
+/* ===== Body Background ===== */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1a001a, #330033);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* ===== Shimmer Animation for Background ===== */
+@keyframes shimmer {
+    0% {background-position: -500px 0;}
+    100% {background-position: 500px 0;}
+}
+body::before {
+    content: '';
+    position: absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 70%);
+    background-size: 1000px 100%;
+    animation: shimmer 6s infinite linear;
+    z-index:0;
+}
+
+/* ===== Main Container ===== */
+.container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+    max-width: 400px;
+}
+
+/* ===== Animated Glow Title ===== */
+h1 {
+    font-size: 28px;
+    color: #FFD700;
+    text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700;
+    margin-bottom: 25px;
+    animation: pulseTitle 2s infinite alternate;
+}
+@keyframes pulseTitle {
+    0% { text-shadow: 0 0 10px #FFD700, 0 0 20px #FFDF80, 0 0 30px #FFD700; }
+    100% { text-shadow: 0 0 20px #FFD700, 0 0 35px #FFDF80, 0 0 50px #FFD700; }
+}
+
+body {
+    overflow-y: auto;   /* allow vertical scrolling */
+}
+
+@media screen and (max-width: 480px) {
+    .container {
+        padding: 20px;
+        width: 90%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .container {
+        padding: 20px;
+        width: 90%;
+    }
+}
+
+/* ===== Booking Card ===== */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
     border-radius: 15px;
     margin-bottom: 25px;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
@@ -91,6 +175,13 @@ body {
     font-size: 18px;
 }
 
+/* Make all text in the card white, including auto-detected phone links */
+.card, 
+.card p, 
+.card p a {
+    color: #ffffff !important;
+    text-decoration: none;  /* remove underline from phone links */
+}
 /* ===== Glowing Checkmark ===== */
 .checkmark {
     font-size: 60px;
@@ -134,7 +225,13 @@ button:hover {
 </head>
 <body>
 <div class="container">
-    <h1>CONFIRMED BOOKING</h1>
+/* Make all text in the card white, including auto-detected phone links */
+.card, 
+.card p, 
+.card p a {
+    color: #ffffff !important;
+    text-decoration: none;  /* remove underline from phone links */
+}    <h1>CONFIRMED BOOKING</h1>
     <div class="card">
         <p><strong>Car Plate:</strong> {{ booking['car_plate'] }}</p>
         <p><strong>Service:</strong> {{ booking['service'] }}</p>
@@ -143,8 +240,6 @@ button:hover {
         <p><strong>Contact:</strong> {{ booking['contact'] }}</p>
         <p><strong>Booking ID:</strong> {{ booking['booking_id'] }}</p>
     </div>
-    <div class="checkmark">✔️</div>
-    <button onclick="window.location.href='/home'">Return Home</button>
 </div>
 </body>
 </html>
