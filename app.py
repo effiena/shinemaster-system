@@ -505,13 +505,19 @@ def booking():
     services = conn.execute("SELECT * FROM services").fetchall()
     conn.close()
 
-    timeslots = generate_timeslots()
 
+    timeslots = generate_timeslots()
+    
+    # ✅ Define current_date so the form can set min date
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    
     return render_template(
         "booking.html",
         services=services,
         timeslots=timeslots,
-        plate=plate
+        plate=plate,
+        current_date=current_date
+
     )
 
 @app.route("/create_booking", methods=["POST"])
