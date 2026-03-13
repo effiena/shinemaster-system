@@ -241,6 +241,42 @@ def pos():
     conn.close()
     return render_template("new_order.html", services=services)
 
+@app.route("/packages")
+def packages():
+    packages = [
+        {
+            "name": "Basic Wash",
+            "price": "RM15",
+            "details": [
+                "Exterior hand wash",
+                "Tyre cleaning",
+                "Quick dry"
+            ]
+        },
+        {
+            "name": "Premium Wash",
+            "price": "RM35",
+            "details": [
+                "Exterior wash",
+                "Interior vacuum",
+                "Dashboard wipe",
+                "Tyre shine"
+            ]
+        },
+        {
+            "name": "Full Detailing",
+            "price": "RM120",
+            "details": [
+                "Exterior deep wash",
+                "Interior detailing",
+                "Seat cleaning",
+                "Wax protection"
+            ]
+        }
+    ]
+
+    return render_template("packages.html", packages=packages)
+
 # -----------------------------
 # Loyalty Logic
 # -----------------------------
@@ -266,16 +302,6 @@ def process_loyalty(order):
     order["loyalty_eligible"] = paid_count >= 5
     order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
 
-    # Safe upsert
-    cur.execute("""
-        INSERT INTO loyalty (car_plate, paid_count)
-        VALUES (?, ?)
-        ON CONFLICT(car_plate) DO UPDATE SET paid_count=excluded.paid_count
-    """, (car_plate, paid_count))
-
-    conn.commit()
-    conn.close()
-    return order
 
 # -----------------------------
 # Create Order Route
