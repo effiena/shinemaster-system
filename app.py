@@ -1,11 +1,14 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, render_template, request, redirect, jsonify, session, url_for
+from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
 from flask_socketio import SocketIO
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import qrcode
+from io import BytesIO
+
 import os
 
 app = Flask(__name__)
@@ -331,6 +334,32 @@ def login():
 def logout():
     session.clear()
     return redirect("/login")
+
+# ========= LAUNCH PAGE =============
+@app.route('/launch_page')
+def launch_page():
+    return render_template('launch_page.html')
+
+# ==== QR-CODE ======
+@app.route('/qr_booking')
+def qr_booking():
+    booking_url = "https://shinemaster-system-production.up.railway.app/booking"
+
+    qr = qrcode.QRCode(
+        version=1,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(booking_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return send_file(buffer, mimetype="image/png")
 
 
 # ================= POS =================
