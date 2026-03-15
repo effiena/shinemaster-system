@@ -753,46 +753,54 @@ def add_inventory():
 
     return redirect("/inventory")
 
-
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
     if session.get("role") != "admin":
         return "Admin only"
 
     conn = get_db_connection()
-    item = conn.execute("SELECT * FROM inventory WHERE id=?", (id,)).fetchone()
+    conn.row_factory = sqlite3.Row
 
+    # Fetch the item
+    item = conn.execute("SELECT * FROM inventory WHERE id=?", (id,)).fetchone()
     if not item:
         conn.close()
         return "Item not found", 404
 
     if request.method == "POST":
-        conn.execute("""
-            UPDATE inventory
-            SET item=?, company=?, phone=?, address=?, purchase_date=?,
-                quantity=?, price=?, category=?, unit=?, serial_number=?, last_updated=?
-            WHERE id=?
-        """, (
-            request.form["item"],
-            request.form["company"],
-            request.form["phone"],
-            request.form["address"],
-            request.form["purchase_date"],
-            request.form["quantity"],
-            request.form["price"],
-            request.form.get("category", ""),
-            request.form.get("unit", ""),
-            request.form.get("serial_number", ""),
-            now_kul().strftime("%Y-%m-%d %H:%M:%S"),
-            id
-        ))
-        conn.commit()
+        try:
+            item_name = request.form.get("item", "").strip()
+            company = request.form.get("company", "").strip()
+            phone = request.form.get("phone", "").strip()
+            address = request.form.get("address", "").strip()
+            purchase_date = request.form.get("purchase_date", "").strip()
+
+            quantity = request.form.get("quantity", "0").strip()
+            quantity = int(quantity) if quantity else 0
+
+            price = request.form.get("price", "0").strip()
+            price = float(price) if price else 0.0
+
+            serial_number = request.form.get("serial_number", "").strip()
+
+            # Update database
+            conn.execute("""
+                UPDATE inventory
+                SET item=?, company=?, phone=?, address=?, purchase_date=?,
+                    quantity=?, price=?, serial_number=?, last_updated=CURRENT_TIMESTAMP
+                WHERE id=?
+            """, (item_name, company, phone, address, purchase_date,
+                  quantity, price, serial_number, id))
+            conn.commit()
+        except Exception as e:
+            conn.close()
+            return f"Error updating item: {e}", 500
+
         conn.close()
         return redirect("/inventory")
 
     conn.close()
     return render_template("edit_inventory.html", item=item)
-
 
 @app.route("/delete_inventory/<int:id>")
 def delete_inventory(id):
