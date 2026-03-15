@@ -1,156 +1,136 @@
 {% extends "base.html" %}
-{% block title %}Inventory Management{% endblock %}
+{% block title %}Inventory Report{% endblock %}
 
 {% block content %}
 
 <h2>Inventory Management</h2>
 
-<!-- Overall total spent -->
-<div style="background:#ffd800; padding:10px; border-radius:6px; margin-bottom:20px; font-weight:bold;">
-    Overall Inventory Spent (All Time): RM {{ overall_total }}
+<!-- FILTER & PRINT -->
+<form method="GET" action="/inventory" id="filterForm">
+    <label>Filter by:</label>
+    <input type="date" name="filter_start" id="filterStart">
+    <input type="date" name="filter_end" id="filterEnd">
+
+    <button type="submit">Filter</button>
+    <button type="button" onclick="window.print()">Print</button>
+</form>
+
+<!-- TOTAL SPENT-->
+<div id="printArea">
+    <h3 id="printTotal">Total Inventory Spent: RM {{ total_spent }}</h3>
+
+    <h3 class="screen-only">Inventory List</h3>
+    <table border="1" cellpadding="5" cellspacing="0" id="inventoryTable">
+        <thead>
+            <tr>
+                <th>Line</th>
+                <th>Purchase Date</th>
+                <th>Serial Number</th>
+                <th>Item</th>
+                <th>Company</th>
+                <th>Address</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th class="action-column">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ item.purchase_date }}</td>
+                <td>{{ item.serial_number }}</td>
+                <td>{{ item.item }}</td>
+                <td>{{ item.company }}</td>
+                <td>{{ item.address }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }}</td>
+                <td class="action-column">
+                    <a href="/edit_inventory/{{ item.id }}">Edit</a>
+                    <a href="/delete_inventory/{{ item.id }}" onclick="return confirm('Delete this item?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
-<!-- Add Item Form -->
-<h3>Add Item</h3>
-<form method="POST" action="/add_inventory">
+<hr>
+
+<!-- ADD INVENTORY -->
+<form method="POST" action="/add_inventory" id="addInventoryForm">
+    <h3>Add Item</h3>
     <label>Item</label><br>
     <input type="text" name="item" required><br>
-
-    <label>Serial Number</label><br>
-    <input type="text" name="serial_number"><br>
-
     <label>Company</label><br>
     <input type="text" name="company"><br>
-
     <label>Phone</label><br>
     <input type="text" name="phone"><br>
-
     <label>Address</label><br>
     <input type="text" name="address"><br>
-
     <label>Purchase Date</label><br>
     <input type="date" name="purchase_date"><br>
-
     <label>Quantity</label><br>
     <input type="number" name="quantity"><br>
-
     <label>Price</label><br>
-    <input type="number" step="0.01" name="price"><br><br>
-
+    <input type="number" step="0.01" name="price"><br>
+    <label>Serial Number</label><br>
+    <input type="text" name="serial_number"><br><br>
     <button type="submit">Add Item</button>
 </form>
 
 <hr>
 
-<!-- Filters -->
-<h3>Filter Inventory</h3>
-<form method="GET" action="/inventory">
-    <label>Month:</label>
-    <input type="number" name="month" min="1" max="12" value="{{ selected_month or '' }}">
-    <label>Year:</label>
-    <input type="number" name="year" min="2000" max="2100" value="{{ selected_year or '' }}">
-    <label>Start Date:</label>
-    <input type="date" name="start_date" value="{{ selected_start_date or '' }}">
-    <label>End Date:</label>
-    <input type="date" name="end_date" value="{{ selected_end_date or '' }}">
-    <button type="submit">Filter</button>
-    <button type="button" onclick="window.print()">Print Report</button>
-</form>
 
-<!-- Filtered total -->
-<h3>Total Inventory Spent (Filtered): RM {{ total_spent or 0.0 }}</h3>
-
-<hr>
-
-<!-- Inventory List Table -->
-<h3>Inventory List</h3>
-<table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-        <tr>
-            <th>Line</th>
-            <th>Purchase Date</th>
-            <th>Serial Number</th>
-            <th>Item</th>
-            <th>Company</th>
-            <th>Address</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th class="no-print">Line Total</th>
-            <th class="no-print">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ item.purchase_date }}</td>
-            <td>{{ item.serial_number or '-' }}</td>
-            <td>{{ item.item }}</td>
-            <td>{{ item.company }}</td>
-            <td>{{ item.address }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.price }}</td>
-            <td class="no-print">RM {{ item.line_total }}</td>
-            <td class="no-print">
-                <a href="/edit_inventory/{{ item.id }}"><button>Edit</button></a>
-                <a href="/delete_inventory/{{ item.id }}" onclick="return confirm('Are you sure?');">
-                    <button>Delete</button>
-                </a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<!-- CSS for print -->
 <style>
 @media print {
-    /* Hide everything unnecessary */
-    .add-item, .filters, .no-print, button {
+    #filterForm,
+    #addInventoryForm,
+    .action-column,
+    .buttons,
+    nav,
+    header,
+    footer,
+    .screen-only,
+    h2,
+    hr {
         display: none !important;
     }
 
-    h2, h3 {
-        color: black;
+    body * {
+        visibility: hidden;
     }
 
-    body {
-        background: white;
-        color: black;
+    #printArea,
+    #printArea * {
+        visibility: visible;
     }
 
-    table {
+    #printArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    #printTotal {
+        margin-bottom: 15px;
+        font-size: 20px;
+    }
+
+    #inventoryTable {
         width: 100%;
         border-collapse: collapse;
     }
 
-    th, td {
+    #inventoryTable th,
+    #inventoryTable td {
         border: 1px solid black;
-        padding: 5px;
-        color: black;
+        padding: 6px;
+        text-align: left;
     }
 }
+
 </style>
-{% endblock %}
 
-{% block scripts %}
-<script>
-function printInventoryReport() {
-    // Print only the div with the inventory table and filters
-    let printContents = document.getElementById('printArea').innerHTML;
-    let originalContents = document.body.innerHTML;
-
-    let header = `<h2>SHINEMASTER AUTO - Inventory Report</h2>`;
-    let currentDate = new Date().toLocaleString();
-    header += `<p>Report generated on: ${currentDate}</p>`;
-
-    document.body.innerHTML = header + printContents;
-
-    window.print();
-
-    // Restore the original page
-    document.body.innerHTML = originalContents;
-    location.reload(); // reload to restore event listeners
-}
-</script>
 {% endblock %}
