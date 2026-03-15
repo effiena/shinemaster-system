@@ -1,78 +1,336 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Service Bookings</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Admin Calendar</title>
 <style>
+*{
+    box-sizing:border-box;
+}
+
 body{
-    font-family:Arial;
-    background:#111;
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(135deg,#120018,#240033);
     color:white;
+    padding:20px;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
+.wrapper{
+    max-width:1400px;
+    margin:0 auto;
 }
 
-th,td{
-    padding:10px;
-    border:1px solid #444;
-    text-align:center;
-}
-
-th{
-    background:#6a0dad;
-}
-
-tr:nth-child(even){
-    background:#222;
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
 }
 
 h1{
+    margin:0;
     color:#ffd700;
+    font-size:30px;
 }
 
-a{
+.top-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+.btn{
+    display:inline-block;
+    text-decoration:none;
+    background:#6a0dad;
+    color:white;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:bold;
+    border:none;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.btn:hover{
+    background:#8427d1;
+}
+
+.btn.gold{
+    background:#ffd700;
+    color:#1a001f;
+}
+
+.month-title{
+    font-size:24px;
+    color:#fff;
+    margin:15px 0 20px;
+    font-weight:bold;
+}
+
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:12px;
+}
+
+.day-header{
+    background:#6a0dad;
     color:#ffd700;
+    text-align:center;
+    padding:12px;
+    border-radius:12px;
+    font-weight:bold;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+
+.day-cell{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    min-height:170px;
+    padding:10px;
+    position:relative;
+    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+}
+
+.day-cell.empty{
+    opacity:0.15;
+}
+
+.day-number{
+    font-size:18px;
+    font-weight:bold;
+    color:#ffd700;
+    margin-bottom:8px;
+}
+
+.booking-card{
+    background:rgba(106,13,173,0.35);
+    border-left:4px solid #ffd700;
+    border-radius:10px;
+    padding:8px;
+    margin-bottom:8px;
+    font-size:12px;
+    line-height:1.45;
+}
+
+.booking-card .time{
+    color:#ffd700;
+    font-weight:bold;
+    font-size:13px;
+}
+
+.booking-card .service{
+    font-weight:bold;
+    color:#fff;
+}
+
+.count-badge{
+    display:inline-block;
+    margin-top:4px;
+    background:#222;
+    color:#ffd700;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid #555;
+}
+
+.full-badge{
+    display:inline-block;
+    margin-top:6px;
+    background:#e53935;
+    color:white;
+    font-size:11px;
+    font-weight:bold;
+    padding:5px 10px;
+    border-radius:999px;
+}
+
+.legend{
+    margin-top:20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    font-size:14px;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.legend-box{
+    width:16px;
+    height:16px;
+    border-radius:4px;
+}
+
+.purple{
+    background:#6a0dad;
+}
+
+.red{
+    background:#e53935;
+}
+
+.summary{
+    margin-top:25px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:15px;
+}
+
+.summary-card{
+    background:rgba(255,255,255,0.06);
+    border-radius:14px;
+    padding:16px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+}
+
+.summary-card h3{
+    margin:0 0 8px;
+    color:#ffd700;
+    font-size:16px;
+}
+
+.summary-card p{
+    margin:0;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.no-booking{
+    color:#bbb;
+    font-size:12px;
+    margin-top:8px;
+}
+
+@media (max-width: 1100px){
+    .calendar{
+        grid-template-columns:repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 800px){
+    .calendar{
+        grid-template-columns:repeat(2, 1fr);
+    }
+
+    .day-header{
+        display:none;
+    }
+}
+
+@media (max-width: 500px){
+    .calendar{
+        grid-template-columns:1fr;
+    }
+
+    body{
+        padding:12px;
+    }
+
+    .day-cell{
+        min-height:auto;
+    }
 }
 </style>
-
 </head>
 <body>
 
-<h1>Service Booking Schedule</h1>
+<div class="wrapper">
+    <div class="topbar">
+        <h1>Service Booking Calendar</h1>
 
-<a href="/dashboard">← Back to Dashboard</a>
+        <div class="top-actions">
+            <a class="btn" href="/dashboard">← Back to Dashboard</a>
+            <a class="btn" href="{{ url_for('booking_admin', year=prev_year, month=prev_month) }}">← Previous</a>
+            <a class="btn gold" href="{{ url_for('booking_admin', year=next_year, month=next_month) }}">Next →</a>
+        </div>
+    </div>
 
-<table>
+    <div class="month-title">{{ month_name }} {{ year }}</div>
 
-<tr>
-<th>ID</th>
-<th>Car Plate</th>
-<th>Service</th>
-<th>Date</th>
-<th>Time</th>
-<th>Contact</th>
-<th>Status</th>
-</tr>
+    <div class="calendar">
+        <div class="day-header">Monday</div>
+        <div class="day-header">Tuesday</div>
+        <div class="day-header">Wednesday</div>
+        <div class="day-header">Thursday</div>
+        <div class="day-header">Friday</div>
+        <div class="day-header">Saturday</div>
+        <div class="day-header">Sunday</div>
 
-{% for b in bookings %}
+        {% for week in calendar_data %}
+            {% for day in week %}
+                {% if day == 0 %}
+                    <div class="day-cell empty"></div>
+                {% else %}
+                    {% set day_key = "%04d-%02d-%02d"|format(year, month, day) %}
+                    {% set day_bookings = grouped_bookings.get(day_key, []) %}
 
-<tr>
-<td>{{b.id}}</td>
-<td>{{b.car_plate}}</td>
-<td>{{b.service_type}}</td>
-<td>{{b.booking_date}}</td>
-<td>{{b.booking_time}}</td>
-<td>{{b.contact}}</td>
-<td>{{b.status}}</td>
-</tr>
+                    <div class="day-cell">
+                        <div class="day-number">{{ day }}</div>
 
-{% endfor %}
+                        {% if day_bookings %}
+                            {% for b in day_bookings %}
+                                <div class="booking-card">
+                                    <div class="time">{{ b.booking_time }}</div>
+                                    <div class="service">{{ b.service_type }}</div>
+                                    <div>Name: {{ b.customer_name }}</div>
+                                    <div>Plate: {{ b.car_plate }}</div>
+                                </div>
+                            {% endfor %}
 
-</table>
+                            <div class="count-badge">{{ day_bookings|length }}/3 Confirmed</div>
+
+                            {% if day_bookings|length >= 3 %}
+                                <div class="full-badge">FULL</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="no-booking">No confirmed booking</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box purple"></div>
+            <span>Confirmed Booking</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box red"></div>
+            <span>Full Day (3 bookings max)</span>
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card">
+            <h3>Total Confirmed This Month</h3>
+            <p>{{ total_confirmed }}</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Days Fully Booked</h3>
+            <p>{{ full_days }}</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Booking Limit Per Day</h3>
+            <p>3</p>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
