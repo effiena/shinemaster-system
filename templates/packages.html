@@ -1,139 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>ShineMaster Packages</title>
-
+<title>Shine Master Packages</title>
 <style>
+body { background:#0f0f0f; font-family:Arial; color:white; margin:0; }
+.header { text-align:center; padding:30px; }
+.header h1 { color:#ffd500; }
+.header h2 { color:#9b5cff; }
+.container { display:flex; flex-wrap:wrap; justify-content:center; gap:25px; padding:20px; }
 
-body{
-    background:#0f0f0f;
-    font-family:Arial;
-    color:white;
-    margin:0;
+.card-link {
+  text-decoration:none; /* remove underline */
+  color:inherit;        /* keep text colors */
+  width:320px;
 }
 
-.header{
-    text-align:center;
-    padding:30px;
+.card {
+  background:#1a1a1a;
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.6);
+  border-top:4px solid #ffd500;
+  transition: transform 0.2s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  cursor:pointer;
 }
 
-.header h1{
-    color:#ffd500;
-}
-
-.header h2{
-    color:#9b5cff;
-}
-
-.container{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:25px;
-    padding:20px;
-}
-
-.card{
-    width:320px;
-    background:#1a1a1a;
-    border-radius:10px;
-    padding:20px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.6);
-    border-top:4px solid #ffd500;
-}
-
-.card h3{
-    color:#ffd500;
-}
-
-.price{
-    color:#9b5cff;
-    font-size:18px;
-    margin-bottom:10px;
-}
-
-ul{
-    padding-left:18px;
-}
-
-li{
-    margin-bottom:6px;
-    font-size:14px;
-}
-
-.section{
-    margin-top:40px;
-}
-
-.section-title{
-    text-align:center;
-    font-size:24px;
-    color:#ffd500;
-    margin-top:40px;
-}
-
+.card h3 { color:#ffd500; }
+.price { color:#9b5cff; font-size:18px; margin-bottom:10px; }
+ul { padding-left:18px; }
+li { margin-bottom:6px; font-size:14px; }
 </style>
-
 </head>
-
 <body>
 
 <div class="header">
-<h1>ShineMaster</h1>
+<h1>Shine Master</h1>
 <h2>Auto Detailing Packages</h2>
-<p>Nano Graphene Coating (Artdeshine Product)</p>
+<p>Nano Graphene Coating</p>
 </div>
 
 <div class="container">
 
-<!-- BASIC WASH -->
-
-<div class="card">
-
-<h3>Car Wash Basic</h3>
-
-<div class="price">
-Sedan RM20<br>
-SUV / MPV RM24<br>
-Large MPV / 4x4 RM28
-</div>
-
-<ul>
-<li>Nano wax shampoo 水蜡洗车液</li>
-<li>Interior dust removal 车内饰除尘</li>
-<li>Interior vacuum 车内饰吸尘</li>
-<li>Interior wipe down 车内饰擦拭</li>
-<li>Rim wash 轮毂清洗</li>
-<li>Tyre shine 轮胎光亮剂</li>
-</ul>
-
-</div>
+<!-- Clickable Card -->
+<a class="card-link" href="package_basic">
+  <div class="card">
+    <h3>ELEGANT Wash</h3>
+    <div class="price">
+     Sedan RM20 <br>
+     SUV / MPV RM24 <br>
+     Large MPV / 4x4 RM28
+    </div>
+    <ul>
+      <li>Nano wax shampoo 水蜡洗车液</li>
+      <li>Interior dust removal 车内饰除尘</li>
+      <li>Interior vacuum 车内饰吸尘</li>
+      <li>Interior wipe down 车内饰擦拭</li>
+      <li>Rim wash 轮毂清洗</li>
+      <li>Tyre shine 轮胎光亮剂</li>
+    </ul>
+  </div>
+</a>
 
 <!-- SPECIAL WASH -->
 
-<div class="card">
-
-<h3>Car Wash Special</h3>
-
-<div class="price">
-Sedan RM48<br>
-SUV / MPV RM58<br>
-Large MPV / 4x4 RM68
-</div>
-
-<ul>
-<li>Pre wash shampoo 预洗</li>
-<li>Snow wash shampoo 雪洗</li>
-<li>Water coating wax 镀晶水蜡</li>
-<li>Interior dust removal 内饰除尘</li>
-<li>Interior vacuum 内饰吸尘</li>
-<li>Interior wipe 内饰擦拭</li>
-<li>Air disinfectant 内饰消毒</li>
-<li>Rim wash 轮毂清洗</li>
-<li>Tyre shine 轮胎光亮剂</li>
-</ul>
-
-</div>
+<a class="card-link" href="package_supreme">
+  <div class="card">
+    <h3>SUPREME Wash</h3>
+    <div class="price">
+     Sedan RM48<br>
+     SUV / MPV RM58<br>
+     Large MPV / 4x4 RM68
+    </div>
+    <ul>
+      <li>Pre wash shampoo 预洗</li>
+      <li>Snow wash shampoo 雪洗</li>
+      <li>Water coating wax 镀晶水蜡</li>
+      <li>Interior dust removal 内饰除尘</li>
+      <li>Interior vacuum 内饰吸尘</li>
+      <li>Interior wipe 内饰擦拭</li>
+      <li>Air disinfectant 内饰消毒</li>
+      <li>Rim wash 轮毂清洗</li>
+      <li>Tyre shine 轮胎光亮剂</li>
+    </ul>
+  </div>
+</a>
 
 <!-- MAINTENANCE -->
 
@@ -284,12 +237,10 @@ easy clean</li>
 
 </div>
 
-</div>
-
-<div class="section">
-
-<div class="section-title">
-Membership Packages
+<div class="container">
+    <div class="section-title">
+        Membership Packages
+    </div>
 </div>
 
 <div class="container">
