@@ -1,13 +1,193 @@
-<h2>Shinemaster Login</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shine Master Solution</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Arial, sans-serif;
+    }
 
-<form action="/login"  method="POST">
+    body{
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: linear-gradient(135deg, #0f0f0f, #2a003f, #111111);
+      overflow:hidden;
+      position:relative;
+    }
 
-Username
-<input name="username">
+    .bubble{
+      position:absolute;
+      border-radius:50%;
+      background: rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+      animation: float 8s infinite ease-in-out;
+    }
 
-Password
-<input name="password" type="password">
+    .bubble:nth-child(1){
+      width:70px;
+      height:70px;
+      top:10%;
+      left:8%;
+      animation-delay:0s;
+    }
 
-<button type="submit">Login</button>
+    .bubble:nth-child(2){
+      width:40px;
+      height:40px;
+      top:20%;
+      right:12%;
+      animation-delay:2s;
+    }
 
-</form>
+    .bubble:nth-child(3){
+      width:55px;
+      height:55px;
+      bottom:18%;
+      left:12%;
+      animation-delay:4s;
+    }
+
+    .bubble:nth-child(4){
+      width:30px;
+      height:30px;
+      bottom:10%;
+      right:18%;
+      animation-delay:1s;
+    }
+
+    @keyframes float{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-18px); }
+    }
+
+    .login-box{
+      width:380px;
+      background: rgba(20,20,20,0.95);
+      border:2px solid #ffd400;
+      border-radius:20px;
+      padding:30px 28px;
+      box-shadow:0 12px 30px rgba(0,0,0,0.45);
+      position:relative;
+      z-index:2;
+    }
+
+    .logo-title{
+      text-align:center;
+      margin-bottom:18px;
+    }
+
+    .logo-title h2{
+      color:#ffd400;
+      font-size:30px;
+      margin-bottom:8px;
+      letter-spacing:1px;
+    }
+
+    .logo-title p{
+      color:#d7b8ff;
+      font-size:14px;
+    }
+
+    .car-graphic{
+      display:flex;
+      justify-content:center;
+      margin-bottom:20px;
+    }
+
+    .car-graphic svg{
+      width:170px;
+      height:auto;
+    }
+
+    label{
+      display:block;
+      color:#ffffff;
+      margin-bottom:8px;
+      margin-top:12px;
+      font-weight:bold;
+    }
+
+    input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid #7a2cbf;
+      background:#1c1c1c;
+      color:white;
+      font-size:15px;
+      outline:none;
+      transition:0.3s;
+    }
+
+    input:focus{
+      border-color:#ffd400;
+      box-shadow:0 0 8px rgba(255,212,0,0.35);
+    }
+
+    button{
+      width:100%;
+      margin-top:20px;
+      padding:13px;
+      border:none;
+      border-radius:12px;
+      background: linear-gradient(90deg, #ffd400, #ffea70);
+      color:#1a1a1a;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    button:hover{
+      transform:translateY(-2px);
+      box-shadow:0 8px 16px rgba(255,212,0,0.25);
+    }
+
+    .shine{
+      position:absolute;
+      top:18px;
+      right:18px;
+      color:#fff7b2;
+      font-size:20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+
+  <div class="login-box">
+    <div class="shine">✦</div>
+
+    <div class="logo-title">
+      <h2>Shine Master Login</h2>
+      <p>Wash • Coating • Polish • Detailing</p>
+    </div>
+
+<div class="car-icon">
+  <img src="{{ url_for('static', filename='caricon.png') }}" alt="Shine Master Logo">
+</div>
+
+    <form action="/login" method="POST">
+      <label>Username</label>
+      <input name="username" required>
+
+      <label>Password</label>
+      <input name="password" type="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+</body>
+</html>
