@@ -657,8 +657,68 @@ def packages():
     ]
     return render_template("packages.html", packages=packages)
 
-
 # ================= INVENTORY =================
+@app.route('/inventory')
+def inventory():
+    if "username" not in session:
+        return redirect("/login")  # login required
+
+    conn = get_db_connection()
+    conn.row_factory = sqlite3.Row
+
+    # Get filter params
+    month = request.args.get("month")
+    year = request.args.get("year")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    # Build WHERE clause dynamically
+    where_clauses = []
+    params = []
+
+    if month:
+        where_clauses.append("strftime('%m', purchase_date) = ?")
+        params.append(f"{int(month):02d}")  # zero-padded month
+    if year:
+        where_clauses.append("strftime('%Y', purchase_date) = ?")
+        params.append(str(year))
+    if start_date:
+        where_clauses.append("purchase_date >= ?")
+        params.append(start_date)
+    if end_date:
+        where_clauses.append("purchase_date <= ?")
+        params.append(end_date)
+
+    where_sql = " AND ".join(where_clauses)
+    if where_sql:
+        where_sql = "WHERE " + where_sql
+
+    # Fetch filtered inventory
+    query = f"SELECT * FROM inventory {where_sql} ORDER BY purchase_date DESC"
+    rows = conn.execute(query, params).fetchall()
+
+    items = []
+    total_spent = 0.0
+    for row in rows:
+        line_total = (row["quantity"] or 0) * (row["price"] or 0.0)
+        total_spent += line_total
+        item = dict(row)
+        item["line_total"] = round(line_total, 2)
+        items.append(item)
+
+    conn.close()
+
+    # ✅ This return must be inside the function, exactly aligned with previous code
+    return render_template(
+        "inventory.html",
+        items=items,
+        total_spent=round(total_spent, 2),
+        selected_month=month,
+        selected_year=year,
+        selected_start_date=start_date,
+        selected_end_date=end_date
+    )
+
 @app.route("/add_inventory", methods=["POST"])
 def add_inventory():
     if session.get("role") != "admin":
@@ -689,17 +749,6 @@ def add_inventory():
     conn.close()
 
     return redirect("/inventory")
-
-
-@app.route('/inventory')
-def inventory():
-    if "username" not in session:
-        return redirect("/login")
-
-    conn = get_db_connection()
-    items = conn.execute("SELECT * FROM inventory ORDER BY id DESC").fetchall()
-    conn.close()
-    return render_template("inventory.html", items=items)
 
 
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
