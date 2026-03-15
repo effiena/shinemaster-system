@@ -1,9 +1,9 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, render_template, request, redirect, jsonify, session, url_for
+from flask import Flask, render_template, request, redirect, jsonify, session
 import sqlite3
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
@@ -11,7 +11,6 @@ import os
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 socketio = SocketIO(app)
-
 
 COMPANY_INFO = {
     "name": "SHINEMASTER AUTO",
@@ -23,17 +22,14 @@ COMPANY_INFO = {
 def inject_company():
     return dict(company=COMPANY_INFO)
 
-# ===== DATABASE CONNECTIONS =====
+# ================= DATABASE =================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "shine.db")
+
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
-# -----------------------------
-# Initialize Database
-# -----------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "shine.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -70,7 +66,6 @@ def init_db():
             price REAL NOT NULL
         )
     """)
-
     c.execute("""
         CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,7 +79,6 @@ def init_db():
             time TEXT
         )
     """)
-
     c.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,7 +91,6 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
     c.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,7 +103,6 @@ def init_db():
             price REAL
         )
     """)
-
     c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,11 +111,9 @@ def init_db():
             role TEXT
         )
     """)
-
     conn.commit()
     conn.close()
 
-# run database initialization
 init_db()
 
 #home after payment
@@ -131,8 +121,9 @@ init_db()
 def home():
     return render_template("new_order.html")
 
-#login route
+# ================= LOGIN =================
 @app.route("/")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -147,45 +138,31 @@ def login():
         conn.close()
 
         if user:
-            role = user[3]  # assuming 4th column is role
-
-            # <-- SET SESSION HERE
             session["username"] = username
-            session["role"] = role
-
-            if role == "admin":
+            session["role"] = user["role"]
+            if user["role"] == "admin":
                 return redirect("/dashboard")
-            elif role == "cashier":
+            else:
                 return redirect("/pos")
-        else:
-            return "Invalid username or password"
-
+        return "Invalid username or password"
     return render_template("login.html")
 
-def get_latest_sales():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    sales = conn.execute("SELECT * FROM sales ORDER BY date DESC, time DESC").fetchall()
-    conn.close()
-    return sales
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
 
-# POS page
-
+# ================= POS =================
 @app.route("/pos", methods=["GET", "POST"])
 def pos():
     if "username" not in session:
         return redirect("/login")
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     services = conn.execute("SELECT * FROM services").fetchall()
-
     if request.method == "POST":
-        # Get current date and time
         now = datetime.now(ZoneInfo("Asia/Kuala_Lumpur"))
         date = now.strftime("%Y-%m-%d")
         time = now.strftime("%H:%M:%S")
-
         invoice = f"INV{now.strftime('%Y%m%d%H%M%S')}"
 
         car_plate = request.form["car_plate"].replace(" ", "").upper()
@@ -194,7 +171,6 @@ def pos():
         payment_method = request.form["payment_method"]
         price = float(request.form["price"])
 
-        # Create order dict
         order = {
             "car_plate": car_plate,
             "car_type": car_type,
@@ -203,104 +179,26 @@ def pos():
             "price": price
         }
 
-        # Apply loyalty system
         order = process_loyalty(order)
 
-
-        print("Saving sale:", invoice, car_plate, price, date)
-
-
-        # Insert into sales table
         conn.execute("""
             INSERT INTO sales
             (invoice, car_plate, car_type, service_type, payment_method, price, date, time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            invoice,
-            order["car_plate"],
-            order["car_type"],
-            order["service_type"],
-            order["payment_method"],
-            order["price"],
-            date,
-            time
-        ))
+        """, (invoice, order["car_plate"], order["car_type"], order["service_type"],
+              order["payment_method"], order["price"], date, time))
         conn.commit()
-        print("Sale saved successfully")
         conn.close()
 
-        # Add extra info for receipt
         order["invoice_no"] = invoice
         order["date"] = date
         order["time"] = time
-
         socketio.emit("update_dashboard")
-
         return render_template("receipt.html", order=order)
 
     conn.close()
     return render_template("new_order.html", services=services)
 
-@app.route("/packages")
-def packages():
-    packages = [
-        {
-            "name": "Basic Wash",
-            "price": "RM15",
-            "details": [
-                "Exterior hand wash",
-                "Tyre cleaning",
-                "Quick dry"
-            ]
-        },
-        {
-            "name": "Premium Wash",
-            "price": "RM35",
-            "details": [
-                "Exterior wash",
-                "Interior vacuum",
-                "Dashboard wipe",
-                "Tyre shine"
-            ]
-        },
-        {
-            "name": "Full Detailing",
-            "price": "RM120",
-            "details": [
-                "Exterior deep wash",
-                "Interior detailing",
-                "Seat cleaning",
-                "Wax protection"
-            ]
-        }
-    ]
-
-    return render_template("packages.html", packages=packages)
-
-# -----------------------------
-# Loyalty Logic
-# -----------------------------
-def process_loyalty(order):
-    car_plate = order["car_plate"].replace(" ", "").upper()
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-
-    # Get current paid count
-    cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
-    row = cur.fetchone()
-    paid_count = (row[0] if row else 0) + 1
-
-    # Free wash on 6th visit
-    if paid_count == 6:
-        order["price"] = 0.0
-        order["loyalty_free"] = True
-        paid_count = 0
-    else:
-        order["loyalty_free"] = False
-
-    order["loyalty_count"] = paid_count
-    order["loyalty_eligible"] = paid_count >= 5
-    order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
 
 
 # -----------------------------
@@ -365,41 +263,61 @@ def create_order():
     return render_template("receipt.html", order=order)
 
 
-@app.route("/check_loyalty/<car_plate>")
-def check_loyalty(car_plate):
-    conn = sqlite3.connect(DB_PATH)
+
+
+# ================= LOYALTY =================
+def process_loyalty(order):
+    car_plate = order["car_plate"]
+    conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate.upper(),))
+
+    cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
     row = cur.fetchone()
-    conn.close()
+    paid_count = (row["paid_count"] if row else 0) + 1
 
-    paid = row[0] if row else 0
-    eligible = paid >= 5
+    if paid_count == 6:
+        order["price"] = 0.0
+        order["loyalty_free"] = True
+        paid_count = 0
+    else:
+        order["loyalty_free"] = False
 
-    return {"paid": paid, "eligible": eligible}
+    order["loyalty_count"] = paid_count
+    order["loyalty_eligible"] = paid_count >= 5
+    order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
 
-# Dashboard
-@app.route("/dashboard")
-def dashboard():
-
-    if session.get("role") != "admin":
-        return redirect("/pos")
-
-    data = get_revenue_data()
-
-    return render_template(
-        "dashboard.html",
-        today_revenue=data["today_revenue"],
-        week_revenue=data["week_revenue"],
-        month_revenue=data["month_revenue"],
-        cars_today=data["cars_today"],
-        recent_sales=data["recent_sales"]
-    )
+    if row:
+        cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (paid_count, car_plate))
+    else:
+        cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, paid_count))
 
     conn.commit()
     conn.close()
+    return order
 
-    socketio.emit("update_dashboard")
+@app.route("/check_loyalty/<car_plate>")
+def check_loyalty(car_plate):
+    conn = get_db_connection()
+    row = conn.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate.upper(),)).fetchone()
+    conn.close()
+    paid = row["paid_count"] if row else 0
+    eligible = paid >= 5
+    return {"paid": paid, "eligible": eligible}
+
+# ================= DASHBOARD =================
+@app.route("/dashboard")
+def dashboard():
+    if session.get("role") != "admin":
+        return redirect("/pos")
+    data = get_revenue_data()
+    low_stock = get_low_stock()
+    return render_template("dashboard.html",
+                           today_revenue=data["today_revenue"],
+                           week_revenue=data["week_revenue"],
+                           month_revenue=data["month_revenue"],
+                           cars_today=data["cars_today"],
+                           recent_sales=data["recent_sales"],
+                           low_stock=low_stock)
 
 @app.route("/dashboard_data")
 def dashboard_data():
@@ -407,49 +325,47 @@ def dashboard_data():
     data = get_revenue_data()
 
     return jsonify(data)
-
 def get_revenue_data():
-
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
-
-    today = datetime.now().strftime("%Y-%m-%d")
+    tz = ZoneInfo("Asia/Kuala_Lumpur")
+    today = datetime.now(tz).strftime("%Y-%m-%d")
 
     today_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0) 
-        FROM orders 
-        WHERE DATE(created_at)=?
+        SELECT IFNULL(SUM(price),0) FROM orders WHERE DATE(created_at)=? AND payment_status='Paid'
     """, (today,)).fetchone()[0]
 
     week_revenue = conn.execute("""
-        SELECT SUM(price)
-        FROM orders
-        WHERE DATE(created_at) >= DATE('now','-7 days')
-        AND payment_status = 'Paid'
-        """).fetchone()[0]
+        SELECT IFNULL(SUM(price),0) FROM orders WHERE DATE(created_at) >= DATE('now','-7 days') AND payment_status='Paid'
+    """).fetchone()[0]
 
     month_revenue = conn.execute("""
-        SELECT SUM(price)
-        FROM orders
-        WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m','now')
-        AND payment_status = 'Paid'
-        """).fetchone()[0]
-
+        SELECT IFNULL(SUM(price),0) FROM orders WHERE strftime('%Y-%m', created_at)=strftime('%Y-%m','now') AND payment_status='Paid'
+    """).fetchone()[0]
 
     cars_today = conn.execute("""
-        SELECT COUNT(*)
-        FROM orders
-        WHERE DATE(created_at) = ?
-        AND payment_status = 'Paid'
-        """, (today,)).fetchone()[0]
+        SELECT COUNT(*) FROM orders WHERE DATE(created_at)=? AND payment_status='Paid'
+    """, (today,)).fetchone()[0]
 
-    recent_sales = conn.execute("""
+    # Fetch recent sales, using created_at to get the time
+    recent_sales_raw = conn.execute("""
         SELECT invoice_no, car_plate, service_type, price, created_at
         FROM orders
-        WHERE payment_status = 'Paid'
+        WHERE payment_status='Paid'
         ORDER BY created_at DESC
         LIMIT 10
     """).fetchall()
+
+    recent_sales = []
+    for row in recent_sales_raw:
+        created_at = datetime.fromisoformat(row["created_at"]).astimezone(tz)
+        recent_sales.append({
+            "invoice": row["invoice_no"],
+            "car_plate": row["car_plate"],
+            "service_type": row["service_type"],
+            "price": row["price"],
+            "time": created_at.strftime("%H:%M:%S")  # generate time from timestamp
+        })
 
     conn.close()
 
@@ -458,9 +374,16 @@ def get_revenue_data():
         "week_revenue": week_revenue,
         "month_revenue": month_revenue,
         "cars_today": cars_today,
-        "recent_sales": [dict(x) for x in recent_sales]
+        "recent_sales": recent_sales
     }
 
+def get_low_stock():
+    conn = get_db_connection()
+    rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5").fetchall()
+    conn.close()
+    return [dict(x) for x in rows]
+
+# ================= RECEIPT =================
 @app.route("/receipt/<invoice>")
 def receipt(invoice):
 
@@ -476,6 +399,16 @@ def receipt(invoice):
 
     return render_template("receipt.html",sale=sale)
 
+
+# ================= PACKAGES =================
+@app.route("/packages")
+def packages():
+    packages = [
+        {"name": "Basic Wash", "price": "RM15", "details": ["Exterior hand wash","Tyre cleaning","Quick dry"]},
+        {"name": "Premium Wash", "price": "RM35", "details": ["Exterior wash","Interior vacuum","Dashboard wipe","Tyre shine"]},
+        {"name": "Full Detailing", "price": "RM120", "details": ["Exterior deep wash","Interior detailing","Seat cleaning","Wax protection"]}
+    ]
+    return render_template("packages.html", packages=packages)
 
 @app.route("/add_inventory", methods=["POST"])
 def add_inventory():
@@ -788,11 +721,8 @@ def finance():
     return render_template("finance.html", report=report)
 
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/login")
 
+
+# ================= RUN =================
 if __name__ == "__main__":
     socketio.run(app, debug=True)
-
