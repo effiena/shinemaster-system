@@ -666,37 +666,47 @@ def inventory():
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
 
-    # Fetch filter parameters
     filter_type = request.args.get("filter_type", "all")
+    filter_month = request.args.get("filter_month", "").strip()
+    filter_year = request.args.get("filter_year", "").strip()
+    filter_start = request.args.get("filter_start", "").strip()
+    filter_end = request.args.get("filter_end", "").strip()
+
     query = "SELECT * FROM inventory"
     params = []
 
-    if filter_type == "month":
-        month = request.args.get("filter_month")
-        if month:
-            query += " WHERE strftime('%Y-%m', purchase_date)=?"
-            params.append(month)
-    elif filter_type == "year":
-        year = request.args.get("filter_year")
-        if year:
-            query += " WHERE strftime('%Y', purchase_date)=?"
-            params.append(year)
-    elif filter_type == "custom":
-        start = request.args.get("filter_start")
-        end = request.args.get("filter_end")
-        if start and end:
-            query += " WHERE purchase_date BETWEEN ? AND ?"
-            params.extend([start, end])
+    if filter_type == "month" and filter_month:
+        query += " WHERE strftime('%Y-%m', purchase_date) = ?"
+        params.append(filter_month)
+        filter_label = filter_month
 
-    query += " ORDER BY purchase_date DESC"
+    elif filter_type == "year" and filter_year:
+        query += " WHERE strftime('%Y', purchase_date) = ?"
+        params.append(filter_year)
+        filter_label = filter_year
+
+    elif filter_type == "custom" and filter_start and filter_end:
+        query += " WHERE purchase_date BETWEEN ? AND ?"
+        params.extend([filter_start, filter_end])
+        filter_label = f"{filter_start} to {filter_end}"
+
+    else:
+        filter_label = "All Dates"
+
+    query += " ORDER BY purchase_date DESC, id DESC"
 
     items = conn.execute(query, params).fetchall()
-
-    # Total spent
-    total_spent = sum([row["price"] for row in items])
+    total_spent = sum((item["price"] or 0) for item in items)
 
     conn.close()
-    return render_template("inventory.html", items=items, total_spent=total_spent)
+
+    return render_template(
+        "inventory.html",
+        items=items,
+        total_spent=f"{total_spent:.2f}",
+        filter_label=filter_label
+    )
+
 
 @app.route("/add_inventory", methods=["POST"])
 def add_inventory():
