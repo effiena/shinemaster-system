@@ -1,42 +1,93 @@
 {% extends "base.html" %}
-{% block title %}Payment Report{% endblock %}
+{% block title %}Inventory Management{% endblock %}
 
 {% block content %}
 
 <h2>Inventory Management</h2>
 
-<h3>Add Item</h3>
+<!-- ================= Add Item Form ================= -->
+<h3>Add New Inventory Item</h3>
 
 <form method="POST" action="/add_inventory">
+    <label>Item</label><br>
+    <input type="text" name="item" required><br>
 
-Item<br>
-<input type="text" name="item" required><br>
+    <label>Serial Number</label><br>
+    <input type="text" name="serial_number" required><br>
 
-Company<br>
-<input type="text" name="company"><br>
+    <label>Company</label><br>
+    <input type="text" name="company"><br>
 
-Phone<br>
-<input type="text" name="phone"><br>
+    <label>Phone</label><br>
+    <input type="text" name="phone"><br>
 
-Address<br>
-<input type="text" name="address"><br>
+    <label>Address</label><br>
+    <input type="text" name="address"><br>
 
-Purchase Date<br>
-<input type="date" name="purchase_date"><br>
+    <label>Purchase Date</label><br>
+    <input type="date" name="purchase_date" required><br>
 
-Quantity<br>
-<input type="number" name="quantity"><br>
+    <label>Quantity</label><br>
+    <input type="number" name="quantity" min="1" required><br>
 
-Price<br>
-<input type="number" step="0.01" name="price"><br><br>
+    <label>Price (per unit)</label><br>
+    <input type="number" step="0.01" name="price" min="0" required><br><br>
 
-<button type="submit">Add Item</button>
-
+    <button type="submit">Add Item</button>
 </form>
 
 <hr>
 
+<!-- ================= Inventory Filters ================= -->
+<h3>Filter Inventory</h3>
+
+<form method="GET" action="/inventory">
+    <label>Month</label>
+    <select name="month">
+        <option value="">All</option>
+        {% for m in range(1, 13) %}
+            <option value="{{m}}" {% if selected_month == m|string %}selected{% endif %}>
+                {{m}}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Year</label>
+    <input type="number" name="year" value="{{selected_year or ''}}">
+
+    <label>From Date</label>
+    <input type="date" name="start_date" value="{{selected_start_date or ''}}">
+
+    <label>To Date</label>
+    <input type="date" name="end_date" value="{{selected_end_date or ''}}">
+
+    <button type="submit">Filter</button>
+    <a href="/inventory"><button type="button">Reset</button></a>
+    <button type="button" onclick="printInventory()">Print</button>
+
+
+</form>
+
+<br>
+
+<br>
+
+<h3>Total Inventory Spent: RM {{ total_spent or 0.0 }}</h3>
+
+<hr>
+
+<!-- ================= Inventory Table ================= -->
+<div id="printArea">
 <h3>Inventory List</h3>
+
+{% if selected_month or selected_year or selected_start_date or selected_end_date %}
+<p><strong>Filters Applied:</strong>
+    {% if selected_month %} Month: {{ selected_month }} {% endif %}
+    {% if selected_year %} Year: {{ selected_year }} {% endif %}
+    {% if selected_start_date %} From: {{ selected_start_date }} {% endif %}
+    {% if selected_end_date %} To: {{ selected_end_date }} {% endif %}
+</p>
+{% endif %}
 
 <table border="1" cellpadding="5" cellspacing="0">
     <thead>
@@ -48,29 +99,48 @@ Price<br>
             <th>Company</th>
             <th>Address</th>
             <th>Quantity</th>
-            <th>Price</th>
-            <th>Action</th>
+            <th>Price (per unit)</th>
+            <th>Total</th>
         </tr>
     </thead>
     <tbody>
         {% for item in items %}
         <tr>
-            <td>{{ loop.index }}</td>  <!-- This creates a line number -->
+            <td>{{ loop.index }}</td>
             <td>{{ item.purchase_date }}</td>
-            <td>{{ item.serial_number }}</td>
+            <td>{{ item.serial_number or '-' }}</td>
             <td>{{ item.item }}</td>
             <td>{{ item.company }}</td>
             <td>{{ item.address }}</td>
             <td>{{ item.quantity }}</td>
-            <td>{{ item.price }}</td>
-            <td>
-                <a href="/delete_inventory/{{ item.id }}">
-                    <button>Delete</button>
-                </a>
-            </td>
+            <td>RM {{ item.price }}</td>
+            <td>RM {{ item.line_total }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+function printInventoryReport() {
+    // Print only the div with the inventory table and filters
+    let printContents = document.getElementById('printArea').innerHTML;
+    let originalContents = document.body.innerHTML;
+
+    let header = `<h2>SHINEMASTER AUTO - Inventory Report</h2>`;
+    let currentDate = new Date().toLocaleString();
+    header += `<p>Report generated on: ${currentDate}</p>`;
+
+    document.body.innerHTML = header + printContents;
+
+    window.print();
+
+    // Restore the original page
+    document.body.innerHTML = originalContents;
+    location.reload(); // reload to restore event listeners
+}
+</script>
 {% endblock %}
