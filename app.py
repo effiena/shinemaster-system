@@ -877,42 +877,57 @@ def booking():
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    car_plate = request.form["car_plate"].upper()
+    car_plate = request.form["car_plate"].replace(" ", "").upper()
     service = request.form["service_type"]
     date = request.form["booking_date"]
     time = request.form["booking_time"]
     contact = request.form["contact"]
+    customer_name = request.form.get("customer_name", "").strip()
     car_type = request.form.get("car_type", "-")
     created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
-    selected_date = request.form["booking_date"]
 
     conn = get_db_connection()
+    cur = conn.cursor()
 
-    existing = conn.execute("""
-        SELECT COUNT(*) FROM bookings
-        WHERE booking_date=? AND booking_time=?
-    """, (date, time)).fetchone()[0]
-
-    if existing >= 3:
-        conn.close()
-    return "This time slot is full. Please choose another."
-
-    count_row = conn.execute("""
-        SELECT COUNT(*) as total
+    # Rule 1: only confirmed bookings count toward daily max 3
+    confirmed_count = cur.execute("""
+        SELECT COUNT(*) AS total
         FROM bookings
         WHERE booking_date = ?
-        AND LOWER(status) = 'confirmed'
-        """, (selected_date,)).fetchone()
+          AND LOWER(status) = 'confirmed'
+    """, (date,)).fetchone()["total"]
 
-    if count_row["total"] >= 3:
-       conn.close()
-    return "This date is already full. Only 3 confirmed bookings allowed."
-    cur = conn.cursor()
+    if confirmed_count >= 3:
+        conn.close()
+        return "This date is already full. Only 3 confirmed bookings allowed."
+
+    # Rule 2: prevent duplicate same date + same time for confirmed bookings
+    existing_slot = cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM bookings
+        WHERE booking_date = ?
+          AND booking_time = ?
+          AND LOWER(status) = 'confirmed'
+    """, (date, time)).fetchone()["total"]
+
+    if existing_slot >= 1:
+        conn.close()
+        return "This booking time is already taken. Please choose another time."
+
     cur.execute("""
         INSERT INTO bookings
-        (car_plate, service_type, booking_date, booking_time, contact, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (car_plate, service, date, time, contact, created_at))
+        (car_plate, service_type, booking_date, booking_time, contact, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        car_plate,
+        service,
+        date,
+        time,
+        contact,
+        "Booked",
+        created_at
+    ))
+
     booking_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -921,6 +936,7 @@ def create_booking():
         "car_plate": car_plate,
         "service": service,
         "car_type": car_type,
+        "name": customer_name,
         "date": date,
         "time": time,
         "contact": contact,
@@ -928,7 +944,6 @@ def create_booking():
     }
 
     return render_template("booking_confirmed.html", booking=booking_data)
-
 
 @app.route("/booking_admin")
 def booking_admin():
