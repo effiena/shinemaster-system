@@ -150,6 +150,13 @@
         color:#ccc;
     }
 
+
+.timeslot.disabled {
+    background-color: #555 !important;
+    color: #aaa !important;
+    border-color: #444 !important;
+    cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -197,13 +204,23 @@
     <label>Pick a Time Slot</label>
     <div class="timeslots">
         {% for slot in timeslots %}
-            <div class="timeslot" onclick="selectSlot(this)">
+            {% set slot_disabled = false %}
+            {% for booked in booked_times %}
+                {% set booked_dt = datetime.strptime(booked, '%H:%M') %}
+                {% set slot_dt = datetime.strptime(slot, '%H:%M') %}
+                {% set diff = abs((slot_dt - booked_dt).total_seconds() / 3600) %}
+                {% if diff < 3 %}
+                    {% set slot_disabled = true %}
+                {% endif %}
+            {% endfor %}
+            <div class="timeslot {% if slot_disabled %}disabled{% endif %}" 
+                 onclick="selectSlot(this)" 
+                 {% if slot_disabled %}style='opacity:0.3;pointer-events:none;' title='Unavailable'{% endif %}>
                 {{ slot }}
-                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required>
+                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required {% if slot_disabled %}disabled{% endif %}>
             </div>
         {% endfor %}
     </div>
-
     <label>Contact Number</label>
     <input type="text" name="contact" placeholder="e.g 018-1234567" required>
 
