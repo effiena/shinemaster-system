@@ -17,6 +17,9 @@
 
 <!-- TOTAL SPENT-->
 <div id="printArea">
+    <h2 id="printTitle">Inventory Report</h2>
+    <p id="printFilter">Filtered Date: {{ filter_label }}</p>
+    </p>
     <h3 id="printTotal">Total Inventory Spent: RM {{ total_spent }}</h3>
 
     <h3 class="screen-only">Inventory List</h3>
@@ -92,7 +95,7 @@
     header,
     footer,
     .screen-only,
-    h2,
+    h2:not(#printTitle),
     hr {
         display: none !important;
     }
@@ -113,6 +116,15 @@
         width: 100%;
     }
 
+    #printTitle {
+        margin-bottom: 5px;
+    }
+
+    #printDateTime {
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
     #printTotal {
         margin-bottom: 15px;
         font-size: 20px;
@@ -131,6 +143,21 @@
     }
 }
 
+function updatePrintDateTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString("en-MY", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+    document.getElementById("printDateTime").innerText = "Printed on: " + formatted;
+}
+
+window.addEventListener("beforeprint", updatePrintDateTime);
+window.onload = updatePrintDateTime;
 </style>
 
 {% endblock %}
