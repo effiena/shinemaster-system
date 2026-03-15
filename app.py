@@ -666,19 +666,19 @@ def inventory():
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
 
-    # Get filter params
+    # --- Get filter params ---
     month = request.args.get("month")
     year = request.args.get("year")
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    # Build WHERE clause dynamically
+    # --- Build WHERE clause dynamically ---
     where_clauses = []
     params = []
 
     if month:
         where_clauses.append("strftime('%m', purchase_date) = ?")
-        params.append(f"{int(month):02d}")  # zero-padded month
+        params.append(f"{int(month):02d}")
     if year:
         where_clauses.append("strftime('%Y', purchase_date) = ?")
         params.append(str(year))
@@ -693,26 +693,29 @@ def inventory():
     if where_sql:
         where_sql = "WHERE " + where_sql
 
-    # Fetch filtered inventory
+    # --- Fetch filtered inventory ---
     query = f"SELECT * FROM inventory {where_sql} ORDER BY purchase_date DESC"
     rows = conn.execute(query, params).fetchall()
 
     items = []
-    total_spent = 0.0
+    total_spent_filtered = 0.0
     for row in rows:
         line_total = (row["quantity"] or 0) * (row["price"] or 0.0)
-        total_spent += line_total
+        total_spent_filtered += line_total
         item = dict(row)
         item["line_total"] = round(line_total, 2)
         items.append(item)
 
+    # --- Overall total spent (all time, unfiltered) ---
+    overall_total = conn.execute("SELECT SUM(quantity * price) as total FROM inventory").fetchone()["total"] or 0.0
+
     conn.close()
 
-    # ✅ This return must be inside the function, exactly aligned with previous code
     return render_template(
         "inventory.html",
         items=items,
-        total_spent=round(total_spent, 2),
+        total_spent=round(total_spent_filtered, 2),
+        overall_total=round(overall_total, 2),
         selected_month=month,
         selected_year=year,
         selected_start_date=start_date,
