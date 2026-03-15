@@ -5,6 +5,8 @@ from flask import Flask, render_template, request, redirect, jsonify, session, u
 import sqlite3
 from flask_socketio import SocketIO
 from datetime import datetime, timedelta
+import calendar
+from collections import defaultdict
 from zoneinfo import ZoneInfo
 import qrcode
 from io import BytesIO
@@ -882,6 +884,7 @@ def create_booking():
     contact = request.form["contact"]
     car_type = request.form.get("car_type", "-")
     created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
+    selected_date = request.form["booking_date"]
 
     conn = get_db_connection()
 
@@ -892,8 +895,18 @@ def create_booking():
 
     if existing >= 3:
         conn.close()
-        return "This time slot is full. Please choose another."
+    return "This time slot is full. Please choose another."
 
+    count_row = conn.execute("""
+        SELECT COUNT(*) as total
+        FROM bookings
+        WHERE booking_date = ?
+        AND LOWER(status) = 'confirmed'
+        """, (selected_date,)).fetchone()
+
+    if count_row["total"] >= 3:
+       conn.close()
+    return "This date is already full. Only 3 confirmed bookings allowed."
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO bookings
@@ -922,15 +935,66 @@ def booking_admin():
     if session.get("role") != "admin":
         return redirect("/pos")
 
+    import calendar
+    from collections import defaultdict
+    from datetime import datetime
+    from flask import request
+
+    today = datetime.now()
+    year = request.args.get("year", default=today.year, type=int)
+    month = request.args.get("month", default=today.month, type=int)
+
     conn = get_db_connection()
+
     bookings = conn.execute("""
-        SELECT * FROM bookings
+        SELECT *
+        FROM bookings
+        WHERE strftime('%Y', booking_date) = ?
+          AND strftime('%m', booking_date) = ?
+          AND LOWER(status) = 'confirmed'
         ORDER BY booking_date ASC, booking_time ASC, id ASC
-    """).fetchall()
+    """, (str(year), f"{month:02d}")).fetchall()
+
     conn.close()
 
-    return render_template("booking_admin.html", bookings=bookings)
+    grouped_bookings = defaultdict(list)
+    for b in bookings:
+        grouped_bookings[b["booking_date"]].append(b)
 
+    cal = calendar.Calendar(firstweekday=0)
+    calendar_data = cal.monthdayscalendar(year, month)
+
+    month_name = calendar.month_name[month]
+
+    prev_month = month - 1
+    prev_year = year
+    if prev_month == 0:
+        prev_month = 12
+        prev_year -= 1
+
+    next_month = month + 1
+    next_year = year
+    if next_month == 13:
+        next_month = 1
+        next_year += 1
+
+    total_confirmed = len(bookings)
+    full_days = sum(1 for day_bookings in grouped_bookings.values() if len(day_bookings) >= 3)
+
+    return render_template(
+        "booking_admin.html",
+        calendar_data=calendar_data,
+        grouped_bookings=grouped_bookings,
+        month=month,
+        year=year,
+        month_name=month_name,
+        prev_month=prev_month,
+        prev_year=prev_year,
+        next_month=next_month,
+        next_year=next_year,
+        total_confirmed=total_confirmed,
+        full_days=full_days
+    )
 
 # ================= STAFF =================
 @app.route("/staff")
