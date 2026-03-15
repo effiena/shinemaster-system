@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master Solution</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #000;
+        color: #fff;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .container {
+        max-width: 500px;
+        margin: auto;
+        background: #1a1a1a;
+        border: 2px solid #ffeb3b;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+        color: #9c27b0;
+        margin-bottom: 20px;
+    }
+
+    .poster {
+        width: 100%;
+        max-width: 420px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .qr-box {
+        background: #fff;
+        padding: 12px;
+        display: inline-block;
+        border-radius: 12px;
+        margin-top: 10px;
+    }
+
+    .scan-text {
+        color: #ffeb3b;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+
+    .book-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 20px;
+        background: linear-gradient(90deg,#9c27b0,#ffeb3b);
+        color: #000;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 8px;
+    }
+
+    .footer {
+        margin-top: 20px;
+        font-size: 12px;
+        color: #bbb;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shine Master Solution</h1>
+
+        <img src="{{ url_for('static', filename='poster.png') }}" alt="Poster" class="poster">
+
+        <div class="scan-text">Scan QR Code to Book Now</div>
+
+        <div class="qr-box">
+            <img src="{{ url_for('qr_booking') }}" alt="QR Booking Code" style="width:220px;">
+        </div>
+
+        <div>
+            <a class="book-btn" href="https://shinemaster-system-production.up.railway.app/booking" target="_blank">
+                Book Directly
+            </a>
+        </div>
+
+        <div class="footer">
+            @Shine Master Solution - Powered by AsliTech
+        </div>
+    </div>
+</body>
+</html>
