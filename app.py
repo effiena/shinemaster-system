@@ -657,6 +657,19 @@ def packages():
     ]
     return render_template("packages.html", packages=packages)
 
+# Individual package pages
+@app.route("/package_basic")
+def package_basic():
+    return render_template("package_basic.html")
+
+@app.route("/package_supreme")
+def package_special():
+    return render_template("package_supreme.html")
+
+@app.route("/package_polishing")
+def package_polishing():
+    return render_template("package_polishing.html")
+
 # ================= INVENTORY =================
 @app.route("/inventory")
 def inventory():
