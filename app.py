@@ -858,20 +858,30 @@ def generate_timeslots():
 @app.route("/booking")
 def booking():
     plate = request.args.get("plate", "")
+    current_date = request.args.get("date") or now_kul().strftime("%Y-%m-%d")
 
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
+
+    # Fetch confirmed bookings for this date
+    bookings = conn.execute("""
+        SELECT booking_time
+        FROM bookings
+        WHERE booking_date=? AND LOWER(status)='confirmed'
+    """, (current_date,)).fetchall()
     conn.close()
 
+    booked_times = [row["booking_time"] for row in bookings]
+
     timeslots = generate_timeslots()
-    current_date = now_kul().strftime("%Y-%m-%d")
 
     return render_template(
         "booking.html",
         services=services,
         timeslots=timeslots,
         plate=plate,
-        current_date=current_date
+        current_date=current_date,
+        booked_times=booked_times
     )
 
 
@@ -886,25 +896,40 @@ def create_booking():
     created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-    cur = conn.cursor()
 
-    # Check if this time slot is full
-    existing = cur.execute("""
+    # Check if the day is already full (3 bookings)
+    count_day = conn.execute("""
         SELECT COUNT(*) FROM bookings
-        WHERE booking_date=? AND booking_time=? AND LOWER(status)='confirmed'
-    """, (date, time)).fetchone()[0]
+        WHERE booking_date=? AND LOWER(status)='confirmed'
+    """, (date,)).fetchone()[0]
 
-    if existing >= 3:
+    if count_day >= 3:
         conn.close()
-        return "This time slot is full. Please choose another."
+        return "<script>alert('All slots for this date are full. Please pick a new date.');window.location='/booking';</script>"
+
+    # Check if selected time is too close to existing bookings (3 hours apart)
+    existing_bookings = conn.execute("""
+        SELECT booking_time FROM bookings
+        WHERE booking_date=? AND LOWER(status)='confirmed'
+    """, (date,)).fetchall()
+
+    from datetime import datetime
+    slot_dt = datetime.strptime(time, "%H:%M")
+
+    for row in existing_bookings:
+        booked_dt = datetime.strptime(row["booking_time"], "%H:%M")
+        diff_hours = abs((slot_dt - booked_dt).total_seconds() / 3600)
+        if diff_hours < 3:
+            conn.close()
+            return "<script>alert('This time slot is unavailable. Please choose another.');window.location='/booking';</script>"
 
     # Insert booking
+    cur = conn.cursor()
     cur.execute("""
         INSERT INTO bookings
         (car_plate, service_type, booking_date, booking_time, contact, created_at, status)
         VALUES (?, ?, ?, ?, ?, ?, 'confirmed')
     """, (car_plate, service, date, time, contact, created_at))
-    
     booking_id = cur.lastrowid
     conn.commit()
     conn.close()
