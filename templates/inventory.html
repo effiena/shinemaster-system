@@ -4,10 +4,13 @@
 {% block content %}
 
 <h2>Inventory Management</h2>
-
+<!-- Overall total spent -->
+<div style="background:#ffd800; padding:10px; border-radius:6px; margin-bottom:20px; font-weight:bold;">
+    Overall Inventory Spent (All Time): RM {{ overall_total }}
+</div>
 <!-- ================= Add Item Form ================= -->
-<h3>Add New Inventory Item</h3>
 
+<h3>Add New Inventory Item</h3>
 <form method="POST" action="/add_inventory">
     <label>Item</label><br>
     <input type="text" name="item" required><br>
