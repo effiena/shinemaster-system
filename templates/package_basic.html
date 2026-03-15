@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Car Wash - Basic</title>
+<style>
+  /* Global Styles */
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    color: #fff;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 50px 20px;
+    text-align: center;
+  }
+
+  /* Header */
+  h1 {
+    color: #ffd500;
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 5px #000;
+  }
+
+  .subtitle {
+    color: #9b5cff;
+    font-size: 1.2em;
+    margin-bottom: 30px;
+  }
+
+  /* Price Highlight */
+  .price {
+    background: #ffd500;
+    color: #0f0f0f;
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    display: inline-block;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  /* Features List */
+  ul {
+    list-style-type: none;
+    padding: 0;
+    font-size: 1.2em;
+    line-height: 2;
+    margin-bottom: 40px;
+  }
+
+  ul li {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    margin: 8px 0;
+    border-left: 6px solid #9b5cff;
+    border-radius: 8px;
+    transition: transform 0.3s, background 0.3s;
+  }
+
+  ul li:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Back Link */
+  .back {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 12px 25px;
+    font-size: 1.2em;
+    color: #ffd500;
+    text-decoration: none;
+    border: 2px solid #ffd500;
+    border-radius: 12px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .back:hover {
+    background: #ffd500;
+    color: #0f0f0f;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ELEGANT Wash</h1>
+  <div class="subtitle">Quick, efficient, and spotless cleaning</div>
+
+  <div class="price">Sedan RM20 | SUV / MPV RM24 | Large MPV / 4x4 RM28</div>
+
+  <ul>
+    <li>Nano wax shampoo 水蜡洗车液</li>
+    <li>Interior dust removal 车内饰除尘</li>
+    <li>Interior vacuum 车内饰吸尘</li>
+    <li>Interior wipe down 车内饰擦拭</li>
+    <li>Rim wash 轮毂清洗</li>
+    <li>Tyre shine 轮胎光亮剂</li>
+  </ul>
+
+  <a href="/packages" class="back">← Back to Packages</a>
+</div>
+
+</body>
+</html>
