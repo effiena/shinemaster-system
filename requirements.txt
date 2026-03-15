@@ -3,3 +3,5 @@ flask-socketio
 gunicorn
 werkzeug
 eventlet
+qrcode[pil]
+Pillow
