@@ -202,7 +202,11 @@ def sync_old_orders_data():
     conn.commit()
     conn.close()
 
-
+# ======= ADD THIS BLOCK =======
+@app.before_first_request
+def startup_tasks():
+    init_db()
+    sync_old_orders_data()
 
 # ================= HELPERS =================
 
