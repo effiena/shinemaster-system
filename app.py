@@ -202,11 +202,6 @@ def sync_old_orders_data():
     conn.commit()
     conn.close()
 
-# ======= ADD THIS BLOCK =======
-@app.before_first_request
-def startup_tasks():
-    init_db()
-    sync_old_orders_data()
 
 # ================= HELPERS =================
 
@@ -1143,12 +1138,13 @@ def finance():
     }
     return render_template("finance.html", report=report)
 
-
 # ================= RUN =================
 if __name__ == "__main__":
-    # Initialize database and sync old data
+    # Only for local dev
     init_db()
     sync_old_orders_data()
-
-    # Run the app
     socketio.run(app, debug=True)
+else:
+    # When using Gunicorn/WSGI, run init once per process
+    init_db()
+    sync_old_orders_data()
