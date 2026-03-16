@@ -203,7 +203,6 @@ def sync_old_orders_data():
     conn.close()
 
 
-sync_old_orders_data()
 
 # ================= HELPERS =================
 
