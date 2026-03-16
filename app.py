@@ -739,8 +739,8 @@ def inventory():
 
     query += " ORDER BY purchase_date DESC, id DESC"
 
-    items = conn.execute(query, params).fetchall()
-    total_spent = sum((item["price"] or 0) for item in items)
+    items = conn.execute("SELECT * FROM inventory WHERE is_deleted = 0 ORDER BY id DESC").fetchall()
+    total_spent = conn.execute("SELECT COALESCE(SUM(quantity * price),0) FROM inventory WHERE is_deleted = 0").fetchone()[0]
 
     conn.close()
 
