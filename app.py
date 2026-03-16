@@ -47,11 +47,78 @@ def column_exists(cursor, table_name, column_name):
     cursor.execute(f"PRAGMA table_info({table_name})")
     return any(col[1] == column_name for col in cursor.fetchall())
 
+# ================= DATABASE INIT =================
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # ------------------ INVENTORY ------------------
+    # ===== ORDERS =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_plate TEXT,
+            contact_number TEXT,
+            address TEXT,
+            service_type TEXT,
+            price REAL,
+            payment_method TEXT,
+            payment_status TEXT,
+            loyalty_status TEXT DEFAULT 'Not Eligible',
+            created_at TEXT,
+            car_type TEXT,
+            invoice_no TEXT,
+            invoice_date TEXT,
+            reported_date TEXT
+        )
+    """)
+
+    # ===== LOYALTY =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS loyalty (
+            car_plate TEXT PRIMARY KEY,
+            paid_count INTEGER
+        )
+    """)
+
+    # ===== SERVICES =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL
+        )
+    """)
+
+    # ===== SALES (legacy) =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            invoice TEXT,
+            car_plate TEXT,
+            car_type TEXT,
+            service_type TEXT,
+            payment_method TEXT,
+            price REAL,
+            date TEXT,
+            time TEXT
+        )
+    """)
+
+    # ===== BOOKINGS =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_plate TEXT,
+            service_type TEXT,
+            booking_date TEXT,
+            booking_time TEXT,
+            contact TEXT,
+            status TEXT DEFAULT 'Booked',
+            created_at TEXT
+        )
+    """)
+
+    # ===== INVENTORY =====
     c.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,19 +132,41 @@ def init_db():
         )
     """)
 
-    # Add extra columns if missing
-    extra_cols = {
-        "serial_number": "TEXT",
-        "category": "TEXT",
-        "unit": "TEXT",
-        "last_updated": "TEXT",
-        "is_deleted": "INTEGER DEFAULT 0"
-    }
+    # ===== USERS =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            password TEXT,
+            role TEXT
+        )
+    """)
 
-    for col, col_type in extra_cols.items():
-        if not column_exists(c, "inventory", col):
-            c.execute(f"ALTER TABLE inventory ADD COLUMN {col} {col_type}")
-            print(f"Added column '{col}' to inventory table")
+    # ===== INVENTORY LOG =====
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS inventory_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            inventory_id INTEGER,
+            change INTEGER,
+            type TEXT,
+            reference TEXT,
+            date TEXT
+        )
+    """)
+
+    # ===== SAFE COLUMN UPGRADES =====
+    existing_columns = [row[1] for row in c.execute("PRAGMA table_info(inventory)").fetchall()]
+
+    if "serial_number" not in existing_columns:
+        c.execute("ALTER TABLE inventory ADD COLUMN serial_number TEXT")
+    if "category" not in existing_columns:
+        c.execute("ALTER TABLE inventory ADD COLUMN category TEXT")
+    if "unit" not in existing_columns:
+        c.execute("ALTER TABLE inventory ADD COLUMN unit TEXT")
+    if "last_updated" not in existing_columns:
+        c.execute("ALTER TABLE inventory ADD COLUMN last_updated TEXT")
+    if "is_deleted" not in existing_columns:
+        c.execute("ALTER TABLE inventory ADD COLUMN is_deleted INTEGER DEFAULT 0")
 
     conn.commit()
     conn.close()
@@ -1055,6 +1144,7 @@ def finance():
     return render_template("finance.html", report=report)
 
 
+# ================= RUN =================
 # ================= RUN =================
 if __name__ == "__main__":
     socketio.run(app, debug=True)
