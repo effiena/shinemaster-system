@@ -8,8 +8,10 @@ from collections import defaultdict
 from zoneinfo import ZoneInfo
 import qrcode
 from io import BytesIO
-
 import os
+import logging
+logging.getLogger('engineio').setLevel(logging.WARNING)
+logging.getLogger('socketio').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -1143,7 +1145,7 @@ if __name__ == "__main__":
     # Only for local dev
     init_db()
     sync_old_orders_data()
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0", port=8080, debug=True)
 else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
