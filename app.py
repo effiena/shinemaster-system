@@ -43,82 +43,15 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-
 def column_exists(cursor, table_name, column_name):
     cursor.execute(f"PRAGMA table_info({table_name})")
-    cols = cursor.fetchall()
-    return any(col[1] == column_name for col in cols)
-
+    return any(col[1] == column_name for col in cursor.fetchall())
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Orders table - main sales source
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            car_plate TEXT,
-            contact_number TEXT,
-            address TEXT,
-            service_type TEXT,
-            price REAL,
-            payment_method TEXT,
-            payment_status TEXT,
-            loyalty_status TEXT DEFAULT 'Not Eligible',
-            created_at TEXT,
-            car_type TEXT,
-            invoice_no TEXT,
-            invoice_date TEXT,
-            reported_date TEXT
-        )
-    """)
-
-    # Loyalty table
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS loyalty (
-            car_plate TEXT PRIMARY KEY,
-            paid_count INTEGER
-        )
-    """)
-
-    # Services table
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS services (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            price REAL NOT NULL
-        )
-    """)
-
-    # Legacy sales table kept for compatibility
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS sales (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invoice TEXT,
-            car_plate TEXT,
-            car_type TEXT,
-            service_type TEXT,
-            payment_method TEXT,
-            price REAL,
-            date TEXT,
-            time TEXT
-        )
-    """)
-
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            car_plate TEXT,
-            service_type TEXT,
-            booking_date TEXT,
-            booking_time TEXT,
-            contact TEXT,
-            status TEXT DEFAULT 'Booked',
-            created_at TEXT
-        )
-    """)
-
+    # ------------------ INVENTORY ------------------
     c.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,56 +65,22 @@ def init_db():
         )
     """)
 
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            password TEXT,
-            role TEXT
-        )
-    """)
+    # Add extra columns if missing
+    extra_cols = {
+        "serial_number": "TEXT",
+        "category": "TEXT",
+        "unit": "TEXT",
+        "last_updated": "TEXT",
+        "is_deleted": "INTEGER DEFAULT 0"
+    }
 
-    # Safe schema upgrades
-    if not column_exists(c, "orders", "invoice_date"):
-        c.execute("ALTER TABLE orders ADD COLUMN invoice_date TEXT")
-    if not column_exists(c, "orders", "reported_date"):
-        c.execute("ALTER TABLE orders ADD COLUMN reported_date TEXT")
-    if not column_exists(c, "orders", "created_at"):
-        c.execute("ALTER TABLE orders ADD COLUMN created_at TEXT")
-    if not column_exists(c, "orders", "invoice_no"):
-        c.execute("ALTER TABLE orders ADD COLUMN invoice_no TEXT")
-    if not column_exists(c, "orders", "car_type"):
-        c.execute("ALTER TABLE orders ADD COLUMN car_type TEXT")
-    if not column_exists(c, "orders", "loyalty_status"):
-        c.execute("ALTER TABLE orders ADD COLUMN loyalty_status TEXT DEFAULT 'Not Eligible'")
-
-    # Inventory upgrades
-    if not column_exists(c, "inventory", "serial_number"):
-        c.execute("ALTER TABLE inventory ADD COLUMN serial_number TEXT")
-    if not column_exists(c, "inventory", "category"):
-        c.execute("ALTER TABLE inventory ADD COLUMN category TEXT")
-    if not column_exists(c, "inventory", "unit"):
-        c.execute("ALTER TABLE inventory ADD COLUMN unit TEXT")
-    if not column_exists(c, "inventory", "last_updated"):
-        c.execute("ALTER TABLE inventory ADD COLUMN last_updated TEXT")
-
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS inventory_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            inventory_id INTEGER,
-            change INTEGER,
-            type TEXT,
-            reference TEXT,
-            date TEXT
-        )
-    """)
+    for col, col_type in extra_cols.items():
+        if not column_exists(c, "inventory", col):
+            c.execute(f"ALTER TABLE inventory ADD COLUMN {col} {col_type}")
+            print(f"Added column '{col}' to inventory table")
 
     conn.commit()
     conn.close()
-
-
-init_db()
-
 
 def sync_old_orders_data():
     conn = get_db_connection()
