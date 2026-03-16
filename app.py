@@ -1,5 +1,3 @@
-#import eventlet
-#eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
@@ -1140,11 +1138,14 @@ def finance():
         "by_method": by_method,
         "total_revenue": total_revenue
     }
-
     return render_template("finance.html", report=report)
 
 
 # ================= RUN =================
-# ================= RUN =================
 if __name__ == "__main__":
+    # Initialize database and sync old data
+    init_db()
+    sync_old_orders_data()
+
+    # Run the app
     socketio.run(app, debug=True)
