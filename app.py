@@ -716,7 +716,7 @@ def inventory():
     filter_start = request.args.get("filter_start", "").strip()
     filter_end = request.args.get("filter_end", "").strip()
 
-    query = "SELECT * FROM inventory"
+    query = "SELECT * FROM inventory WHERE is_deleted = 0"
     params = []
 
     if filter_type == "month" and filter_month:
@@ -751,6 +751,32 @@ def inventory():
         filter_label=filter_label
     )
 
+@app.route("/inventory/save", methods=["POST"])
+def save_item():
+    data = request.json
+    item_id = data.get("id")
+    name = data.get("name")
+    quantity = data.get("quantity")
+    price = data.get("price")
+
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE inventory SET name=?, quantity=?, price=? WHERE id=?",
+        (name, quantity, price, item_id)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route("/inventory/delete", methods=["POST"])
+def delete_item():
+    data = request.json
+    item_id = data.get("id")
+    conn = get_db_connection()
+    conn.execute("UPDATE inventory SET is_deleted=1 WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
 
 @app.route("/add_inventory", methods=["POST"])
 def add_inventory():
@@ -758,30 +784,48 @@ def add_inventory():
         return "Admin only"
 
     item = request.form["item"]
-    company = request.form["company"]
-    phone = request.form["phone"]
-    address = request.form["address"]
-    purchase_date = request.form["purchase_date"]
-    quantity = request.form["quantity"]
-    price = request.form["price"]
+    company = request.form.get("company", "")
+    phone = request.form.get("phone", "")
+    address = request.form.get("address", "")
+    purchase_date = request.form.get("purchase_date", "")
+    quantity = int(request.form.get("quantity", 0))
+    price = float(request.form.get("price", 0))
+    serial_number = request.form.get("serial_number", "")
     category = request.form.get("category", "")
     unit = request.form.get("unit", "")
-    serial_number = request.form.get("serial_number", "")
     last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-    conn.execute("""
-        INSERT INTO inventory
-        (item, company, phone, address, purchase_date, quantity, price, category, unit, serial_number, last_updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        item, company, phone, address, purchase_date, quantity, price,
-        category, unit, serial_number, last_updated
-    ))
+
+    existing = conn.execute(
+        "SELECT id, is_deleted FROM inventory WHERE item=?",
+        (item,)
+    ).fetchone()
+
+    if existing and existing["is_deleted"] == 1:
+        conn.execute("""
+            UPDATE inventory
+            SET company=?, phone=?, address=?, purchase_date=?, quantity=?, price=?,
+                serial_number=?, category=?, unit=?, is_deleted=0, last_updated=?
+            WHERE id=?
+        """, (
+            company, phone, address, purchase_date, quantity, price,
+            serial_number, category, unit, last_updated, existing["id"]
+        ))
+    else:
+        conn.execute("""
+            INSERT INTO inventory
+            (item, company, phone, address, purchase_date, quantity, price, serial_number, category, unit, last_updated, is_deleted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        """, (
+            item, company, phone, address, purchase_date, quantity, price,
+            serial_number, category, unit, last_updated
+        ))
+
     conn.commit()
     conn.close()
-
     return redirect("/inventory")
+
 
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
@@ -843,6 +887,27 @@ def delete_inventory(id):
     conn.close()
     return redirect("/inventory")
 
+@app.route("/inventory_deleted")
+def inventory_deleted():
+    if session.get("role") != "admin":
+        return redirect("/pos")
+
+    conn = get_db_connection()
+    items = conn.execute(
+        "SELECT * FROM inventory WHERE is_deleted = 1 ORDER BY last_updated DESC"
+    ).fetchall()
+    conn.close()
+
+    return render_template("inventory_deleted.html", items=items)
+
+@app.route("/restore_inventory/<int:id>")
+def restore_inventory(id):
+    conn = get_db_connection()
+    conn.execute("UPDATE inventory SET is_deleted = 0 WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect("/inventory_deleted")
 
 # ================= BOOKING =================
 def generate_timeslots():
