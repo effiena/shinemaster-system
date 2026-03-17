@@ -1145,7 +1145,7 @@ if __name__ == "__main__":
     # Only for local dev
     init_db()
     sync_old_orders_data()
-    socketio.run(app, host="0.0.0.0", port=8080, debug=True)
+    socketio.run(app, port=5000, debug=True)
 else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
