@@ -1,7 +1,6 @@
 
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
-from flask_socketio import SocketIO
 from datetime import datetime, timedelta
 import calendar
 from collections import defaultdict
@@ -15,7 +14,6 @@ logging.getLogger('socketio').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
-socketio = SocketIO(app)
 
 COMPANY_INFO = {
     "name": "SHINEMASTER AUTO",
@@ -1150,3 +1148,4 @@ else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
     sync_old_orders_data()
+
