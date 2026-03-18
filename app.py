@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
+import urllib.parse
 from datetime import datetime, timedelta
 import calendar
 from collections import defaultdict
@@ -393,12 +394,64 @@ def pos():
         order["created_at"] = saved["created_at"]
         order["reported_date"] = saved["reported_date"]
 
-        socketio.emit("update_dashboard")
         conn.close()
         return render_template("receipt.html", order=order)
 
     conn.close()
     return render_template("new_order.html", services=services)
+
+# ================= POS RETAIL =================
+@app.route("/pos_retail", methods=["GET","POST"])
+def pos_retail():
+    if request.method == "GET":
+        return render_template("pos_retail.html", order=None)
+
+    data = request.get_json()
+    cart = data.get("cart", [])
+    payment_method = data.get("payment_method", "cash")
+    paid = float(data.get("paid", 0))
+
+    total = sum(float(item["subtotal"]) for item in cart)
+    change = max(0, paid - total)
+
+    # Save order to DB
+    conn = get_db_connection()
+    cur = conn.cursor()
+    invoice_no = int(datetime.now().timestamp())
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cur.execute(
+        "INSERT INTO retail_orders (invoice_no, date, payment_method, total, paid, change) VALUES (?,?,?,?,?,?)",
+        (invoice_no, now_str, payment_method, total, paid, change)
+    )
+    order_id = cur.lastrowid
+
+    for item in cart:
+        cur.execute(
+            "INSERT INTO retail_order_items (order_id, item_name, quantity, subtotal) VALUES (?,?,?,?)",
+            (order_id, item["item"], item["qty"], item["subtotal"])
+        )
+    conn.commit()
+    conn.close()
+
+    # Generate QR code if E-Wallet
+    qr_url = None
+    if payment_method == "ewallet":
+        qr_data = f"Pay RM {total} via E-Wallet"
+        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={urllib.parse.quote(qr_data)}"
+
+    order_data = {
+        "invoice_no": invoice_no,
+        "date": now_str,
+        "items": cart,
+        "total": total,
+        "paid": paid,
+        "change": change,
+        "payment_method": payment_method,
+        "qr_url": qr_url
+    }
+
+    return render_template("receipt_retail.html", order=order_data)
 
 
 # ================= CREATE ORDER =================
@@ -443,7 +496,6 @@ def create_order():
     order["created_at"] = saved["created_at"]
     order["reported_date"] = saved["reported_date"]
 
-    socketio.emit("update_dashboard")
     return render_template("receipt.html", order=order)
 
 
@@ -1143,7 +1195,8 @@ if __name__ == "__main__":
     # Only for local dev
     init_db()
     sync_old_orders_data()
-    socketio.run(app, port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
 else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
