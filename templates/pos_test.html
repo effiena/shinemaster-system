@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master POS</title>
+
 <style>
 body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
 .wrapper{display:flex;height:100vh;}
+
 /* LEFT PANEL */
 .left{width:35%;background:#2c2c2c;color:white;padding:20px;box-sizing:border-box;}
 .left label{display:block;margin-top:10px;font-weight:bold;}
@@ -22,7 +24,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 .pay-option{padding:14px;text-align:center;background:#2a2a2a;border-radius:10px;cursor:pointer;}
 .pay-option.active{background:#ba55d3;font-weight:bold;}
-.cash-box input{width:100%;padding:12px;border-radius:10px;border:none;background:#2a2a2a;color:#fff;font-size:14px;margin-top:5px;}
+.cash-box input{width:100%;padding:12px;border-radius:10px;border:none;background:#2a2a2a;color:#fff;}
 #balance_display{font-size:14px;color:#00e676;margin-top:5px;}
 #qr_box{display:none;text-align:center;margin-top:10px;}
 .pay-btn{width:100%;padding:14px;background:#9C27B0;color:white;border:none;border-radius:10px;margin-top:10px;cursor:pointer;}
@@ -34,6 +36,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .right iframe{flex:1;width:100%;border:none;border-radius:8px;}
 </style>
 </head>
+
 <body>
 
 <div class="wrapper">
@@ -70,6 +73,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 
 <!-- MIDDLE PANEL -->
 <div class="middle">
+
 <div id="price_display">RM 0.00</div>
 
 <div class="payment-grid">
@@ -89,6 +93,11 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 </div>
 
 <button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
+
+<button class="pay-btn" style="background:#4CAF50;" onclick="printReceiptCopy()">
+PRINT COPY OF RECEIPT
+</button>
+
 </div>
 
 <!-- RIGHT PANEL -->
@@ -124,7 +133,10 @@ let selectedService=null;
 let selectedPayment=null;
 
 // Service
-function selectService(service){selectedService=service;calculatePrice();}
+function selectService(service){
+    selectedService=service;
+    calculatePrice();
+}
 
 // Price
 function calculatePrice(){
@@ -132,57 +144,107 @@ function calculatePrice(){
     if(selectedService){
         let price=priceTable[selectedService][carType];
         document.getElementById('price_display').textContent="RM "+price.toFixed(2);
-    } else document.getElementById('price_display').textContent="RM 0.00";
+    } else {
+        document.getElementById('price_display').textContent="RM 0.00";
+    }
 }
 
-// Loyalty
-async function checkLoyalty(){
-    const plate=document.getElementById('car_plate').value;
-    const box=document.getElementById('loyalty_status');
-    if(plate.length<3){ box.value=""; box.style.background='#2c2c2c'; return; }
-    const res=await fetch('/check_loyalty/'+plate);
-    const data=await res.json();
-    if(data.eligible){ box.value='Eligible for FREE Car Wash'; box.style.background='#b8f5b1'; }
-    else{ const remaining=5-data.paid; box.value='Not Eligible ('+remaining+' more wash)'; box.style.background='#ffd6d6'; }
-}
-
-// Payment selection
+// Payment
 function selectPayment(el,method){
     document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active'));
-    el.classList.add('active'); selectedPayment=method;
+    el.classList.add('active');
+    selectedPayment=method;
+
     document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none';
-    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';
+    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'block';
 }
 
-// Cash balance
+// Balance
 function calculateBalance(){
     let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0;
     let cash=parseFloat(document.getElementById('cash_input').value)||0;
     let balance=cash-total;
-    document.getElementById('balance_display').textContent=balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";
+    document.getElementById('balance_display').textContent=
+        balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";
 }
 
-// Complete payment → POST to iframe
+// ORIGINAL receipt
 function completePayment(){
     if(!selectedService||!selectedPayment){alert("Missing input"); return;}
+
+    submitReceipt("ORIGINAL", "receipt_frame");
+}
+
+// COPY receipt
+function printReceiptCopy(){
+    if(!selectedService||!selectedPayment){alert("Missing input"); return;}
+
+    submitReceipt("COPY", "_blank");
+}
+
+// Submit to Flask
+function submitReceipt(type, target){
     const plate=document.getElementById('car_plate').value;
     const carType=document.getElementById('car_type').value;
     const price=priceTable[selectedService][carType];
 
     const form=document.createElement("form");
     form.method="POST";
-    form.action="/pos_test";       // Flask route returns receipt.html
-    form.target="receipt_frame";
+    form.action="/pos_test";
+    form.target=target;
 
-    const data={car_plate:plate, car_type:carType, service_type:selectedService, price:price, payment_method:selectedPayment};
+    const data={
+        car_plate:plate,
+        car_type:carType,
+        service_type:selectedService,
+        price:price,
+        payment_method:selectedPayment,
+        receipt_type:type
+    };
+
     for(let key in data){
         const input=document.createElement("input");
-        input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);
+        input.type="hidden";
+        input.name=key;
+        input.value=data[key];
+        form.appendChild(input);
     }
 
     document.body.appendChild(form);
     form.submit();
+    document.body.removeChild(form);
+
+    return render_template(
+    "receipt.html",
+    order=order,
+    receipt_type=receipt_type
+)
+}
+
+// Loyalty
+async function checkLoyalty(){
+    const plate=document.getElementById('car_plate').value;
+    const box=document.getElementById('loyalty_status');
+
+    if(plate.length<3){
+        box.value="";
+        box.style.background='#2c2c2c';
+        return;
+    }
+
+    const res=await fetch('/check_loyalty/'+plate);
+    const data=await res.json();
+
+    if(data.eligible){
+        box.value='Eligible for FREE Car Wash';
+        box.style.background='#b8f5b1';
+    } else {
+        const remaining=5-data.paid;
+        box.value='Not Eligible ('+remaining+' more wash)';
+        box.style.background='#ffd6d6';
+    }
 }
 </script>
+
 </body>
 </html>
