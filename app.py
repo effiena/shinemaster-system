@@ -453,6 +453,22 @@ def pos_retail():
 
     return render_template("receipt_retail.html", order=order_data)
 
+#===========post_test========
+
+@app.route('/pos_test', methods=['GET','POST'])
+def pos_test():
+    if request.method == 'POST':
+        car_plate = request.form.get('car_plate')
+        car_type = request.form.get('car_type')
+        service_type = request.form.get('service_type')
+        price = request.form.get('price')
+        payment_method = request.form.get('payment_method')
+
+        # Save order logic here
+        print(f'Order received: {car_plate}, {car_type}, {service_type}, RM{price}, {payment_method}')
+        return f"<h2>Payment Received: RM {price} via {payment_method}</h2><a href='/pos_test'>Back to POS</a>"
+
+    return render_template('pos_test.html')
 
 # ================= CREATE ORDER =================
 @app.route("/create_order", methods=["POST"])
