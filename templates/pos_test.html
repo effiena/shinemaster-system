@@ -117,66 +117,100 @@ button.pay-btn:hover {background:#7B1FA2;}
 .pay-btn:hover {
     transform: scale(1.03);
 }
+
+.middle{
+    width:30%;
+    background:#111;
+    padding:20px;
+    color:#fff;
+}
+
+.receipt-panel{
+    width:30%;
+    background:#fff;
+    padding:20px;
+    overflow:auto;
+}
+
+.wrapper{
+    display:flex;
+    height:100vh;
+}
+
+.left{ width:40%; }
 </style>
 </head>
 <body>
-
 <div class="wrapper">
 
-<!-- LEFT PANEL: Vehicle info, loyalty, car type, service buttons -->
+<!-- ================= LEFT PANEL ================= -->
 <div class="left">
 <div class="time-box" id="live_time"></div>
-<label for="car_plate">Car Plate</label>
-<input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()">
+
+<label>Car Plate</label>
+<input type="text" id="car_plate" onkeyup="checkLoyalty()">
+
 <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
+
 <label>Car Type</label>
-<select name="car_type" id="car_type" onchange="calculatePrice()">
+<select id="car_type" onchange="calculatePrice()">
 <option value="Sedan">Sedan</option>
 <option value="SUV_MPV">SUV/MPV</option>
 <option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
 </select>
+
 <div class="service-buttons">
-<button type="button" onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
-<button type="button" onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
-<button type="button" onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
-<button type="button" onclick="selectService('coat1')">COATING - 1 YEAR</button>
-<button type="button" onclick="selectService('coat2')">COATING - 2 YEAR</button>
-<button type="button" onclick="selectService('coat3')">COATING - 3 YEAR</button>
-<button type="button" onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
-<button type="button" onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
-<button type="button" onclick="selectService('wax')">WAXING</button>
-<button type="button" onclick="selectService('int_detail')">INTERIOR DETAILING</button>
-<button type="button" onclick="selectService('int_coat')">INTERIOR COATING</button>
+<button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
+<button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
+<button onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
+<button onclick="selectService('coat1')">COATING - 1 YEAR</button>
+<button onclick="selectService('coat2')">COATING - 2 YEAR</button>
+<button onclick="selectService('coat3')">COATING - 3 YEAR</button>
+<button onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
+<button onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
+<button onclick="selectService('wax')">WAXING</button>
+<button onclick="selectService('int_detail')">INTERIOR DETAILING</button>
+<button onclick="selectService('int_coat')">INTERIOR COATING</button>
 </div>
 </div>
 
-<!-- RIGHT PANEL: Price, total, payment -->
-<div class="right">
+<!-- ================= MIDDLE PANEL ================= -->
+<div class="middle">
 
-    <div>
-        <!-- PRICE -->
-        <div id="price_display">RM 0.00</div>
+<div id="price_display">RM 0.00</div>
 
-        <!-- PAYMENT METHODS -->
-        <div class="section-title">Payment Method</div>
-        <div class="payment-grid">
-            <div class="pay-option" onclick="selectPayment(this, 'Cash')">💵 Cash</div>
-            <div class="pay-option" onclick="selectPayment(this, 'Card')">💳 Card</div>
-            <div class="pay-option" onclick="selectPayment(this, 'E-Wallet')">📱 E-Wallet</div>
-            <div class="pay-option" onclick="selectPayment(this, 'QR Code')">🔳 QR Code</div>
-        </div>
+<div class="section-title">Payment Method</div>
+<div class="payment-grid">
+<div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
+<div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
+<div class="pay-option" onclick="selectPayment(this,'E-Wallet')">📱 E-Wallet</div>
+<div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
+</div>
 
-        <!-- CASH INPUT -->
-        <div class="cash-box" id="cash_box" style="display:none;">
-            <input type="number" id="cash_input" placeholder="Enter cash received" oninput="calculateBalance()">
-            <div id="balance_display"></div>
-        </div>
-    </div>
+<!-- CASH -->
+<div class="cash-box" id="cash_box" style="display:none;">
+<input type="number" id="cash_input" placeholder="Enter cash received" oninput="calculateBalance()">
+<div id="balance_display"></div>
+</div>
 
-    <!-- BUTTON -->
-    <button class="pay-btn" onclick="submitPayment()">COMPLETE PAYMENT</button>
+<!-- QR DISPLAY -->
+<div id="qr_box" style="display:none; text-align:center; margin-top:15px;">
+<h4>Scan to Pay</h4>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=SHINEMASTERPAY">
+</div>
+
+<button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
 
 </div>
+
+<!-- ================= RIGHT PANEL ================= -->
+<div class="receipt-panel">
+<h3>Receipt</h3>
+<div id="receipt_output"></div>
+</div>
+
+</div>
+
 
 <script>
 // Live Malaysia date & time
@@ -254,21 +288,72 @@ function submitPayment(){
     });
 }
 
+
 let selectedPayment = null;
 
 function selectPayment(el, method) {
     document.querySelectorAll('.pay-option').forEach(btn => btn.classList.remove('active'));
     el.classList.add('active');
+
     selectedPayment = method;
 
-    // Show cash input only if cash
-    if (method === 'Cash') {
-        document.getElementById('cash_box').style.display = 'block';
-    } else {
-        document.getElementById('cash_box').style.display = 'none';
-    }
+    // Cash
+    document.getElementById('cash_box').style.display =
+        method === 'Cash' ? 'block' : 'none';
+
+    // QR only for ewallet / qr
+    document.getElementById('qr_box').style.display =
+        (method === 'E-Wallet' || method === 'QR Code') ? 'block' : 'none';
 }
 
+function completePayment(){
+
+    if(!selectedPayment){
+        alert("Select payment method");
+        return;
+    }
+
+    const plate = document.getElementById('car_plate').value;
+    const carType = document.getElementById('car_type').value;
+    const price = selectedService ? priceTable[selectedService][carType] : 0;
+
+    if(!plate || !selectedService){
+        alert("Missing input");
+        return;
+    }
+
+    // RECEIPT RENDER
+    let receiptHTML = `
+    <div style="font-family:monospace; width:250px; margin:auto;">
+        <div style="text-align:center;"><b>SHINE MASTER</b></div>
+        <hr>
+        Plate: ${plate}<br>
+        Service: ${selectedService}<br>
+        Car: ${carType}<br>
+        <hr>
+        Total: RM ${price.toFixed(2)}<br>
+        Payment: ${selectedPayment}<br>
+        <hr>
+        Thank You!
+    </div>
+    `;
+
+    document.getElementById("receipt_output").innerHTML = receiptHTML;
+
+    // OPTIONAL: send to backend
+    fetch('/pos_test',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            car_plate:plate,
+            car_type:carType,
+            service_type:selectedService,
+            price:price,
+            payment_method:selectedPayment
+        })
+    });
+
+}
 function calculateBalance() {
     let total = parseFloat(document.getElementById('price_display').innerText.replace('RM','')) || 0;
     let cash = parseFloat(document.getElementById('cash_input').value) || 0;
