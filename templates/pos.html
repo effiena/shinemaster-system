@@ -1,328 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shine Master POS</title>
-    <style>
-        /* ===== Page Background ===== */
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9C27B0, #F3E5F5); /* soft grey → light purple */
-            color: #333333;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master POS</title>
+<style>
+body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
+.wrapper{display:flex;height:100vh;}
 
-        /* ===== Container Card ===== */
-        .container {
-            max-width: 500px;
-            width: 90%;
-            margin: 20px auto;
-            padding: 25px;
-            background: #FFFFFF;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
+/* LEFT PANEL */
+.left{width:33%;background:#2c2c2c;color:white;padding:10px;box-sizing:border-box;overflow-y:auto;}
+.left label{display:block;margin-top:5px;font-weight:bold;font-size:14px;}
+.left input{width:100%;padding:6px;margin-bottom:5px;border:none;border-radius:6px;font-size:14px;}
+.time-box{background:#6A1B9A;text-align:center;padding:8px;margin-bottom:10px;font-size:16px;border-radius:6px;}
+.service-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.service-buttons button{padding:6px;font-size:12px;background:#9C27B0;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+.service-buttons button:hover{background:#7B1FA2;}
 
-.logo-container {
-    text-align: center;
-    margin-bottom: 15px;
+/* MIDDLE PANEL */
+.middle{width:34%;background:#111;color:white;padding:10px;box-sizing:border-box;}
+#price_display{font-size:28px;font-weight:bold;text-align:center;margin-bottom:10px;color:#00e676;background:#1c1c1c;padding:10px;border-radius:8px;}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
+.pay-option{padding:10px;text-align:center;background:#2a2a2a;border-radius:6px;cursor:pointer;font-size:12px;}
+.pay-option.active{background:#ba55d3;font-weight:bold;}
+.cash-box input{width:100%;padding:8px;border-radius:6px;border:none;background:#2a2a2a;color:#fff;font-size:12px;}
+#balance_display{font-size:12px;color:#00e676;margin-top:3px;}
+#qr_box{display:none;text-align:center;margin-top:5px;}
+.pay-btn{width:100%;padding:10px;background:#9C27B0;color:white;border:none;border-radius:8px;margin-top:5px;cursor:pointer;font-size:12px;}
+.pay-btn:hover{background:#7B1FA2;}
+
+/* RIGHT PANEL */
+.right{width:33%;background:#fff;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;}
+.right h3{text-align:center;margin-bottom:5px;font-size:14px;}
+.right iframe{flex:1;width:100%;border:none;border-radius:6px;}
+
+/* Car Type */
+.car-type-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
+.car-type-buttons button{padding:6px;font-size:12px;background:#444;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;}
+.car-type-buttons button.active{background:#9C27B0;}
+.car-type-buttons button:hover{background:#7B1FA2;}
+
+.car-plate-keypad {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
 }
 
-.logo {
-    width: 120px;          /* set width */
-    height: 120px;         /* set height to make it square */
-    border-radius: 50%;    /* makes it perfectly circular */
-    object-fit: cover;     /* ensures logo scales and fills the circle */
-    display: inline-block;
-    border: 2px solid #6A1B9A; /* optional: purple border for polish */
-}
-
-        /* ===== Headings ===== */
-        h2 {
-            text-align: center;
-            color: #6A1B9A;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        /* ===== Labels ===== */
-        label {
-            display: block;
-            margin-top: 12px;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        /* ===== Inputs & Selects ===== */
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-            font-size: 16px;
-            line-height: 1.5;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        /* Car Plate input same height as select boxes */
-        #car_plate {
-            width: 60%;
-            padding: 10px;
-            display: inline-block;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-
-        /* ===== Focus ===== */
-        input:focus,
-        select:focus {
-            border-color: #B39DDB;
-            box-shadow: 0 0 8px #B39DDB;
-        }
-
-        /* ===== Price Box ===== */
-        .price-box {
-            margin-top: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #6A1B9A;
-            text-align: center;
-            background-color: #F3E5F5;
-            padding: 12px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        /* ===== Buttons ===== */
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(90deg, #B39DDB, #9C27B0);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-
-        button:hover {
-            background: linear-gradient(90deg, #9C27B0, #7B1FA2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        /* ===== Footer ===== */
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            margin-top: 15px;
-            color: #777777;
-        }
-
-        /* ===== Responsive ===== */
-        @media screen and (max-width: 400px) {
-            h2 { font-size: 20px; }
-            input, select { font-size: 14px; padding: 12px; }
-            #car_plate { width: 100%; padding: 12px; }
-            button { font-size: 16px; padding: 12px; }
-            .price-box { font-size: 20px; padding: 10px; }
-        }
-
-/* ===== Tablet Full-Screen ===== */
-@media screen and (min-width: 401px) and (max-width: 1024px) {
-    .container {
-        width: 90% !important;   /* almost full width on tablets */
-        max-width: 95% !important;
-        margin: 10px auto;
-        padding: 20px;
-    }
-}
-
-	#loyalty_status {
-    width: 100%;
+/* Letters */
+.letter {
+    background: #FFD54F;
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #FBC02D;
+    border-radius: 6px;
     padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #B39DDB;
+}
+
+/* Numbers */
+.number {
+    background: #FFB300;
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #FFA000;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* Special buttons */
+.enter {
+    background: #9C27B0;
+    color: white;
+    font-weight: bold;
+}
+
+.backspace {
+    background: #f44336;
+    color: white;
+    font-weight: bold;
+}
+
+/* Empty spacing */
+.spacer {
+    visibility: hidden;
+}
+
+
+.car-info-card {
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #6A1B9A;  /* deep purple to match theme */
     border-radius: 8px;
-    background-color: #F3E5F5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.loyalty-box {
+    background: #2c2c2c;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #fff;
+    font-size: 13px;
+}
+
+/* Text */
+#loyalty_status {
+    width: 100%;
+    padding: 12px;              /* match input height */
+    margin-top: 5px;
+    border: 2px solid #B39DDB;  /* same purple border */
+    border-radius: 10px;         /* same rounded corners as buttons/price box */
+    background-color: #F3E5F5;   /* default light purple background */
     font-weight: bold;
     text-align: center;
-    color: #6A1B9A;
-}	
-
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Logo placeholder -->
-        <div class="logo-container">
-    	   <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Shinemaster Logo" class="logo">
-        </div>
-
-        <h2>SHINE MASTER SOLUTION</h2>
-
-        <form action="/pos" method="POST">
-            <label for="car_plate">Car Plate</label>
-	    <input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()">
-            <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
-	    <label for="car_type">Car Type</label>
-	    <select name="car_type" id="car_type" onchange="calculatePrice()" required>
-                <option value="Sedan">Sedan</option>
-                <option value="SUV_MPV">SUV/MPV</option>
-                <option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
-            </select>
-
-
-<select name="service_type" id="service_type" onchange="calculatePrice()" required>
-
-<option value="">--Select Service--</option>
-
-<optgroup label="CAR WASH">
-<option value="wash_basic">CAR WASH - BASIC</option>
-<option value="wash_special">CAR WASH - SPECIAL</option>
-<option value="wash_maintain">CAR WASH - MAINTAINANCE</option>
-</optgroup>
-
-<optgroup label="POLISHING">
-<option value="coat1">COATING - 1 YEAR</option>
-<option value="coat2">COATING - 2 YEAR</option>
-<option value="coat3">COATING - 3 YEAR</option>
-
-<option value="disp2">DISPOSABLE - 2 YEAR</option>
-<option value="disp3">DISPOSABLE - 3 YEAR</option>
-
-<option value="wax">WAXING</option>
-</optgroup>
-
-<optgroup label="INTERIOR">
-<option value="int_detail">INTERIOR DETAILING</option>
-<option value="int_coat">INTERIOR COATING</option>
-</optgroup>
-
-</select>
-
-
-<div class="price-box">
-    RM <span id="price_display">0.00</span>
-</div>
-
-            <input type="hidden" name="price" id="price">
-            <label for="payment_method">Payment Method</label>
-            <select name="payment_method" id="payment_method" required>
-                <option value="Cash">Cash</option>
-                <option value="Card">Card</option>
-                <option value="E-Wallet">E-Wallet</option>
-                <option value="QR Code">QR Code</option>
-            </select>
-
-            <button type="submit">PAYMENT</button>
-        </form>
-
-        <div class="footer">
-            @SHINEMASTER AUTO. Powered By Asli.Tech
-        </div>
-    </div>
-
-    <script>
-const priceTable = {
-
-wash_basic: {
-    Sedan: 20,
-    SUV_MPV: 24,
-    "LARGE-MPV_4X4": 28
-},
-
-wash_special: {
-    Sedan: 48,
-    SUV_MPV: 58,
-    "LARGE-MPV_4X4": 68
-},
-
-wash_maintain: {
-    Sedan: 98,
-    SUV_MPV: 108,
-    "LARGE-MPV_4X4": 118
-},
-
-coat1: {
-    Sedan: 488,
-    SUV_MPV: 588,
-    "LARGE-MPV_4X4": 688
-},
-
-coat2: {
-    Sedan: 688,
-    SUV_MPV: 788,
-    "LARGE-MPV_4X4": 888
-},
-
-coat3: {
-    Sedan: 888,
-    SUV_MPV: 988,
-    "LARGE-MPV_4X4": 1088
-},
-
-disp2: {
-    Sedan: 588,
-    SUV_MPV: 688,
-    "LARGE-MPV_4X4": 788
-},
-
-disp3: {
-    Sedan: 788,
-    SUV_MPV: 888,
-    "LARGE-MPV_4X4": 988
-},
-
-wax: {
-    Sedan: 288,
-    SUV_MPV: 388,
-    "LARGE-MPV_4X4": 488
-},
-
-int_detail: {
-    Sedan: 188,
-    SUV_MPV: 288,
-    "LARGE-MPV_4X4": 388
-},
-
-int_coat: {
-    Sedan: 288,
-    SUV_MPV: 388,
-    "LARGE-MPV_4X4": 488
+    color: #6A1B9A;              /* purple text */
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* subtle shadow like price box */
+    transition: all 0.3s ease;
+}
+/* Progress container */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #555;
+    border-radius: 5px;
+    overflow: hidden;
 }
 
+/* Progress fill */
+#loyalty_progress {
+    height: 100%;
+    width: 0%;
+    background: #f44336;
+    transition: width 0.3s ease;
 }
 
-function calculatePrice() {
-    const service = document.getElementById("service_type").value
-    const carType = document.getElementById("car_type").value
-    const priceDisplay = document.getElementById("price_display")
-    const hiddenPrice = document.getElementById("price")
+/* Eligible state */
+.loyalty-eligible {
+    background: #1b5e20 !important;
+}
 
-    if(service && carType && priceTable[service]){
-        const price = priceTable[service][carType]
-        if(price !== undefined){
-            priceDisplay.textContent = price.toFixed(2)
-            hiddenPrice.value = price
-        } else {
-            priceDisplay.textContent = "0.00"
-            hiddenPrice.value = 0  // set default numeric value
-        }
-    } else {
-        priceDisplay.textContent = "0.00"
-        hiddenPrice.value = 0
+.loyalty-eligible #loyalty_progress {
+    background: #00e676;
+}
+
+/* Flash animation */
+@keyframes flash {
+    0% { box-shadow: 0 0 5px #00e676; }
+    50% { box-shadow: 0 0 15px #00e676; }
+    100% { box-shadow: 0 0 5px #00e676; }
+}
+
+.flash {
+    animation: flash 1s ease-in-out 3;
+}
+
+@media screen and (max-width: 400px) {
+    #loyalty_status {
+        font-size: 14px;
+        padding: 10px;
     }
 }
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+
+<!-- LEFT PANEL -->
+<div class="left">
+
+<input type="text" id="car_plate" onkeyup="checkLoyalty()" readonly placeholder="Enter Car Plate">
+
+<div class="car-plate-keypad"></div>
+
+
+<label>Car Type</label>
+<div class="car-type-buttons">
+    <button onclick="selectCarType(this,'Sedan')">SEDAN</button>
+    <button onclick="selectCarType(this,'SUV_MPV')">SUV / MPV</button>
+    <button onclick="selectCarType(this,'LARGE-MPV_4X4')">LARGE 4X4</button>
+</div>
+<input type="hidden" id="car_type">
+
+<label>Packages</label>
+<div class="service-buttons">
+<button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
+<button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
+<button onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
+<button onclick="selectService('coat1')">COATING - 1 YEAR</button>
+<button onclick="selectService('coat2')">COATING - 2 YEAR</button>
+<button onclick="selectService('coat3')">COATING - 3 YEAR</button>
+<button onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
+<button onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
+<button onclick="selectService('wax')">WAXING</button>
+<button onclick="selectService('int_detail')">INTERIOR DETAILING</button>
+<button onclick="selectService('int_coat')">INTERIOR COATING</button>
+</div>
+</div>
+
+<!-- MIDDLE PANEL -->
+<div class="middle">
+<div class="time-box" id="live_time"></div>
+
+<!-- Car info display card -->
+<div id="car_info" class="car-info-card">
+    Car Plate: - | Type: -
+</div>
+
+<!-- SHOW LOYALTY -->
+<div class="loyalty-box">
+    <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
+</div>
+
+<div id="price_display">RM 0.00</div>
+<div class="payment-grid">
+<div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
+<div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
+<div class="pay-option" onclick="selectPayment(this,'E-Wallet')">📱 E-Wallet</div>
+<!-- MIDDLE PANEL --><div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
+</div>
+
+<div class="cash-box" id="cash_box" style="display:none;">
+<input type="number" id="cash_input" placeholder="Enter cash" oninput="calculateBalance()">
+<div id="balance_display"></div>
+</div>
+
+<div id="qr_box">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=PAYMENT">
+</div>
+
+<button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
+<button class="pay-btn" style="background:#4CAF50;" onclick="printReceiptCopy()">PRINT COPY OF RECEIPT</button>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+<h3>Receipt</h3>
+<iframe id="receipt_frame" name="receipt_frame"></iframe>
+</div>
+
+</div>
+
+<script>
+// Live time
+setInterval(()=>{document.getElementById('live_time').textContent=new Date().toLocaleString('en-MY');},1000);
+
+function updateCarInfo(){
+    const plate = document.getElementById('car_plate').value || '-';
+    const type = document.getElementById('car_type').value || '-';
+    document.getElementById('car_info').textContent = `Car Plate: ${plate} | Type: ${type}`;
+}
+
+// Price table
+const priceTable = {
+wash_basic:{Sedan:20,SUV_MPV:24,"LARGE-MPV_4X4":28},
+wash_special:{Sedan:48,SUV_MPV:58,"LARGE-MPV_4X4":68},
+wash_maintain:{Sedan:98,SUV_MPV:108,"LARGE-MPV_4X4":118},
+coat1:{Sedan:488,SUV_MPV:588,"LARGE-MPV_4X4":688},
+coat2:{Sedan:688,SUV_MPV:788,"LARGE-MPV_4X4":888},
+coat3:{Sedan:888,SUV_MPV:988,"LARGE-MPV_4X4":1088},
+disp2:{Sedan:588,SUV_MPV:688,"LARGE-MPV_4X4":788},
+disp3:{Sedan:788,SUV_MPV:888,"LARGE-MPV_4X4":988},
+wax:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488},
+int_detail:{Sedan:188,SUV_MPV:288,"LARGE-MPV_4X4":388},
+int_coat:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488}
+};
+
+let selectedService=null;
+let selectedPayment=null;
+
+function selectService(service){selectedService=service; calculatePrice();}
+function selectCarType(el,type){document.querySelectorAll('.car-type-buttons button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.getElementById('car_type').value=type; calculatePrice();     updateCarInfo(); }
+
+
+function calculatePrice(){ const carType=document.getElementById('car_type').value; if(selectedService && carType){ document.getElementById('price_display').textContent="RM "+priceTable[selectedService][carType].toFixed(2); } else { document.getElementById('price_display').textContent="RM 0.00"; } }
+
+function selectPayment(el,method){document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedPayment=method; document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none'; document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';}
+
+function calculateBalance(){let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0; let cash=parseFloat(document.getElementById('cash_input').value)||0; let balance=cash-total; document.getElementById('balance_display').textContent= balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";}
+
+function completePayment(){if(!selectedService||!selectedPayment){alert("Missing input"); return;} submitReceipt("ORIGINAL","receipt_frame");}
+
+function printReceiptCopy(){
+    if(!selectedService || !selectedPayment){
+        alert("Missing input");
+        return;
+    }
+
+    const plate = document.getElementById('car_plate').value;
+    const carType = document.getElementById('car_type').value;
+    const price = priceTable[selectedService][carType];
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/pos";
+    form.target = "_blank"; // new tab
+
+    const data = {
+        car_plate: plate,
+        car_type: carType,
+        service_type: selectedService,
+        price: price,
+        payment_method: selectedPayment,
+        receipt_type: "COPY"
+    };
+
+    for(let key in data){
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = data[key];
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+
+function submitReceipt(type,target){const plate=document.getElementById('car_plate').value; const carType=document.getElementById('car_type').value; const price=priceTable[selectedService][carType]; const form=document.createElement("form"); form.method="POST"; form.action="/pos"; form.target=target; const data={car_plate:plate,car_type:carType,service_type:selectedService,price:price,payment_method:selectedPayment,receipt_type:type}; for(let key in data){const input=document.createElement("input"); input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);} document.body.appendChild(form); form.submit(); document.body.removeChild(form);}
 
 async function checkLoyalty() {
     const plate = document.getElementById("car_plate").value
@@ -347,11 +349,107 @@ async function checkLoyalty() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    calculatePrice();  // ensures hidden price has a numeric value on page load
-});
 
-    </script>
+const keypad = document.querySelector('.car-plate-keypad');
 
+function addBtn(text, type, onClick){
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    if(type) btn.classList.add(type);
+    btn.onclick = () => onClick(text);
+    keypad.appendChild(btn);
+}
+
+function addSpacer(){
+    const div = document.createElement('div');
+    div.classList.add('spacer');
+    keypad.appendChild(div);
+}
+
+// ===== ROW 1 =====
+['A','B','C','D'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['1','2','3'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 2 =====
+['E','F','G','H'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['4','5','6'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 3 =====
+['I','J','K','L'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['7','8','9'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 4 =====
+['M','N','O','P'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('0','number',appendCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 5 =====
+['Q','R','S','T'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('ENTER','enter',submitCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 6 =====
+['U','V','W','X'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('⌫','backspace',backspaceCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 7 =====
+['Y','Z'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addSpacer(); addSpacer(); addSpacer(); addSpacer(); addSpacer();
+
+// Add letters
+for(let char of letters){
+    const btn = document.createElement('button');
+    btn.textContent = char;
+    btn.onclick = ()=>appendCarPlate(char);
+    keypadContainer.appendChild(btn);
+}
+
+// Add numbers
+for(let num of numbers){
+    const btn = document.createElement('button');
+    btn.textContent = num;
+    btn.onclick = ()=>appendCarPlate(num);
+    keypadContainer.appendChild(btn);
+}
+
+// Enter button
+const enterBtn = document.createElement('button');
+enterBtn.textContent = 'Enter';
+enterBtn.classList.add('enter');
+enterBtn.onclick = ()=>submitCarPlate();
+keypadContainer.appendChild(enterBtn);
+
+// Backspace button
+const backspaceBtn = document.createElement('button');
+backspaceBtn.textContent = '⌫'; // or "Backspace"
+backspaceBtn.classList.add('backspace');
+backspaceBtn.onclick = ()=>backspaceCarPlate();
+keypadContainer.appendChild(backspaceBtn);
+
+// Functions
+function appendCarPlate(char){
+    const input = document.getElementById('car_plate');
+    input.value += char;
+    checkLoyalty();
+    updateCarInfo();
+}
+
+function submitCarPlate(){
+    checkLoyalty();
+    document.getElementById('car_type').focus();
+}
+
+function backspaceCarPlate(){
+    const input = document.getElementById('car_plate');
+    input.value = input.value.slice(0, -1);
+    checkLoyalty();
+    updateCarInfo();
+}
+
+// Keypad functions
+function appendCarPlate(char){const input=document.getElementById('car_plate'); input.value+=char; checkLoyalty();}
+function submitCarPlate(){checkLoyalty(); document.getElementById('car_type').focus();}
+</script>
 </body>
 </html>
