@@ -466,6 +466,9 @@ def pos_test():
         price = float(request.form['price'])
         payment_method = request.form['payment_method']
 
+        # ✅ ADD THIS LINE
+        receipt_type = request.form.get("receipt_type", "ORIGINAL")
+
         # ===== Loyalty logic =====
         conn = get_db_connection()
         cur = conn.cursor()
@@ -510,9 +513,14 @@ def pos_test():
             "loyalty_eligible": loyalty_eligible
         }
 
-        return render_template("receipt.html", order=order)
+        conn.close()
+
+        # ✅ PASS receipt_type to HTML
+        return render_template("receipt.html", order=order, receipt_type=receipt_type)
 
     return render_template("pos_test.html")
+
+
 
 # ================= CREATE ORDER =================
 @app.route("/create_order", methods=["POST"])
