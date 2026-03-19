@@ -64,6 +64,12 @@ width:180px;
 
 <body>
 
+{% if receipt_type == "COPY" %}
+<p class="center"><strong>*** COPY OF RECEIPT ***</strong></p>
+{% else %}
+<p class="center"><strong>*** ORIGINAL RECEIPT ***</strong></p>
+{% endif %}
+
 <div class="company">
 SHINE MASTER SOLUTION<br>
 </div>
