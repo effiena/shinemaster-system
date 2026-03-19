@@ -4,124 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master POS</title>
-
 <style>
 body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
 .wrapper{display:flex;height:100vh;}
 
 /* LEFT PANEL */
-.left{width:35%;background:#2c2c2c;color:white;padding:20px;box-sizing:border-box;}
-.left label{display:block;margin-top:10px;font-weight:bold;}
-.left input,.left select{width:100%;padding:10px;margin-bottom:10px;border:none;border-radius:8px;}
-.time-box{background:#6A1B9A;text-align:center;padding:10px;margin-bottom:15px;font-size:18px;border-radius:8px;}
-.service-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.service-buttons button{padding:10px;background:#9C27B0;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+.left{width:33%;background:#2c2c2c;color:white;padding:10px;box-sizing:border-box;overflow-y:auto;}
+.left label{display:block;margin-top:5px;font-weight:bold;font-size:14px;}
+.left input{width:100%;padding:6px;margin-bottom:5px;border:none;border-radius:6px;font-size:14px;}
+.time-box{background:#6A1B9A;text-align:center;padding:8px;margin-bottom:10px;font-size:16px;border-radius:6px;}
+.service-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.service-buttons button{padding:6px;font-size:12px;background:#9C27B0;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
 .service-buttons button:hover{background:#7B1FA2;}
 
 /* MIDDLE PANEL */
-.middle{width:30%;background:#111;color:white;padding:20px;box-sizing:border-box;}
-#price_display{font-size:38px;font-weight:bold;text-align:center;margin-bottom:15px;color:#00e676;background:#1c1c1c;padding:15px;border-radius:12px;}
-.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.pay-option{padding:14px;text-align:center;background:#2a2a2a;border-radius:10px;cursor:pointer;}
+.middle{width:34%;background:#111;color:white;padding:10px;box-sizing:border-box;}
+#price_display{font-size:28px;font-weight:bold;text-align:center;margin-bottom:10px;color:#00e676;background:#1c1c1c;padding:10px;border-radius:8px;}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
+.pay-option{padding:10px;text-align:center;background:#2a2a2a;border-radius:6px;cursor:pointer;font-size:12px;}
 .pay-option.active{background:#ba55d3;font-weight:bold;}
-.cash-box input{width:100%;padding:12px;border-radius:10px;border:none;background:#2a2a2a;color:#fff;}
-#balance_display{font-size:14px;color:#00e676;margin-top:5px;}
-#qr_box{display:none;text-align:center;margin-top:10px;}
-.pay-btn{width:100%;padding:14px;background:#9C27B0;color:white;border:none;border-radius:10px;margin-top:10px;cursor:pointer;}
+.cash-box input{width:100%;padding:8px;border-radius:6px;border:none;background:#2a2a2a;color:#fff;font-size:12px;}
+#balance_display{font-size:12px;color:#00e676;margin-top:3px;}
+#qr_box{display:none;text-align:center;margin-top:5px;}
+.pay-btn{width:100%;padding:10px;background:#9C27B0;color:white;border:none;border-radius:8px;margin-top:5px;cursor:pointer;font-size:12px;}
 .pay-btn:hover{background:#7B1FA2;}
 
 /* RIGHT PANEL */
-.right{width:35%;background:#fff;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;}
-.right h3{text-align:center;margin-bottom:10px;}
-.right iframe{flex:1;width:100%;border:none;border-radius:8px;}
+.right{width:33%;background:#fff;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;}
+.right h3{text-align:center;margin-bottom:5px;font-size:14px;}
+.right iframe{flex:1;width:100%;border:none;border-radius:6px;}
 
-.car-type-buttons{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-bottom:10px;
-}
+/* Car Type */
+.car-type-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
+.car-type-buttons button{padding:6px;font-size:12px;background:#444;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;}
+.car-type-buttons button.active{background:#9C27B0;}
+.car-type-buttons button:hover{background:#7B1FA2;}
 
-.car-type-buttons button{
-    padding:12px;
-    background:#444;
+/* Keypad */
+.car-plate-keypad{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;}
+.car-plate-keypad button{padding:6px;font-size:12px;font-weight:bold;border:none;border-radius:4px;cursor:pointer;background:#444;color:white;}
+.car-plate-keypad button:hover{background:#7B1FA2;}
+.car-plate-keypad button.enter{background:#9C27B0;grid-column:span 2;}
+.car-plate-keypad button.enter:hover{background:#ba55d3;}
+
+.car-plate-keypad button.backspace {
+    background:#f44336;
     color:white;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
+    grid-column: span 2; /* same width as Enter */
 }
 
-.car-type-buttons button.active{
-    background:#9C27B0;
+.car-plate-keypad button.backspace:hover {
+    background:#d32f2f;
 }
 
-.car-type-buttons button:hover{
-    background:#7B1FA2;
+.car-info-card {
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #6A1B9A;  /* deep purple to match theme */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
-.car-plate-keypad {
-    display:grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap:5px;
-    margin-bottom:10px;
-}
-
-.car-plate-keypad button {
-    padding:8px;
-    font-weight:bold;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    background:#444;
-    color:white;
-}
-
-.car-plate-keypad button:hover {
-    background:#7B1FA2;
-}
-
-.car-plate-keypad button.enter {
-    background:#9C27B0;
-    grid-column: span 2;
-}
-
-.car-plate-keypad button.enter:hover {
-    background:#ba55d3;
-}
-
 </style>
 </head>
 
 <body>
-
 <div class="wrapper">
 
 <!-- LEFT PANEL -->
 <div class="left">
-<div class="time-box" id="live_time"></div>
 
 <label>Car Plate</label>
 <input type="text" id="car_plate" onkeyup="checkLoyalty()">
 
-
-<!-- Alphanumeric Keypad -->
-<div class="car-plate-keypad">
-</div>
+<div class="car-plate-keypad"></div>
 
 <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
 
 <label>Car Type</label>
-
 <div class="car-type-buttons">
     <button onclick="selectCarType(this,'Sedan')">SEDAN</button>
     <button onclick="selectCarType(this,'SUV_MPV')">SUV / MPV</button>
     <button onclick="selectCarType(this,'LARGE-MPV_4X4')">LARGE 4X4</button>
 </div>
-
 <input type="hidden" id="car_type">
 
 <label>Packages</label>
-
 <div class="service-buttons">
 <button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
 <button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
@@ -139,9 +110,14 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 
 <!-- MIDDLE PANEL -->
 <div class="middle">
+<div class="time-box" id="live_time"></div>
+
+<!-- Car info display card -->
+<div id="car_info" class="car-info-card">
+    Car Plate: - | Type: -
+</div>
 
 <div id="price_display">RM 0.00</div>
-
 <div class="payment-grid">
 <div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
 <div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
@@ -159,11 +135,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 </div>
 
 <button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
-
-<button class="pay-btn" style="background:#4CAF50;" onclick="printReceiptCopy()">
-PRINT COPY OF RECEIPT
-</button>
-
+<button class="pay-btn" style="background:#4CAF50;" onclick="printReceiptCopy()">PRINT COPY OF RECEIPT</button>
 </div>
 
 <!-- RIGHT PANEL -->
@@ -176,9 +148,13 @@ PRINT COPY OF RECEIPT
 
 <script>
 // Live time
-setInterval(()=>{
-document.getElementById('live_time').textContent = new Date().toLocaleString('en-MY');
-},1000);
+setInterval(()=>{document.getElementById('live_time').textContent=new Date().toLocaleString('en-MY');},1000);
+
+function updateCarInfo(){
+    const plate = document.getElementById('car_plate').value || '-';
+    const type = document.getElementById('car_type').value || '-';
+    document.getElementById('car_info').textContent = `Car Plate: ${plate} | Type: ${type}`;
+}
 
 // Price table
 const priceTable = {
@@ -198,121 +174,32 @@ int_coat:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488}
 let selectedService=null;
 let selectedPayment=null;
 
-// Service
-function selectService(service){
-    selectedService=service;
-    calculatePrice();
-}
+function selectService(service){selectedService=service; calculatePrice();}
+function selectCarType(el,type){document.querySelectorAll('.car-type-buttons button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.getElementById('car_type').value=type; calculatePrice();     updateCarInfo(); }
 
-// Car Type selection
-function selectCarType(el, type){
-    document.querySelectorAll('.car-type-buttons button').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('car_type').value = type; // <-- Important!
-    calculatePrice(); // recalc price whenever car type changes
-}
 
-// Price
-function calculatePrice(){
-    const carType=document.getElementById('car_type').value;
-    if(selectedService){
-        let price=priceTable[selectedService][carType];
-        document.getElementById('price_display').textContent="RM "+price.toFixed(2);
-    } else {
-        document.getElementById('price_display').textContent="RM 0.00";
-    }
-}
+function calculatePrice(){ const carType=document.getElementById('car_type').value; if(selectedService && carType){ document.getElementById('price_display').textContent="RM "+priceTable[selectedService][carType].toFixed(2); } else { document.getElementById('price_display').textContent="RM 0.00"; } }
 
-// Payment
-function selectPayment(el,method){
-    document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active'));
-    el.classList.add('active');
-    selectedPayment=method;
+function selectPayment(el,method){document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedPayment=method; document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none'; document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';}
 
-    document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none';
-    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';
-}
+function calculateBalance(){let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0; let cash=parseFloat(document.getElementById('cash_input').value)||0; let balance=cash-total; document.getElementById('balance_display').textContent= balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";}
 
-// Balance
-function calculateBalance(){
-    let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0;
-    let cash=parseFloat(document.getElementById('cash_input').value)||0;
-    let balance=cash-total;
-    document.getElementById('balance_display').textContent=
-        balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";
-}
+function completePayment(){if(!selectedService||!selectedPayment){alert("Missing input"); return;} submitReceipt("ORIGINAL","receipt_frame");}
 
-// ORIGINAL receipt
-function completePayment(){
-    if(!selectedService||!selectedPayment){alert("Missing input"); return;}
-
-    submitReceipt("ORIGINAL", "receipt_frame");
-}
-
-// COPY receipt
 function printReceiptCopy(){
-    if(!selectedService||!selectedPayment){alert("Missing input"); return;}
+    const frame = document.getElementById('receipt_frame');
 
-    submitReceipt("COPY", "_blank");
-}
-
-// Submit to Flask
-function submitReceipt(type, target){
-    const plate=document.getElementById('car_plate').value;
-    const carType=document.getElementById('car_type').value;
-    const price=priceTable[selectedService][carType];
-
-    const form=document.createElement("form");
-    form.method="POST";
-    form.action="/pos_test";
-    form.target=target;
-
-    const data={
-        car_plate:plate,
-        car_type:carType,
-        service_type:selectedService,
-        price:price,
-        payment_method:selectedPayment,
-        receipt_type:type
-    };
-
-    for(let key in data){
-        const input=document.createElement("input");
-        input.type="hidden";
-        input.name=key;
-        input.value=data[key];
-        form.appendChild(input);
-    }
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-}
-
-// Loyalty
-async function checkLoyalty(){
-    const plate=document.getElementById('car_plate').value;
-    const box=document.getElementById('loyalty_status');
-
-    if(plate.length<3){
-        box.value="";
-        box.style.background='#2c2c2c';
+    if(!frame.src){
+        alert("No receipt to copy");
         return;
     }
 
-    const res=await fetch('/check_loyalty/'+plate);
-    const data=await res.json();
-
-    if(data.eligible){
-        box.value='Eligible for FREE Car Wash';
-        box.style.background='#b8f5b1';
-    } else {
-        const remaining=5-data.paid;
-        box.value='Not Eligible ('+remaining+' more wash)';
-        box.style.background='#ffd6d6';
-    }
+    // Open exact same receipt in new tab
+    window.open(frame.src, '_blank');
 }
+function submitReceipt(type,target){const plate=document.getElementById('car_plate').value; const carType=document.getElementById('car_type').value; const price=priceTable[selectedService][carType]; const form=document.createElement("form"); form.method="POST"; form.action="/pos_test"; form.target=target; const data={car_plate:plate,car_type:carType,service_type:selectedService,price:price,payment_method:selectedPayment,receipt_type:type}; for(let key in data){const input=document.createElement("input"); input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);} document.body.appendChild(form); form.submit(); document.body.removeChild(form);}
+
+async function checkLoyalty(){const plate=document.getElementById('car_plate').value; const box=document.getElementById('loyalty_status'); if(plate.length<3){box.value=""; box.style.background='#2c2c2c'; return;} const res=await fetch('/check_loyalty/'+plate); const data=await res.json(); if(data.eligible){box.value='Eligible for FREE Car Wash'; box.style.background='#b8f5b1';} else{ const remaining=5-data.paid; box.value='Not Eligible ('+remaining+' more wash)'; box.style.background='#ffd6d6'; }}
 
 // Generate Car Plate Keypad
 const keypadContainer = document.querySelector('.car-plate-keypad');
@@ -342,21 +229,36 @@ enterBtn.classList.add('enter');
 enterBtn.onclick = ()=>submitCarPlate();
 keypadContainer.appendChild(enterBtn);
 
+// Backspace button
+const backspaceBtn = document.createElement('button');
+backspaceBtn.textContent = '⌫'; // or "Backspace"
+backspaceBtn.classList.add('backspace');
+backspaceBtn.onclick = ()=>backspaceCarPlate();
+keypadContainer.appendChild(backspaceBtn);
 
 // Functions
 function appendCarPlate(char){
     const input = document.getElementById('car_plate');
     input.value += char;
     checkLoyalty();
+    updateCarInfo();
 }
 
 function submitCarPlate(){
-    // Optional: do something on Enter key
     checkLoyalty();
-    // Example: focus next input or alert
     document.getElementById('car_type').focus();
 }
-</script>
 
+function backspaceCarPlate(){
+    const input = document.getElementById('car_plate');
+    input.value = input.value.slice(0, -1);
+    checkLoyalty();
+    updateCarInfo();
+}
+
+// Keypad functions
+function appendCarPlate(char){const input=document.getElementById('car_plate'); input.value+=char; checkLoyalty();}
+function submitCarPlate(){checkLoyalty(); document.getElementById('car_type').focus();}
+</script>
 </body>
 </html>
