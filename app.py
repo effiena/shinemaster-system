@@ -454,6 +454,35 @@ def pos_retail():
     return render_template("receipt_retail.html", order=order_data)
 
 #===========post_test========
+def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method, receipt_type):
+    conn = sqlite3.connect("shine.db")  # make sure path is correct
+    cursor = conn.cursor()
+
+    # Make sure table exists
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS receipts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_plate TEXT,
+            car_type TEXT,
+            service_type TEXT,
+            price REAL,
+            payment_method TEXT,
+            receipt_type TEXT,
+            created_at TEXT
+        )
+    """)
+
+    # Insert receipt
+    cursor.execute("""
+        INSERT INTO receipts 
+        (car_plate, car_type, service_type, price, payment_method, receipt_type, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (car_plate, car_type, service_type, price, payment_method, receipt_type, datetime.now().isoformat()))
+
+    conn.commit()
+    receipt_id = cursor.lastrowid
+    conn.close()
+    return receipt_id
 
 @app.route('/pos_test', methods=['GET','POST'])
 def pos_test():
@@ -470,7 +499,9 @@ def pos_test():
         receipt_type = request.form.get("receipt_type", "ORIGINAL")
 
         # save receipt data into DB
-        receipt_id = save_to_db(...)
+        receipt_id = save_receipt_to_db(
+             car_plate, car_type, service_type, price, payment_method, receipt_type
+            )
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
