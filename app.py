@@ -350,55 +350,6 @@ def qr_booking():
 
 
 # ================= POS =================
-@app.route("/pos", methods=["GET", "POST"])
-def pos():
-    if "username" not in session:
-        return redirect("/login")
-
-    conn = get_db_connection()
-    services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
-
-    if request.method == "POST":
-        car_plate = request.form["car_plate"].replace(" ", "").upper()
-        car_type = request.form.get("car_type", "-")
-        service_type = request.form["service_type"]
-        payment_method = request.form["payment_method"]
-        price = float(request.form["price"])
-        invoice_date = request.form.get("invoice_date") or now_kul().strftime("%Y-%m-%d")
-        reported_date = request.form.get("reported_date") or invoice_date
-
-        order = {
-            "car_plate": car_plate,
-            "car_type": car_type,
-            "service_type": service_type,
-            "payment_method": payment_method,
-            "price": price
-        }
-
-        order = process_loyalty(order)
-
-        saved = insert_order_record(
-            car_plate=order["car_plate"],
-            car_type=order["car_type"],
-            service_type=order["service_type"],
-            payment_method=order["payment_method"],
-            price=order["price"],
-            loyalty_status=order["loyalty_status"],
-            invoice_date=invoice_date,
-            reported_date=reported_date
-        )
-
-        order["invoice_no"] = saved["invoice_no"]
-        order["date"] = saved["date"]
-        order["time"] = saved["time"]
-        order["created_at"] = saved["created_at"]
-        order["reported_date"] = saved["reported_date"]
-
-        conn.close()
-        return render_template("receipt.html", order=order)
-
-    conn.close()
-    return render_template("new_order.html", services=services)
 
 # ================= POS RETAIL =================
 @app.route("/pos_retail", methods=["GET","POST"])
@@ -484,8 +435,8 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
     conn.close()
     return receipt_id
 
-@app.route('/pos_test', methods=['GET','POST'])
-def pos_test():
+@app.route('/pos', methods=['GET','POST'])
+def pos():
 
     if request.method == 'POST':
 
@@ -552,7 +503,7 @@ def pos_test():
         # ✅ PASS receipt_type to HTML
         return render_template("receipt.html", order=order, receipt_type=receipt_type)
 
-    return render_template("pos_test.html")
+    return render_template("pos.html")
 
 
 
@@ -1303,4 +1254,3 @@ else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
     sync_old_orders_data()
-
