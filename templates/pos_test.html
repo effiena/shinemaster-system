@@ -59,6 +59,36 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .car-type-buttons button:hover{
     background:#7B1FA2;
 }
+.car-plate-keypad {
+    display:grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap:5px;
+    margin-bottom:10px;
+}
+
+.car-plate-keypad button {
+    padding:8px;
+    font-weight:bold;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#444;
+    color:white;
+}
+
+.car-plate-keypad button:hover {
+    background:#7B1FA2;
+}
+
+.car-plate-keypad button.enter {
+    background:#9C27B0;
+    grid-column: span 2;
+}
+
+.car-plate-keypad button.enter:hover {
+    background:#ba55d3;
+}
+
 </style>
 </head>
 
@@ -72,6 +102,12 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 
 <label>Car Plate</label>
 <input type="text" id="car_plate" onkeyup="checkLoyalty()">
+
+
+<!-- Alphanumeric Keypad -->
+<div class="car-plate-keypad">
+</div>
+
 <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
 
 <label>Car Type</label>
@@ -166,6 +202,14 @@ let selectedPayment=null;
 function selectService(service){
     selectedService=service;
     calculatePrice();
+}
+
+// Car Type selection
+function selectCarType(el, type){
+    document.querySelectorAll('.car-type-buttons button').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('car_type').value = type; // <-- Important!
+    calculatePrice(); // recalc price whenever car type changes
 }
 
 // Price
@@ -268,6 +312,49 @@ async function checkLoyalty(){
         box.value='Not Eligible ('+remaining+' more wash)';
         box.style.background='#ffd6d6';
     }
+}
+
+// Generate Car Plate Keypad
+const keypadContainer = document.querySelector('.car-plate-keypad');
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const numbers = '0123456789';
+
+// Add letters
+for(let char of letters){
+    const btn = document.createElement('button');
+    btn.textContent = char;
+    btn.onclick = ()=>appendCarPlate(char);
+    keypadContainer.appendChild(btn);
+}
+
+// Add numbers
+for(let num of numbers){
+    const btn = document.createElement('button');
+    btn.textContent = num;
+    btn.onclick = ()=>appendCarPlate(num);
+    keypadContainer.appendChild(btn);
+}
+
+// Enter button
+const enterBtn = document.createElement('button');
+enterBtn.textContent = 'Enter';
+enterBtn.classList.add('enter');
+enterBtn.onclick = ()=>submitCarPlate();
+keypadContainer.appendChild(enterBtn);
+
+
+// Functions
+function appendCarPlate(char){
+    const input = document.getElementById('car_plate');
+    input.value += char;
+    checkLoyalty();
+}
+
+function submitCarPlate(){
+    // Optional: do something on Enter key
+    checkLoyalty();
+    // Example: focus next input or alert
+    document.getElementById('car_type').focus();
 }
 </script>
 
