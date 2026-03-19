@@ -5,151 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master POS</title>
 <style>
-body {font-family: Arial, sans-serif; background: linear-gradient(135deg, #9C27B0, #F3E5F5); margin:0;}
-.wrapper {display:flex; height:100vh;}
-.left, .right {padding:20px; box-sizing:border-box;}
-.left {width:50%; background:#2c2c2c; color:white;}
-.right {width:50%; background:#fff; overflow:auto; border-left:5px solid #9C27B0; display:flex; flex-direction:column; justify-content:flex-start;}
-.left h3, .right h3 {text-align:center; margin-bottom:20px;}
-.left label {display:block; margin-top:15px; font-weight:bold;}
-.left input, .left select {width:100%; padding:10px; border-radius:8px; border:none; margin-bottom:10px;}
-.left .time-box {margin-bottom:20px; font-size:20px; text-align:center; padding:10px; background:#6A1B9A; border-radius:8px;}
-.service-buttons {display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:10px;}
-.service-buttons button {padding:10px; border:none; border-radius:8px; background:#9C27B0; color:white; cursor:pointer; font-weight:bold;}
-.service-buttons button:hover {background:#7B1FA2;}
-#price_display {font-size:28px; font-weight:bold; text-align:center; margin-bottom:15px; display:block; color:#6A1B9A;}
-button.pay-btn {width:100%; padding:14px; background:#9C27B0; color:white; border:none; border-radius:10px; margin-top:10px; cursor:pointer;}
-button.pay-btn:hover {background:#7B1FA2;}
-.right {
-    width: 340px;
-    background: #111;
-    padding: 20px;
-    border-left: 2px solid #2a2a2a;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
+body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
+.wrapper{display:flex;height:100vh;}
+/* LEFT PANEL */
+.left{width:35%;background:#2c2c2c;color:white;padding:20px;box-sizing:border-box;}
+.left label{display:block;margin-top:10px;font-weight:bold;}
+.left input,.left select{width:100%;padding:10px;margin-bottom:10px;border:none;border-radius:8px;}
+.time-box{background:#6A1B9A;text-align:center;padding:10px;margin-bottom:15px;font-size:18px;border-radius:8px;}
+.service-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.service-buttons button{padding:10px;background:#9C27B0;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+.service-buttons button:hover{background:#7B1FA2;}
 
-/* Price */
-#price_display {
-    font-size: 38px;
-    font-weight: bold;
-    text-align: center;
-    color: #00e676;
-    background: #1c1c1c;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
+/* MIDDLE PANEL */
+.middle{width:30%;background:#111;color:white;padding:20px;box-sizing:border-box;}
+#price_display{font-size:38px;font-weight:bold;text-align:center;margin-bottom:15px;color:#00e676;background:#1c1c1c;padding:15px;border-radius:12px;}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.pay-option{padding:14px;text-align:center;background:#2a2a2a;border-radius:10px;cursor:pointer;}
+.pay-option.active{background:#ba55d3;font-weight:bold;}
+.cash-box input{width:100%;padding:12px;border-radius:10px;border:none;background:#2a2a2a;color:#fff;font-size:14px;margin-top:5px;}
+#balance_display{font-size:14px;color:#00e676;margin-top:5px;}
+#qr_box{display:none;text-align:center;margin-top:10px;}
+.pay-btn{width:100%;padding:14px;background:#9C27B0;color:white;border:none;border-radius:10px;margin-top:10px;cursor:pointer;}
+.pay-btn:hover{background:#7B1FA2;}
 
-/* Section title */
-.section-title {
-    font-size: 13px;
-    color: #888;
-    margin-bottom: 10px;
-}
-
-/* Payment buttons */
-.payment-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.pay-option {
-    padding: 14px;
-    text-align: center;
-    background: #2a2a2a;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 14px;
-}
-
-.pay-option:hover {
-    background: #3a3a3a;
-}
-
-/* Active selected */
-.pay-option.active {
-    background: #ba55d3;
-    font-weight: bold;
-}
-
-/* Cash input */
-.cash-box {
-    margin-bottom: 15px;
-}
-
-.cash-box input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    background: #2a2a2a;
-    color: #fff;
-    font-size: 14px;
-    outline: none;
-}
-
-/* Balance */
-#balance_display {
-    font-size: 16px;
-    color: #00e676;
-    margin-top: 5px;
-}
-
-/* Button */
-.pay-btn {
-    width: 100%;
-    padding: 16px;
-    font-size: 16px;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ba55d3, #8e44ad);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.pay-btn:hover {
-    transform: scale(1.03);
-}
-
-.middle{
-    width:30%;
-    background:#111;
-    padding:20px;
-    color:#fff;
-}
-
-.receipt-panel{
-    width:30%;
-    background:#fff;
-    padding:20px;
-    overflow:auto;
-}
-
-.wrapper{
-    display:flex;
-    height:100vh;
-}
-
-.left{ width:40%; }
+/* RIGHT PANEL */
+.right{width:35%;background:#fff;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;}
+.right h3{text-align:center;margin-bottom:10px;}
+.right iframe{flex:1;width:100%;border:none;border-radius:8px;}
 </style>
 </head>
 <body>
+
 <div class="wrapper">
 
-<!-- ================= LEFT PANEL ================= -->
+<!-- LEFT PANEL -->
 <div class="left">
 <div class="time-box" id="live_time"></div>
 
 <label>Car Plate</label>
 <input type="text" id="car_plate" onkeyup="checkLoyalty()">
-
 <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
 
 <label>Car Type</label>
@@ -174,12 +68,10 @@ button.pay-btn:hover {background:#7B1FA2;}
 </div>
 </div>
 
-<!-- ================= MIDDLE PANEL ================= -->
+<!-- MIDDLE PANEL -->
 <div class="middle">
-
 <div id="price_display">RM 0.00</div>
 
-<div class="section-title">Payment Method</div>
 <div class="payment-grid">
 <div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
 <div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
@@ -187,40 +79,31 @@ button.pay-btn:hover {background:#7B1FA2;}
 <div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
 </div>
 
-<!-- CASH -->
 <div class="cash-box" id="cash_box" style="display:none;">
-<input type="number" id="cash_input" placeholder="Enter cash received" oninput="calculateBalance()">
+<input type="number" id="cash_input" placeholder="Enter cash" oninput="calculateBalance()">
 <div id="balance_display"></div>
 </div>
 
-<!-- QR DISPLAY -->
-<div id="qr_box" style="display:none; text-align:center; margin-top:15px;">
-<h4>Scan to Pay</h4>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=SHINEMASTERPAY">
+<div id="qr_box">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=PAYMENT">
 </div>
 
 <button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
-
 </div>
 
-<!-- ================= RIGHT PANEL ================= -->
-<div class="receipt-panel">
+<!-- RIGHT PANEL -->
+<div class="right">
 <h3>Receipt</h3>
-<div id="receipt_output"></div>
+<iframe id="receipt_frame" name="receipt_frame"></iframe>
 </div>
 
 </div>
-
 
 <script>
-// Live Malaysia date & time
-function updateTime(){
-    const now = new Date();
-    const options = {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'};
-    document.getElementById('live_time').textContent = now.toLocaleString('en-MY', options);
-}
-setInterval(updateTime, 1000);
-updateTime();
+// Live time
+setInterval(()=>{
+document.getElementById('live_time').textContent = new Date().toLocaleString('en-MY');
+},1000);
 
 // Price table
 const priceTable = {
@@ -237,143 +120,69 @@ int_detail:{Sedan:188,SUV_MPV:288,"LARGE-MPV_4X4":388},
 int_coat:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488}
 };
 
-let selectedService = null;
+let selectedService=null;
+let selectedPayment=null;
 
-function selectService(service){
-    selectedService = service;
-    calculatePrice();
-}
+// Service
+function selectService(service){selectedService=service;calculatePrice();}
 
+// Price
 function calculatePrice(){
-    const carType = document.getElementById('car_type').value;
-    const priceDisplay = document.getElementById('price_display');
-    if(selectedService && priceTable[selectedService]){
-        const price = priceTable[selectedService][carType];
-        priceDisplay.textContent = 'RM ' + (price || 0).toFixed(2);
-    } else {
-        priceDisplay.textContent = 'RM 0.00';
-    }
+    const carType=document.getElementById('car_type').value;
+    if(selectedService){
+        let price=priceTable[selectedService][carType];
+        document.getElementById('price_display').textContent="RM "+price.toFixed(2);
+    } else document.getElementById('price_display').textContent="RM 0.00";
 }
 
+// Loyalty
 async function checkLoyalty(){
-    const plate = document.getElementById('car_plate').value;
-    const box = document.getElementById('loyalty_status');
+    const plate=document.getElementById('car_plate').value;
+    const box=document.getElementById('loyalty_status');
     if(plate.length<3){ box.value=""; box.style.background='#2c2c2c'; return; }
-    const res = await fetch('/check_loyalty/'+plate);
-    const data = await res.json();
-    if(data.eligible){
-        box.value='Eligible for FREE Car Wash';
-        box.style.background='#b8f5b1';
-    } else {
-        const remaining = 5 - data.paid;
-        box.value='Not Eligible ('+remaining+' more wash)';
-        box.style.background='#ffd6d6';
-    }
+    const res=await fetch('/check_loyalty/'+plate);
+    const data=await res.json();
+    if(data.eligible){ box.value='Eligible for FREE Car Wash'; box.style.background='#b8f5b1'; }
+    else{ const remaining=5-data.paid; box.value='Not Eligible ('+remaining+' more wash)'; box.style.background='#ffd6d6'; }
 }
 
-function submitPayment(){
-    const carPlate = document.getElementById('car_plate').value;
-    const carType = document.getElementById('car_type').value;
-    const price = selectedService ? priceTable[selectedService][carType] : 0;
-    const paymentMethod = document.getElementById('payment_method').value;
-    if(!carPlate || !selectedService){ alert('Please enter car plate and select service.'); return; }
-    // submit via fetch or form post to generate receipt
-    fetch('/pos_test', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({car_plate:carPlate, car_type:carType, service_type:selectedService, price:price, payment_method:paymentMethod})
-    }).then(res=>res.json()).then(data=>{
-        alert('Payment successful! Receipt generated.');
-        location.reload();
-    });
+// Payment selection
+function selectPayment(el,method){
+    document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active'); selectedPayment=method;
+    document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none';
+    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';
 }
 
-
-let selectedPayment = null;
-
-function selectPayment(el, method) {
-    document.querySelectorAll('.pay-option').forEach(btn => btn.classList.remove('active'));
-    el.classList.add('active');
-
-    selectedPayment = method;
-
-    // Cash
-    document.getElementById('cash_box').style.display =
-        method === 'Cash' ? 'block' : 'none';
-
-    // QR only for ewallet / qr
-    document.getElementById('qr_box').style.display =
-        (method === 'E-Wallet' || method === 'QR Code') ? 'block' : 'none';
+// Cash balance
+function calculateBalance(){
+    let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0;
+    let cash=parseFloat(document.getElementById('cash_input').value)||0;
+    let balance=cash-total;
+    document.getElementById('balance_display').textContent=balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";
 }
 
+// Complete payment → POST to iframe
 function completePayment(){
+    if(!selectedService||!selectedPayment){alert("Missing input"); return;}
+    const plate=document.getElementById('car_plate').value;
+    const carType=document.getElementById('car_type').value;
+    const price=priceTable[selectedService][carType];
 
-    if(!selectedPayment){
-        alert("Select payment method");
-        return;
+    const form=document.createElement("form");
+    form.method="POST";
+    form.action="/pos_test";       // Flask route returns receipt.html
+    form.target="receipt_frame";
+
+    const data={car_plate:plate, car_type:carType, service_type:selectedService, price:price, payment_method:selectedPayment};
+    for(let key in data){
+        const input=document.createElement("input");
+        input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);
     }
 
-    const plate = document.getElementById('car_plate').value;
-    const carType = document.getElementById('car_type').value;
-    const price = selectedService ? priceTable[selectedService][carType] : 0;
-
-    if(!plate || !selectedService){
-        alert("Missing input");
-        return;
-    }
-
-    // RECEIPT RENDER
-    let receiptHTML = `
-    <div style="font-family:monospace; width:250px; margin:auto;">
-        <div style="text-align:center;"><b>SHINE MASTER</b></div>
-        <hr>
-        Plate: ${plate}<br>
-        Service: ${selectedService}<br>
-        Car: ${carType}<br>
-        <hr>
-        Total: RM ${price.toFixed(2)}<br>
-        Payment: ${selectedPayment}<br>
-        <hr>
-        Thank You!
-    </div>
-    `;
-
-    document.getElementById("receipt_output").innerHTML = receiptHTML;
-
-    // OPTIONAL: send to backend
-    fetch('/pos_test',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-            car_plate:plate,
-            car_type:carType,
-            service_type:selectedService,
-            price:price,
-            payment_method:selectedPayment
-        })
-    });
-
+    document.body.appendChild(form);
+    form.submit();
 }
-function calculateBalance() {
-    let total = parseFloat(document.getElementById('price_display').innerText.replace('RM','')) || 0;
-    let cash = parseFloat(document.getElementById('cash_input').value) || 0;
-    let balance = cash - total;
-
-    document.getElementById('balance_display').innerText =
-        balance >= 0 ? "Balance: RM " + balance.toFixed(2) : "Insufficient amount";
-}
-
-function submitPayment() {
-    if (!selectedPayment) {
-        alert("Please select payment method");
-        return;
-    }
-
-    alert("Processing " + selectedPayment + " payment...");
-    // integrate your backend here
-}
-
 </script>
-
 </body>
 </html>
