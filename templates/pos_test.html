@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master POS</title>
+<style>
+body {font-family: Arial, sans-serif; background: linear-gradient(135deg, #9C27B0, #F3E5F5); margin:0;}
+.wrapper {display:flex; height:100vh;}
+.left, .right {padding:20px; box-sizing:border-box;}
+.left {width:50%; background:#2c2c2c; color:white;}
+.right {width:50%; background:#fff; overflow:auto; border-left:5px solid #9C27B0; display:flex; flex-direction:column; justify-content:flex-start;}
+.left h3, .right h3 {text-align:center; margin-bottom:20px;}
+.left label {display:block; margin-top:15px; font-weight:bold;}
+.left input, .left select {width:100%; padding:10px; border-radius:8px; border:none; margin-bottom:10px;}
+.left .time-box {margin-bottom:20px; font-size:20px; text-align:center; padding:10px; background:#6A1B9A; border-radius:8px;}
+.service-buttons {display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:10px;}
+.service-buttons button {padding:10px; border:none; border-radius:8px; background:#9C27B0; color:white; cursor:pointer; font-weight:bold;}
+.service-buttons button:hover {background:#7B1FA2;}
+#price_display {font-size:28px; font-weight:bold; text-align:center; margin-bottom:15px; display:block; color:#6A1B9A;}
+button.pay-btn {width:100%; padding:14px; background:#9C27B0; color:white; border:none; border-radius:10px; margin-top:10px; cursor:pointer;}
+button.pay-btn:hover {background:#7B1FA2;}
+.right {
+    width: 340px;
+    background: #111;
+    padding: 20px;
+    border-left: 2px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Price */
+#price_display {
+    font-size: 38px;
+    font-weight: bold;
+    text-align: center;
+    color: #00e676;
+    background: #1c1c1c;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* Section title */
+.section-title {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+/* Payment buttons */
+.payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.pay-option {
+    padding: 14px;
+    text-align: center;
+    background: #2a2a2a;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 14px;
+}
+
+.pay-option:hover {
+    background: #3a3a3a;
+}
+
+/* Active selected */
+.pay-option.active {
+    background: #ba55d3;
+    font-weight: bold;
+}
+
+/* Cash input */
+.cash-box {
+    margin-bottom: 15px;
+}
+
+.cash-box input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+
+/* Balance */
+#balance_display {
+    font-size: 16px;
+    color: #00e676;
+    margin-top: 5px;
+}
+
+/* Button */
+.pay-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ba55d3, #8e44ad);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.pay-btn:hover {
+    transform: scale(1.03);
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<!-- LEFT PANEL: Vehicle info, loyalty, car type, service buttons -->
+<div class="left">
+<div class="time-box" id="live_time"></div>
+<label for="car_plate">Car Plate</label>
+<input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()">
+<input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
+<label>Car Type</label>
+<select name="car_type" id="car_type" onchange="calculatePrice()">
+<option value="Sedan">Sedan</option>
+<option value="SUV_MPV">SUV/MPV</option>
+<option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
+</select>
+<div class="service-buttons">
+<button type="button" onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
+<button type="button" onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
+<button type="button" onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
+<button type="button" onclick="selectService('coat1')">COATING - 1 YEAR</button>
+<button type="button" onclick="selectService('coat2')">COATING - 2 YEAR</button>
+<button type="button" onclick="selectService('coat3')">COATING - 3 YEAR</button>
+<button type="button" onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
+<button type="button" onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
+<button type="button" onclick="selectService('wax')">WAXING</button>
+<button type="button" onclick="selectService('int_detail')">INTERIOR DETAILING</button>
+<button type="button" onclick="selectService('int_coat')">INTERIOR COATING</button>
+</div>
+</div>
+
+<!-- RIGHT PANEL: Price, total, payment -->
+<div class="right">
+
+    <div>
+        <!-- PRICE -->
+        <div id="price_display">RM 0.00</div>
+
+        <!-- PAYMENT METHODS -->
+        <div class="section-title">Payment Method</div>
+        <div class="payment-grid">
+            <div class="pay-option" onclick="selectPayment(this, 'Cash')">💵 Cash</div>
+            <div class="pay-option" onclick="selectPayment(this, 'Card')">💳 Card</div>
+            <div class="pay-option" onclick="selectPayment(this, 'E-Wallet')">📱 E-Wallet</div>
+            <div class="pay-option" onclick="selectPayment(this, 'QR Code')">🔳 QR Code</div>
+        </div>
+
+        <!-- CASH INPUT -->
+        <div class="cash-box" id="cash_box" style="display:none;">
+            <input type="number" id="cash_input" placeholder="Enter cash received" oninput="calculateBalance()">
+            <div id="balance_display"></div>
+        </div>
+    </div>
+
+    <!-- BUTTON -->
+    <button class="pay-btn" onclick="submitPayment()">COMPLETE PAYMENT</button>
+
+</div>
+
+<script>
+// Live Malaysia date & time
+function updateTime(){
+    const now = new Date();
+    const options = {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'};
+    document.getElementById('live_time').textContent = now.toLocaleString('en-MY', options);
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// Price table
+const priceTable = {
+wash_basic:{Sedan:20,SUV_MPV:24,"LARGE-MPV_4X4":28},
+wash_special:{Sedan:48,SUV_MPV:58,"LARGE-MPV_4X4":68},
+wash_maintain:{Sedan:98,SUV_MPV:108,"LARGE-MPV_4X4":118},
+coat1:{Sedan:488,SUV_MPV:588,"LARGE-MPV_4X4":688},
+coat2:{Sedan:688,SUV_MPV:788,"LARGE-MPV_4X4":888},
+coat3:{Sedan:888,SUV_MPV:988,"LARGE-MPV_4X4":1088},
+disp2:{Sedan:588,SUV_MPV:688,"LARGE-MPV_4X4":788},
+disp3:{Sedan:788,SUV_MPV:888,"LARGE-MPV_4X4":988},
+wax:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488},
+int_detail:{Sedan:188,SUV_MPV:288,"LARGE-MPV_4X4":388},
+int_coat:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488}
+};
+
+let selectedService = null;
+
+function selectService(service){
+    selectedService = service;
+    calculatePrice();
+}
+
+function calculatePrice(){
+    const carType = document.getElementById('car_type').value;
+    const priceDisplay = document.getElementById('price_display');
+    if(selectedService && priceTable[selectedService]){
+        const price = priceTable[selectedService][carType];
+        priceDisplay.textContent = 'RM ' + (price || 0).toFixed(2);
+    } else {
+        priceDisplay.textContent = 'RM 0.00';
+    }
+}
+
+async function checkLoyalty(){
+    const plate = document.getElementById('car_plate').value;
+    const box = document.getElementById('loyalty_status');
+    if(plate.length<3){ box.value=""; box.style.background='#2c2c2c'; return; }
+    const res = await fetch('/check_loyalty/'+plate);
+    const data = await res.json();
+    if(data.eligible){
+        box.value='Eligible for FREE Car Wash';
+        box.style.background='#b8f5b1';
+    } else {
+        const remaining = 5 - data.paid;
+        box.value='Not Eligible ('+remaining+' more wash)';
+        box.style.background='#ffd6d6';
+    }
+}
+
+function submitPayment(){
+    const carPlate = document.getElementById('car_plate').value;
+    const carType = document.getElementById('car_type').value;
+    const price = selectedService ? priceTable[selectedService][carType] : 0;
+    const paymentMethod = document.getElementById('payment_method').value;
+    if(!carPlate || !selectedService){ alert('Please enter car plate and select service.'); return; }
+    // submit via fetch or form post to generate receipt
+    fetch('/pos_test', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({car_plate:carPlate, car_type:carType, service_type:selectedService, price:price, payment_method:paymentMethod})
+    }).then(res=>res.json()).then(data=>{
+        alert('Payment successful! Receipt generated.');
+        location.reload();
+    });
+}
+
+let selectedPayment = null;
+
+function selectPayment(el, method) {
+    document.querySelectorAll('.pay-option').forEach(btn => btn.classList.remove('active'));
+    el.classList.add('active');
+    selectedPayment = method;
+
+    // Show cash input only if cash
+    if (method === 'Cash') {
+        document.getElementById('cash_box').style.display = 'block';
+    } else {
+        document.getElementById('cash_box').style.display = 'none';
+    }
+}
+
+function calculateBalance() {
+    let total = parseFloat(document.getElementById('price_display').innerText.replace('RM','')) || 0;
+    let cash = parseFloat(document.getElementById('cash_input').value) || 0;
+    let balance = cash - total;
+
+    document.getElementById('balance_display').innerText =
+        balance >= 0 ? "Balance: RM " + balance.toFixed(2) : "Insufficient amount";
+}
+
+function submitPayment() {
+    if (!selectedPayment) {
+        alert("Please select payment method");
+        return;
+    }
+
+    alert("Processing " + selectedPayment + " payment...");
+    // integrate your backend here
+}
+
+</script>
+
+</body>
+</html>
