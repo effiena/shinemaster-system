@@ -44,102 +44,46 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
-    margin-bottom: 10px;
 }
 
-/* Letters A-Z: lighter yellow but more visible */
-.car-plate-keypad button.letter {
-    background: #FFD700; /* vivid gold */
-    color: #000; 
-    font-weight: bold;
-    border: 1px solid #B8860B; /* subtle border for contrast */
-    border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
-}
-
-.car-plate-keypad button.letter:hover {
-    background: #FFC107; /* slightly brighter on hover */
-}
-
-/* Numbers 0-9: darker yellow */
-.car-plate-keypad button.number {
-    background: #FFA000; /* darker amber */
+/* Letters */
+.letter {
+    background: #FFD54F;
     color: #000;
     font-weight: bold;
-    border: 1px solid #FF8F00;
+    border: 1px solid #FBC02D;
     border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+    padding: 10px;
 }
 
-.car-plate-keypad button.number:hover {
-    background: #FF8F00; 
-}
-
-.car-plate-keypad button.number:hover {
-    background: #F9A825;
-/* Letters A-Z: lighter yellow but more visible */
-.car-plate-keypad button.letter {
-    background: #FFD700; /* vivid gold */
-    color: #000; 
-    font-weight: bold;
-    border: 1px solid #B8860B; /* subtle border for contrast */
-    border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
-}
-
-.car-plate-keypad button.letter:hover {
-    background: #FFC107; /* slightly brighter on hover */
-}
-
-/* Numbers 0-9: darker yellow */
-.car-plate-keypad button.number {
-    background: #FFA000; /* darker amber */
+/* Numbers */
+.number {
+    background: #FFB300;
     color: #000;
     font-weight: bold;
-    border: 1px solid #FF8F00;
+    border: 1px solid #FFA000;
     border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+    padding: 10px;
 }
 
-.car-plate-keypad button.number:hover {
-    background: #FF8F00; 
-}
-
-/* Enter button */
-.car-plate-keypad button.enter {
+/* Special buttons */
+.enter {
     background: #9C27B0;
-    color: #fff;
+    color: white;
     font-weight: bold;
-    grid-column: span 2;
 }
 
-.car-plate-keypad button.enter:hover {
-    background: #ba55d3;
-}
-
-/* Backspace button */
-.car-plate-keypad button.backspace {
+.backspace {
     background: #f44336;
-    color: #fff;
+    color: white;
     font-weight: bold;
-    grid-column: span 2;
 }
 
-.car-plate-keypad button.backspace:hover {
-    background: #d32f2f;
+/* Empty spacing */
+.spacer {
+    visibility: hidden;
 }
+
 
 .car-info-card {
     text-align: center;
@@ -311,10 +255,52 @@ function submitReceipt(type,target){const plate=document.getElementById('car_pla
 
 async function checkLoyalty(){const plate=document.getElementById('car_plate').value; const box=document.getElementById('loyalty_status'); if(plate.length<3){box.value=""; box.style.background='#2c2c2c'; return;} const res=await fetch('/check_loyalty/'+plate); const data=await res.json(); if(data.eligible){box.value='Eligible for FREE Car Wash'; box.style.background='#b8f5b1';} else{ const remaining=5-data.paid; box.value='Not Eligible ('+remaining+' more wash)'; box.style.background='#ffd6d6'; }}
 
-// Generate Car Plate Keypad
-const keypadContainer = document.querySelector('.car-plate-keypad');
-const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const numbers = '0123456789';
+const keypad = document.querySelector('.car-plate-keypad');
+
+function addBtn(text, type, onClick){
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    if(type) btn.classList.add(type);
+    btn.onclick = () => onClick(text);
+    keypad.appendChild(btn);
+}
+
+function addSpacer(){
+    const div = document.createElement('div');
+    div.classList.add('spacer');
+    keypad.appendChild(div);
+}
+
+// ===== ROW 1 =====
+['A','B','C','D'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['1','2','3'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 2 =====
+['E','F','G','H'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['4','5','6'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 3 =====
+['I','J','K','L'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+['7','8','9'].forEach(n=>addBtn(n,'number',appendCarPlate));
+
+// ===== ROW 4 =====
+['M','N','O','P'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('0','number',appendCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 5 =====
+['Q','R','S','T'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('ENTER','enter',submitCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 6 =====
+['U','V','W','X'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addBtn('⌫','backspace',backspaceCarPlate);
+addSpacer(); addSpacer();
+
+// ===== ROW 7 =====
+['Y','Z'].forEach(c=>addBtn(c,'letter',appendCarPlate));
+addSpacer(); addSpacer(); addSpacer(); addSpacer(); addSpacer();
 
 // Add letters
 for(let char of letters){
