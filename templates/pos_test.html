@@ -40,21 +40,105 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .car-type-buttons button.active{background:#9C27B0;}
 .car-type-buttons button:hover{background:#7B1FA2;}
 
-/* Keypad */
-.car-plate-keypad{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;}
-.car-plate-keypad button{padding:6px;font-size:12px;font-weight:bold;border:none;border-radius:4px;cursor:pointer;background:#444;color:white;}
-.car-plate-keypad button:hover{background:#7B1FA2;}
-.car-plate-keypad button.enter{background:#9C27B0;grid-column:span 2;}
-.car-plate-keypad button.enter:hover{background:#ba55d3;}
+.car-plate-keypad {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
 
+/* Letters A-Z: lighter yellow but more visible */
+.car-plate-keypad button.letter {
+    background: #FFD700; /* vivid gold */
+    color: #000; 
+    font-weight: bold;
+    border: 1px solid #B8860B; /* subtle border for contrast */
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+.car-plate-keypad button.letter:hover {
+    background: #FFC107; /* slightly brighter on hover */
+}
+
+/* Numbers 0-9: darker yellow */
+.car-plate-keypad button.number {
+    background: #FFA000; /* darker amber */
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #FF8F00;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+.car-plate-keypad button.number:hover {
+    background: #FF8F00; 
+}
+
+.car-plate-keypad button.number:hover {
+    background: #F9A825;
+/* Letters A-Z: lighter yellow but more visible */
+.car-plate-keypad button.letter {
+    background: #FFD700; /* vivid gold */
+    color: #000; 
+    font-weight: bold;
+    border: 1px solid #B8860B; /* subtle border for contrast */
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+.car-plate-keypad button.letter:hover {
+    background: #FFC107; /* slightly brighter on hover */
+}
+
+/* Numbers 0-9: darker yellow */
+.car-plate-keypad button.number {
+    background: #FFA000; /* darker amber */
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #FF8F00;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+.car-plate-keypad button.number:hover {
+    background: #FF8F00; 
+}
+
+/* Enter button */
+.car-plate-keypad button.enter {
+    background: #9C27B0;
+    color: #fff;
+    font-weight: bold;
+    grid-column: span 2;
+}
+
+.car-plate-keypad button.enter:hover {
+    background: #ba55d3;
+}
+
+/* Backspace button */
 .car-plate-keypad button.backspace {
-    background:#f44336;
-    color:white;
-    grid-column: span 2; /* same width as Enter */
+    background: #f44336;
+    color: #fff;
+    font-weight: bold;
+    grid-column: span 2;
 }
 
 .car-plate-keypad button.backspace:hover {
-    background:#d32f2f;
+    background: #d32f2f;
 }
 
 .car-info-card {
@@ -187,16 +271,43 @@ function calculateBalance(){let total=parseFloat(document.getElementById('price_
 function completePayment(){if(!selectedService||!selectedPayment){alert("Missing input"); return;} submitReceipt("ORIGINAL","receipt_frame");}
 
 function printReceiptCopy(){
-    const frame = document.getElementById('receipt_frame');
-
-    if(!frame.src){
-        alert("No receipt to copy");
+    if(!selectedService || !selectedPayment){
+        alert("Missing input");
         return;
     }
 
-    // Open exact same receipt in new tab
-    window.open(frame.src, '_blank');
+    const plate = document.getElementById('car_plate').value;
+    const carType = document.getElementById('car_type').value;
+    const price = priceTable[selectedService][carType];
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/pos_test";
+    form.target = "_blank"; // new tab
+
+    const data = {
+        car_plate: plate,
+        car_type: carType,
+        service_type: selectedService,
+        price: price,
+        payment_method: selectedPayment,
+        receipt_type: "COPY"
+    };
+
+    for(let key in data){
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = data[key];
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
+
+
 function submitReceipt(type,target){const plate=document.getElementById('car_plate').value; const carType=document.getElementById('car_type').value; const price=priceTable[selectedService][carType]; const form=document.createElement("form"); form.method="POST"; form.action="/pos_test"; form.target=target; const data={car_plate:plate,car_type:carType,service_type:selectedService,price:price,payment_method:selectedPayment,receipt_type:type}; for(let key in data){const input=document.createElement("input"); input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);} document.body.appendChild(form); form.submit(); document.body.removeChild(form);}
 
 async function checkLoyalty(){const plate=document.getElementById('car_plate').value; const box=document.getElementById('loyalty_status'); if(plate.length<3){box.value=""; box.style.background='#2c2c2c'; return;} const res=await fetch('/check_loyalty/'+plate); const data=await res.json(); if(data.eligible){box.value='Eligible for FREE Car Wash'; box.style.background='#b8f5b1';} else{ const remaining=5-data.paid; box.value='Not Eligible ('+remaining+' more wash)'; box.style.background='#ffd6d6'; }}
