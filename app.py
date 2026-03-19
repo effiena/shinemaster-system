@@ -457,18 +457,62 @@ def pos_retail():
 
 @app.route('/pos_test', methods=['GET','POST'])
 def pos_test():
+
     if request.method == 'POST':
-        car_plate = request.form.get('car_plate')
-        car_type = request.form.get('car_type')
-        service_type = request.form.get('service_type')
-        price = request.form.get('price')
-        payment_method = request.form.get('payment_method')
 
-        # Save order logic here
-        print(f'Order received: {car_plate}, {car_type}, {service_type}, RM{price}, {payment_method}')
-        return f"<h2>Payment Received: RM {price} via {payment_method}</h2><a href='/pos_test'>Back to POS</a>"
+        car_plate = request.form['car_plate']
+        car_type = request.form['car_type']
+        service_type = request.form['service_type']
+        price = float(request.form['price'])
+        payment_method = request.form['payment_method']
 
-    return render_template('pos_test.html')
+        # ===== Loyalty logic =====
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT COUNT(*) FROM orders WHERE car_plate=?", (car_plate,))
+        count = cur.fetchone()[0]
+
+        loyalty_free = False
+        loyalty_eligible = False
+
+        if count > 0 and count % 5 == 0:
+            loyalty_free = True
+        elif count >= 4:
+            loyalty_eligible = True
+
+        # ===== Insert order =====
+        now = datetime.now()
+        date = now.strftime("%d/%m/%Y")
+        time = now.strftime("%H:%M:%S")
+
+        cur.execute("""
+        INSERT INTO orders (car_plate, car_type, service_type, price, payment_method, date, time)
+        VALUES (?,?,?,?,?,?,?)
+        """, (car_plate, car_type, service_type, price, payment_method, date, time))
+
+        conn.commit()
+
+        order_id = cur.lastrowid
+
+        order = {
+            "id": order_id,
+            "invoice_no": f"INV{order_id:05}",
+            "car_plate": car_plate,
+            "car_type": car_type,
+            "service_type": service_type,
+            "price": price,
+            "payment_method": payment_method,
+            "date": date,
+            "time": time,
+            "loyalty_count": count + 1,
+            "loyalty_free": loyalty_free,
+            "loyalty_eligible": loyalty_eligible
+        }
+
+        return render_template("receipt.html", order=order)
+
+    return render_template("pos_test.html")
 
 # ================= CREATE ORDER =================
 @app.route("/create_order", methods=["POST"])
