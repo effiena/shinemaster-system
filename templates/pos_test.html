@@ -34,6 +34,31 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .right{width:35%;background:#fff;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;}
 .right h3{text-align:center;margin-bottom:10px;}
 .right iframe{flex:1;width:100%;border:none;border-radius:8px;}
+
+.car-type-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.car-type-buttons button{
+    padding:12px;
+    background:#444;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.car-type-buttons button.active{
+    background:#9C27B0;
+}
+
+.car-type-buttons button:hover{
+    background:#7B1FA2;
+}
 </style>
 </head>
 
@@ -50,11 +75,16 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
 
 <label>Car Type</label>
-<select id="car_type" onchange="calculatePrice()">
-<option value="Sedan">Sedan</option>
-<option value="SUV_MPV">SUV/MPV</option>
-<option value="LARGE-MPV_4X4">LARGE-MPV/4X4</option>
-</select>
+
+<div class="car-type-buttons">
+    <button onclick="selectCarType(this,'Sedan')">SEDAN</button>
+    <button onclick="selectCarType(this,'SUV_MPV')">SUV / MPV</button>
+    <button onclick="selectCarType(this,'LARGE-MPV_4X4')">LARGE 4X4</button>
+</div>
+
+<input type="hidden" id="car_type">
+
+<label>Packages</label>
 
 <div class="service-buttons">
 <button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
@@ -156,7 +186,7 @@ function selectPayment(el,method){
     selectedPayment=method;
 
     document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none';
-    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'block';
+    document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';
 }
 
 // Balance
@@ -214,11 +244,6 @@ function submitReceipt(type, target){
     form.submit();
     document.body.removeChild(form);
 
-    return render_template(
-    "receipt.html",
-    order=order,
-    receipt_type=receipt_type
-)
 }
 
 // Loyalty
