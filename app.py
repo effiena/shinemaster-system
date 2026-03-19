@@ -469,6 +469,9 @@ def pos_test():
         # ✅ ADD THIS LINE
         receipt_type = request.form.get("receipt_type", "ORIGINAL")
 
+        # save receipt data into DB
+        receipt_id = save_to_db(...)
+
         # ===== Loyalty logic =====
         conn = get_db_connection()
         cur = conn.cursor()
