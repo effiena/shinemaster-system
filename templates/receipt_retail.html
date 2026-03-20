@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Receipt - Retail POS</title>
+<style>
+body { font-family: monospace; width:180px; margin:auto; font-size:14px; }
+.company { text-align:center; font-weight:bold; font-size:18px; }
+.line { width:100%; }
+.left { float:left; }
+.right { float:right; }
+.clear { clear:both; }
+hr { border-top:1px dashed black; }
+.buttons { text-align:center; margin-top:10px; }
+@media print { .no-print{ display:none; } body{ width:180px; } }
+</style>
+</head>
+<body>
+
+<div class="company">SHINE MASTER SOLUTION</div>
+<hr>
+
+<div class="line"><span class="left">Invoice</span><span class="right">{{ order.invoice_no }}</span><div class="clear"></div></div>
+<div class="line"><span class="left">Date</span><span class="right">{{ order.date }}</span><div class="clear"></div></div>
+<hr>
+
+<h4>Items</h4>
+{% for item in order.items %}
+<div class="line">
+  <span class="left">{{ item.item }} x{{ item.qty }}</span>
+  <span class="right">RM {{ "%.2f"|format(item.subtotal) }}</span>
+  <div class="clear"></div>
+</div>
+{% endfor %}
+<hr>
+
+<div class="line"><span class="left"><strong>Total</strong></span><span class="right"><strong>RM {{ "%.2f"|format(order.total) }}</strong></span><div class="clear"></div></div>
+<div class="line"><span class="left">Paid</span><span class="right">RM {{ "%.2f"|format(order.paid) }}</span><div class="clear"></div></div>
+<div class="line"><span class="left">Change</span><span class="right">RM {{ "%.2f"|format(order.change) }}</span><div class="clear"></div></div>
+<hr>
+
+{% if order.payment_method == 'ewallet' and order.qr_url %}
+<div style="text-align:center;">
+<p>Scan to Pay via E-Wallet</p>
+<img src="{{ order.qr_url }}">
+</div>
+<hr>
+{% endif %}
+
+<div class="buttons no-print">
+<button onclick="window.print()">Print Receipt</button>
+<a href="/pos_retail"><button>New Order</button></a>
+</div>
+
+</body>
+</html>

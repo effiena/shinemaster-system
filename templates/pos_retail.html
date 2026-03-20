@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Retail POS - Shine Master</title>
+<style>
+html, body {margin:0; padding:0; height:100%; font-family:Arial; background:#1c1c1c; color:#fff;}
+header {background:#ba55d3; text-align:center; padding:20px; font-size:28px; font-weight:bold;}
+main {flex:1; display:flex; gap:20px; padding:20px; height:calc(100% - 80px);}
+
+/* LEFT PANEL */
+.left-panel {width:250px; display:flex; flex-direction:column; gap:15px;}
+.left-panel select, .left-panel input, .left-panel button {padding:12px; font-size:18px; border-radius:6px; border:none; width:100%; box-sizing:border-box;}
+.left-panel input {text-align:center; cursor:pointer;}
+.left-panel button {background:#ba55d3; cursor:pointer; color:#fff;}
+
+/* QUANTITY KEYPAD POPUP */
+.keypad {position:absolute; background:#222; display:none; grid-template-columns:repeat(3,1fr); gap:5px; padding:10px; border-radius:8px;}
+.keypad button {padding:15px; font-size:18px; border:none; border-radius:6px; background:#555; color:#fff; cursor:pointer;}
+.keypad button:hover {background:#ba55d3;}
+
+/* MIDDLE PANEL: Calculator (60% width) */
+.middle-panel {flex:1; display:flex; justify-content:center; align-items:flex-start;}
+.calc-wrapper {width:60%; display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+.calc-display {grid-column:span 4; background:#000; color:#0f0; text-align:right; font-size:28px; padding:10px; border-radius:6px; height:60px; overflow-x:auto;}
+.calc-wrapper button {height:60px; font-size:22px; border-radius:6px; border:none; background:#555; color:#fff; cursor:pointer;}
+.calc-wrapper button:hover {background:#ba55d3;}
+.span-two {grid-column:span 2;}
+.span-four {grid-column:span 4;}
+
+/* RIGHT PANEL: Cart & totals */
+.right-panel {width:400px; display:flex; flex-direction:column; gap:15px;}
+.cart {background:#333; border-radius:10px; padding:10px; flex:1; overflow-y:auto;}
+.cart table {width:100%; border-collapse:collapse; color:#fff;}
+.cart th, .cart td {padding:8px; text-align:left; border-bottom:1px solid #555;}
+.cart th {background:#2a2a2a;}
+.cart td button {background:#ff6b6b; border:none; color:#fff; padding:4px 8px; border-radius:5px; cursor:pointer;}
+.totals {font-size:20px; text-align:right;}
+.totals span {display:block; margin:4px 0;}
+.right-buttons {display:flex; gap:10px;}
+.right-buttons button {flex:1; font-size:20px; padding:12px; border-radius:6px; border:none; background:#4caf50; cursor:pointer;}
+.qr-code {margin-top:10px; text-align:center;}
+.qr-code img {width:150px; height:150px;}
+</style>
+</head>
+<body>
+<header>Retail POS - Shine Master</header>
+<main>
+
+<!-- LEFT PANEL: Item selection -->
+<div class="left-panel">
+  <select id="item">
+    <option value="" disabled selected>Select Item</option>
+    <option value="CRYSTAL">CRYSTAL</option>
+    <option value="BRACELET">BRACELET</option>
+    <option value="BRACELET">OTHERS</option>
+  </select>
+  <input type="text" id="quantity" readonly placeholder="QUANTITY" onclick="showKeypad()">
+  <div class="keypad" id="keypad">
+    <button onclick="pressQty('1')">1</button>
+    <button onclick="pressQty('2')">2</button>
+    <button onclick="pressQty('3')">3</button>
+    <button onclick="pressQty('4')">4</button>
+    <button onclick="pressQty('5')">5</button>
+    <button onclick="pressQty('6')">6</button>
+    <button onclick="pressQty('7')">7</button>
+    <button onclick="pressQty('8')">8</button>
+    <button onclick="pressQty('9')">9</button>
+    <button onclick="pressQty('0')">0</button>
+    <button onclick="clearQty()">C</button>
+    <button onclick="hideKeypad()">OK</button>
+  </div>
+  <select id="payment_method">
+    <option value="cash">Cash</option>
+    <option value="card">Card</option>
+    <option value="ewallet">E-Wallet</option>
+  </select>
+</div>
+
+<!-- MIDDLE PANEL: Calculator -->
+<div class="middle-panel">
+  <div class="calc-wrapper">
+    <div id="calcDisplay" class="calc-display">0</div>
+    <button onclick="press('7')">7</button>
+    <button onclick="press('8')">8</button>
+    <button onclick="press('9')">9</button>
+    <button onclick="press('/')">/</button>
+    <button onclick="press('4')">4</button>
+    <button onclick="press('5')">5</button>
+    <button onclick="press('6')">6</button>
+    <button onclick="press('*')">*</button>
+    <button onclick="press('1')">1</button>
+    <button onclick="press('2')">2</button>
+    <button onclick="press('3')">3</button>
+    <button onclick="press('-')">-</button>
+    <button onclick="press('0')" class="span-two">0</button>
+    <button onclick="press('.')">.</button>
+    <button onclick="press('+')">+</button>
+    <button onclick="enterItem()" class="span-four">ENTER</button>
+    <button onclick="del()" class="span-two" style="background:#ff6b6b;">DEL</button>
+    <button onclick="clearDisplay()" class="span-two" style="background:#ff6b6b;">C</button>
+  </div>
+</div>
+
+<!-- RIGHT PANEL: Cart & Totals -->
+<div class="right-panel">
+  <div class="cart">
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Subtotal</th><th>Action</th></tr>
+      </thead>
+      <tbody id="cartBody"></tbody>
+    </table>
+  </div>
+  <div class="totals">
+    <span id="totalDisplay">Total: 0.00</span>
+    <span id="paidDisplay">Paid: 0.00</span>
+    <span id="changeDisplay">Change: 0.00</span>
+  </div>
+  <div class="right-buttons">
+    <button onclick="checkout()">Complete Payment</button>
+    <button onclick="clearCart()">Clear Cart</button>
+  </div>
+  <div class="qr-code" id="qrCode"></div>
+</div>
+
+</main>
+
+<script>
+let displayText = "";
+let cart = [];
+let paid = 0;
+let calcPrice = 0;
+
+// Calculator
+const calcDisplay = document.getElementById("calcDisplay");
+const cartBody = document.getElementById("cartBody");
+const totalDisplay = document.getElementById("totalDisplay");
+const paidDisplay = document.getElementById("paidDisplay");
+const changeDisplay = document.getElementById("changeDisplay");
+
+// Quantity keypad
+const quantityInput = document.getElementById("quantity");
+const keypad = document.getElementById("keypad");
+
+function showKeypad(){ keypad.style.display="grid"; }
+function hideKeypad(){ keypad.style.display="none"; }
+function pressQty(n){ quantityInput.value = (quantityInput.value+n).slice(-2); updateQty(); }
+function clearQty(){ quantityInput.value=""; updateQty(); }
+function updateQty(){ if(quantityInput.value==="") quantityInput.value="1"; }
+
+// Calculator functions
+function press(val){ displayText += val; updateCalcDisplay(); }
+function clearDisplay(){ displayText=""; updateCalcDisplay(); }
+function del(){ displayText = displayText.slice(0,-1); updateCalcDisplay(); }
+function updateCalcDisplay(){ calcDisplay.innerText = displayText || calcPrice.toFixed(2) || "0"; }
+
+// ENTER: add item to cart
+function enterItem(){
+  const itemSelect = document.getElementById("item").value;
+  let quantity = parseInt(quantityInput.value);
+  if(!itemSelect){ alert("Select an item!"); return; }
+  if(!displayText){ alert("Enter price using calculator!"); return; }
+  calcPrice = parseFloat(eval(displayText)).toFixed(2);
+  if(!quantity || quantity<1) quantity=1;
+  const subtotal = (calcPrice*quantity).toFixed(2);
+  cart.push({item:itemSelect, qty:quantity, subtotal});
+  displayText=""; calcPrice=0;
+  updateCalcDisplay(); renderCart();
+}
+
+// Render cart
+function renderCart(){
+  cartBody.innerHTML="";
+  let total=0;
+  cart.forEach((i,index)=>{
+    const row = cartBody.insertRow();
+    row.insertCell(0).innerText=i.item;
+    row.insertCell(1).innerText=i.qty;
+    row.insertCell(2).innerText=i.subtotal;
+    const delBtn=document.createElement("button");
+    delBtn.innerText="DEL";
+    delBtn.onclick=()=>{ cart.splice(index,1); renderCart(); };
+    row.insertCell(3).appendChild(delBtn);
+    total+=parseFloat(i.subtotal);
+  });
+  totalDisplay.innerText="Total: "+total.toFixed(2);
+  paidDisplay.innerText="Paid: "+paid.toFixed(2);
+  changeDisplay.innerText="Change: "+Math.max(0, paid-total).toFixed(2);
+}
+
+// Clear cart
+function clearCart(){ cart=[]; paid=0; calcPrice=0; displayText=""; quantityInput.value=""; renderCart(); updateCalcDisplay(); document.getElementById("item").value=""; document.getElementById("qrCode").innerHTML=""; }
+
+// Checkout: generates receipt
+function checkout(){
+  if(cart.length===0){ alert("Cart empty"); return; }
+  const payment_method = document.getElementById("payment_method").value;
+  const totalAmount = parseFloat(totalDisplay.innerText.replace("Total: ",""));
+  if(payment_method==='ewallet'){
+    // Generate dummy QR code (can integrate with actual e-wallet later)
+    const qrDiv = document.getElementById("qrCode");
+    qrDiv.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Pay RM ${totalAmount} via E-Wallet">`;
+  } else {
+    // Regular receipt
+    fetch("/pos_retail",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ cart, payment_method, paid: totalAmount })
+    }).then(res=>res.text()).then(html=>{
+      clearCart();
+      document.body.innerHTML = html;
+    });
+  }
+}
+</script>
+</body>
+</html>
