@@ -177,7 +177,26 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
     }
 }
 
+.cash-box {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05); /* keeps same theme */
+}
 
+#cash_input {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;   /* slightly bigger */
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 10px;
+}
+
+#balance_display {
+    font-size: 18px;   /* bigger text */
+    font-weight: bold;
+}
 </style>
 </head>
 
@@ -220,15 +239,6 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <div class="middle">
 <div class="time-box" id="live_time"></div>
 
-<!-- Logo -->
-
-    <div style="text-align:center; margin:10px 0;">
-        <img id="logo_img" 
-             src="{{ url_for('static', filename='images/logo.png') }}" 
-             alt="Logo" 
-             style="max-width:120px; height:auto; background:white; padding:5px; border-radius:8px;">
-    </div>
-
 <!-- Car info display card -->
 <div id="car_info" class="car-info-card">
     Car Plate: - | Type: -
@@ -248,8 +258,13 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 </div>
 
 <div class="cash-box" id="cash_box" style="display:none;">
-<input type="number" id="cash_input" placeholder="Enter cash" oninput="calculateBalance()">
-<div id="balance_display"></div>
+    <input 
+        type="number" 
+        id="cash_input" 
+        placeholder="Enter cash" 
+        oninput="calculateBalance()"
+    >
+    <div id="balance_display">Balance: RM 0.00</div>
 </div>
 
 <div id="qr_box">
