@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.png') }}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Shine Master POS</title>
 <style>
 body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
 .wrapper{display:flex;height:100vh;}
+/* Logo fade-in */
+#logo_img {
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+#logo_img.show {
+    opacity: 1;
+}
 
 /* LEFT PANEL */
 .left{width:33%;background:#2c2c2c;color:white;padding:10px;box-sizing:border-box;overflow-y:auto;}
@@ -165,6 +176,8 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
         padding: 10px;
     }
 }
+
+
 </style>
 </head>
 
@@ -206,6 +219,15 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <!-- MIDDLE PANEL -->
 <div class="middle">
 <div class="time-box" id="live_time"></div>
+
+<!-- Logo -->
+
+    <div style="text-align:center; margin:10px 0;">
+        <img id="logo_img" 
+             src="{{ url_for('static', filename='images/logo.png') }}" 
+             alt="Logo" 
+             style="max-width:120px; height:auto; background:white; padding:5px; border-radius:8px;">
+    </div>
 
 <!-- Car info display card -->
 <div id="car_info" class="car-info-card">
@@ -450,6 +472,14 @@ function backspaceCarPlate(){
 // Keypad functions
 function appendCarPlate(char){const input=document.getElementById('car_plate'); input.value+=char; checkLoyalty();}
 function submitCarPlate(){checkLoyalty(); document.getElementById('car_type').focus();}
+
+// Fade-in logo on page load
+window.addEventListener('DOMContentLoaded', () => {
+    const logo = document.getElementById('logo_img');
+    setTimeout(() => {
+        logo.classList.add('show');
+    }, 300);
+});
 </script>
 </body>
 </html>
