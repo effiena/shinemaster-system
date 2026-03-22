@@ -255,7 +255,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
 <div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
 <div class="pay-option" onclick="selectPayment(this,'E-Wallet')">📱 E-Wallet</div>
-<!-- MIDDLE PANEL --><div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
+<div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
 </div>
 
 <div class="cash-box" id="cash_box" style="display:none;">
@@ -368,19 +368,17 @@ function submitReceipt(type, target){
 
 function printCopy() {
     if (!lastInvoice) {
-        alert("No receipt yet!");
+        alert("No receipt yet! Complete payment first.");
         return;
     }
 
-    let frame = document.getElementById("receiptFrame");
-
-    // ✅ reload SAME receipt but as COPY
+    const frame = document.getElementById("receiptFrame");
     frame.src = `/receipt/${lastInvoice}?copy=true`;
 
-    // wait then print
-    setTimeout(() => {
+    frame.onload = () => {
+        frame.contentWindow.focus();
         frame.contentWindow.print();
-    }, 500);
+    };
 }
 
 
@@ -505,10 +503,8 @@ function backspaceCarPlate(){
     updateCarInfo();
 }
 
-// Keypad functions
-function appendCarPlate(char){const input=document.getElementById('car_plate'); input.value+=char; checkLoyalty();}
-function submitCarPlate(){checkLoyalty(); document.getElementById('car_type').focus();}
 
 </script>
+
 </body>
 </html>
