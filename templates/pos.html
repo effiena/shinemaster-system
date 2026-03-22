@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -206,7 +207,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <!-- LEFT PANEL -->
 <div class="left">
 
-<input type="text" id="car_plate" onkeyup="checkLoyalty()" readonly placeholder="Enter Car Plate">
+<input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()"  placeholder="Enter Car Plate">
 
 <div class="car-plate-keypad"></div>
 
@@ -246,7 +247,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 
 <!-- SHOW LOYALTY -->
 <div class="loyalty-box">
-    <input type="text" id="loyalty_status" readonly placeholder="Loyalty Status">
+    <input type="text" id="loyalty_status"  placeholder="Loyalty Status">
 </div>
 
 <div id="price_display">RM 0.00</div>
@@ -270,15 +271,17 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <div id="qr_box">
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=PAYMENT">
 </div>
-
 <button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
-<button class="pay-btn" style="background:#4CAF50;" onclick="printReceiptCopy()">PRINT COPY OF RECEIPT</button>
+<button class="pay-btn" style="background:#4CAF50;" onclick="printCopy()">
+    PRINT COPY OF RECEIPT
+</button>
 </div>
 
 <!-- RIGHT PANEL -->
 <div class="right">
 <h3>Receipt</h3>
 <iframe id="receipt_frame" name="receipt_frame"></iframe>
+<input type="hidden" id="last_invoice_no">
 </div>
 
 </div>
@@ -323,20 +326,13 @@ function calculateBalance(){let total=parseFloat(document.getElementById('price_
 
 function completePayment(){if(!selectedService||!selectedPayment){alert("Missing input"); return;} submitReceipt("ORIGINAL","receipt_frame");}
 
-function printReceiptCopy(){
-    if(!selectedService || !selectedPayment){
-        alert("Missing input");
-        return;
-    }
 
+let lastReceiptData = null;
+
+function submitReceipt(type, target){
     const plate = document.getElementById('car_plate').value;
     const carType = document.getElementById('car_type').value;
     const price = priceTable[selectedService][carType];
-
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/pos";
-    form.target = "_blank"; // new tab
 
     const data = {
         car_plate: plate,
@@ -344,8 +340,18 @@ function printReceiptCopy(){
         service_type: selectedService,
         price: price,
         payment_method: selectedPayment,
-        receipt_type: "COPY"
+        receipt_type: type
     };
+
+    // ✅ Save ORIGINAL request
+    if(type === "ORIGINAL"){
+        lastReceiptData = {...data};
+    }
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/pos";
+    form.target = target;
 
     for(let key in data){
         const input = document.createElement("input");
@@ -360,8 +366,23 @@ function printReceiptCopy(){
     document.body.removeChild(form);
 }
 
+function printCopy() {
+    if (!lastInvoice) {
+        alert("No receipt yet!");
+        return;
+    }
 
-function submitReceipt(type,target){const plate=document.getElementById('car_plate').value; const carType=document.getElementById('car_type').value; const price=priceTable[selectedService][carType]; const form=document.createElement("form"); form.method="POST"; form.action="/pos"; form.target=target; const data={car_plate:plate,car_type:carType,service_type:selectedService,price:price,payment_method:selectedPayment,receipt_type:type}; for(let key in data){const input=document.createElement("input"); input.type="hidden"; input.name=key; input.value=data[key]; form.appendChild(input);} document.body.appendChild(form); form.submit(); document.body.removeChild(form);}
+    let frame = document.getElementById("receiptFrame");
+
+    // ✅ reload SAME receipt but as COPY
+    frame.src = `/receipt/${lastInvoice}?copy=true`;
+
+    // wait then print
+    setTimeout(() => {
+        frame.contentWindow.print();
+    }, 500);
+}
+
 
 async function checkLoyalty() {
     const plate = document.getElementById("car_plate").value
@@ -488,13 +509,6 @@ function backspaceCarPlate(){
 function appendCarPlate(char){const input=document.getElementById('car_plate'); input.value+=char; checkLoyalty();}
 function submitCarPlate(){checkLoyalty(); document.getElementById('car_type').focus();}
 
-// Fade-in logo on page load
-window.addEventListener('DOMContentLoaded', () => {
-    const logo = document.getElementById('logo_img');
-    setTimeout(() => {
-        logo.classList.add('show');
-    }, 300);
-});
 </script>
 </body>
 </html>
