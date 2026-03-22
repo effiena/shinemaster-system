@@ -659,6 +659,20 @@ def dashboard():
         return redirect("/pos")
     data = get_revenue_data()
     low_stock = get_low_stock()
+ 
+    conn = get_db_connection()  # ✅ ADD THIS
+
+    new_bookings = conn.execute("""
+        SELECT car_plate, service_type, booking_date, booking_time
+        FROM bookings
+        WHERE LOWER(status)='confirmed'
+        ORDER BY id DESC
+        LIMIT 5
+    """).fetchall()
+
+    conn.close()
+
+
     return render_template(
         "dashboard.html",
         today_revenue=data["today_revenue"],
@@ -666,6 +680,7 @@ def dashboard():
         month_revenue=data["month_revenue"],
         cars_today=data["cars_today"],
         recent_sales=data["recent_sales"],
+        new_bookings=new_bookings,  # ✅ THIS LINE
         low_stock=low_stock
     )
 
@@ -788,34 +803,19 @@ def receipt(invoice):
         return redirect("/login")
 
     conn = get_db_connection()
-    
-    # Check for order in the main 'orders' table
     order = conn.execute(
-        """ SELECT * FROM orders WHERE invoice_no=? ORDER BY id DESC LIMIT 1 """,
+        "SELECT * FROM orders WHERE invoice_no=? ORDER BY id DESC LIMIT 1",
         (invoice,)
     ).fetchone()
 
     is_copy = request.args.get("copy", "false").lower() == "true"
-    
+    is_reprint = request.args.get("reprint", "false").lower() == "true"
+
     if order:
         conn.close()
-        return render_template("receipt.html", order=order, is_copy=is_copy) # Pass is_copy here
+        return render_template("receipt.html", order=order, is_copy=is_copy, is_reprint=is_reprint)
 
-    # Fallback to legacy 'sales' table if not found in 'orders' (though ideally all should be in orders)
-    sale = conn.execute("SELECT * FROM sales WHERE invoice=?", (invoice,)).fetchone()
     conn.close()
-
-    if sale:
-        # If using legacy 'sales' table, you might need to map its fields to 'order' structure
-        # for a consistent receipt template.
-        # This part depends on how 'receipt.html' expects 'sale' or 'order' data.
-        # For simplicity, let's assume `receipt.html` can handle either `order` or `sale`.
-        # You'll need to adapt `receipt.html` to gracefully handle 'sale' data or convert 'sale' to 'order' format.
-        print("Legacy Sale found:", dict(sale)) # Debugging
-        # You might need to construct an 'order'-like dictionary from 'sale' data
-        # For a copy, you'd still just display the original `sale` data.
-        return render_template("receipt.html", sale=sale, is_copy=is_copy) # Pass is_copy here
-
     return f"Receipt not found for invoice {invoice}", 404
 
 # ================= PACKAGES =================
@@ -1139,13 +1139,15 @@ def booking():
             if slot_datetime > now_kul():
                 available_timeslots.append(ts)
         timeslots = available_timeslots # Update timeslots to only include future times
-    
+
+
     return render_template(
         "booking.html",
         services=services,
         timeslots=timeslots,
         plate=plate,
         current_date=current_date_str,
+        new_bookings=new_bookings,  # ✅ THIS LINE     
         booked_times=booked_times,
         today_date_str=today_date.strftime("%Y-%m-%d") # Pass today's date string for client-side comparison
     )
@@ -1157,49 +1159,36 @@ def create_booking():
     date_str = request.form["booking_date"]
     time_str = request.form["booking_time"]
     contact = request.form["contact"]
-    car_type = request.form.get("car_type", "-") # Assuming car_type is potentially in the form
+    car_type = request.form.get("car_type", "-")
     created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
     
-    # Check if the day is already full (3 bookings)
+    # Check day capacity
     count_day = conn.execute(
-        """
-        SELECT COUNT(*) FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'
-        """,
+        "SELECT COUNT(*) FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
         (date_str,)
     ).fetchone()[0]
 
     if count_day >= 3:
         conn.close()
-        return "<script>alert('All slots for this date are full. Please pick a new date.');window.location='/booking';</script>"
+        return "<script>alert('All slots for this date are full.');window.location='/booking';</script>"
 
-    # Check if selected time is too close to existing bookings (3 hours apart)
+    # Check time gap
     existing_bookings = conn.execute(
-        """
-        SELECT booking_time FROM bookings 
-        WHERE booking_date=? AND LOWER(status)='confirmed'
-        """,
+        "SELECT booking_time FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
         (date_str,)
     ).fetchall()
 
     from datetime import datetime
-    selected_slot_dt = datetime.strptime(time_str, "%H:%M").time() # Only time part for comparison
-
+    selected_slot_dt = datetime.strptime(time_str, "%H:%M").time()
     for row in existing_bookings:
         booked_slot_dt = datetime.strptime(row["booking_time"], "%H:%M").time()
-        
-        # Calculate difference in minutes for better precision
-        # Convert times to minutes from midnight
-        selected_minutes = selected_slot_dt.hour * 60 + selected_slot_dt.minute
-        booked_minutes = booked_slot_dt.hour * 60 + booked_slot_dt.minute
-        
-        diff_minutes = abs(selected_minutes - booked_minutes)
-        
-        # 3 hours = 180 minutes
-        if diff_minutes < 180: 
+        diff_minutes = abs((selected_slot_dt.hour*60 + selected_slot_dt.minute) - 
+                           (booked_slot_dt.hour*60 + booked_slot_dt.minute))
+        if diff_minutes < 180:  # less than 3 hours
             conn.close()
-            return "<script>alert('This time slot is too close to an existing booking. Please choose another.');window.location='/booking';</script>"
+            return "<script>alert('This time slot is too close to an existing booking.');window.location='/booking';</script>"
 
     # Insert booking
     cur = conn.cursor()
@@ -1214,16 +1203,53 @@ def create_booking():
     conn.commit()
     conn.close()
 
+    # Generate booking ID
     booking_data = {
         "car_plate": car_plate,
         "service": service,
-        "car_type": car_type, # Ensure car_type is passed in booking_data
+        "car_type": car_type,
         "date": date_str,
         "time": time_str,
         "contact": contact,
         "booking_id": f"BK{now_kul().strftime('%Y%m%d')}{booking_id:03d}"
     }
-    return render_template("booking_confirmed.html", booking=booking_data)
+
+    # ✅ Save booking in session and redirect
+    session["latest_booking"] = booking_data
+    return redirect(url_for("booking_confirmed"))
+
+
+@app.route("/booking_confirmed")
+def booking_confirmed():
+    booking = session.pop("latest_booking", None)  # Get and remove from session
+    if not booking:
+        return redirect("/booking")  # fallback if no booking in session
+    return render_template("booking_confirmed.html", booking=booking)
+
+@app.route("/latest_bookings")
+def latest_bookings():
+    conn = get_db_connection()
+    bookings = conn.execute("""
+        SELECT car_plate, service_type, booking_date, booking_time
+        FROM bookings
+        WHERE LOWER(status)='confirmed'
+        ORDER BY id DESC
+        LIMIT 5
+    """).fetchall()
+    conn.close()
+    
+    # Convert to list of dicts for JSON
+    bookings_list = [
+        {
+            "car_plate": b["car_plate"],
+            "service_type": b["service_type"],
+            "date": b["booking_date"],
+            "time": b["booking_time"]
+        }
+        for b in bookings
+    ]
+    
+    return {"new_bookings": bookings_list}
 
 
 @app.route("/booking_admin")
