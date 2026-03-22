@@ -190,14 +190,18 @@ color:#aaa;
 
 <div class="section">
 
-<h3>Low Stock Alert</h3>
+<h3>New Confirmed Booking Alert</h3>
 
 <ul>
 
-{% for item in low_stock %}
+{% for booking in new_bookings %}
 
-<li class="lowstock">{{item.name}} ({{item.quantity}} left)</li>
+<li class="lowstock">
+{{booking.car_plate}} - {{booking.service}} ({{booking.date}} {{booking.time}})
+</li>
 
+{% else %}
+<li>No new bookings</li>
 {% endfor %}
 
 </ul>
@@ -273,15 +277,43 @@ document.getElementById("time").innerText = time;
 setInterval(updateClock,1000);
 updateClock();
 
-const socket = io();
+let seenBookings = new Set(); // Track booking IDs we've already displayed
 
-socket.on("update_dashboard", function() {
-    loadDashboard();
-});
+function fetchNewBookings() {
+    fetch("/latest_bookings")
+    .then(res => res.json())
+    .then(data => {
+        const list = document.getElementById("bookingAlertList");
 
+        if (!data.new_bookings.length && seenBookings.size === 0) {
+            list.innerHTML = "<li>No new bookings</li>";
+            return;
+        }
+
+        data.new_bookings.forEach(booking => {
+            // Create a unique key per booking
+            const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
+            if (!seenBookings.has(key)) {
+                seenBookings.add(key);
+
+                // Remove "No new bookings" placeholder if exists
+                if (list.innerText.includes("No new bookings")) list.innerHTML = "";
+
+                const item = document.createElement("li");
+                item.className = "lowstock";
+                item.innerText = `${booking.car_plate} - ${booking.service_type} (${booking.date} ${booking.time})`;
+
+                // Prepend newest bookings at the top
+                list.prepend(item);
+            }
+        });
+    });
+}
+
+// Poll every 5 seconds
+setInterval(fetchNewBookings, 5000);
 
 function loadDashboard(){
-
 fetch("/dashboard_data")
 .then(res => res.json())
 .then(data => {
@@ -311,7 +343,9 @@ document.getElementById("recentSales").innerHTML = table;
 
 }
 
+// ✅ INITIAL LOAD
 loadDashboard();
+
 </script>
 
 </body>
