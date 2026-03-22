@@ -1108,38 +1108,30 @@ def booking():
     plate = request.args.get("plate", "")
     current_date_str = request.args.get("date", now_kul().strftime("%Y-%m-%d"))
     
-    # Ensure current_date is a datetime object for comparison
+    # Ensure current_date is a datetime object
     current_date = datetime.strptime(current_date_str, "%Y-%m-%d").date()
     today_date = now_kul().date()
 
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
-    
+
     # Fetch confirmed bookings for this date
     bookings = conn.execute(
-        """
-        SELECT booking_time FROM bookings 
-        WHERE booking_date=? AND LOWER(status)='confirmed'
-        """,
+        "SELECT booking_time FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
         (current_date_str,)
     ).fetchall()
-    
     conn.close()
-    
+
     booked_times = [row["booking_time"] for row in bookings]
     timeslots = generate_timeslots()
 
-    # Filter out past time slots if the selected date is today
+    # Filter out past time slots if today
     if current_date == today_date:
         now_time = now_kul().time()
-        available_timeslots = []
-        for ts in timeslots:
-            slot_hour, slot_minute = map(int, ts.split(':'))
-            slot_datetime = now_kul().replace(hour=slot_hour, minute=slot_minute, second=0, microsecond=0)
-            if slot_datetime > now_kul():
-                available_timeslots.append(ts)
-        timeslots = available_timeslots # Update timeslots to only include future times
-
+        timeslots = [
+            ts for ts in timeslots
+            if datetime.strptime(ts, "%H:%M").time() > now_time
+        ]
 
     return render_template(
         "booking.html",
@@ -1147,9 +1139,8 @@ def booking():
         timeslots=timeslots,
         plate=plate,
         current_date=current_date_str,
-        new_bookings=new_bookings,  # ✅ THIS LINE     
         booked_times=booked_times,
-        today_date_str=today_date.strftime("%Y-%m-%d") # Pass today's date string for client-side comparison
+        today_date_str=today_date.strftime("%Y-%m-%d")
     )
 
 @app.route("/create_booking", methods=["POST"])
