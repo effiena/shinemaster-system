@@ -87,9 +87,9 @@ Tel: +6018-2096907
 <hr>
 
 <div class="line">
-<span class="left">Invoice</span>
-<span class="right">{{ order["invoice_no"] }}</span>
-<div class="clear"></div>
+  <span class="left">Invoice</span>
+  <span id="invoice_no" class="right">{{ order["invoice_no"] }}</span>
+  <div class="clear"></div>
 </div>
 
 <div class="line">
@@ -207,12 +207,6 @@ font-weight:bold;
 ">
 New Order
 </a>
-
-</div>
-
-<button onclick="printReceiptCopy('{{ order.invoice_no }}')">
-    PRINT COPY
-</button>
 
 <script>
 
