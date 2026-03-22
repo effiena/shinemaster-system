@@ -210,6 +210,9 @@ New Order
 
 </div>
 
+<button onclick="printReceiptCopy('{{ order.invoice_no }}')">
+    PRINT COPY
+</button>
 
 <script>
 
@@ -256,6 +259,12 @@ setTimeout(function(){
 window.print();
 },500);
 
+}
+if (window.parent && window.parent.document.getElementById("last_invoice_no")) {
+    window.parent.document.getElementById("last_invoice_no").value = "{{ order.invoice_no }}";
+}
+function printReceiptCopy(invoice) {
+    window.open(`/receipt/${invoice}?copy=true`, '_blank');
 }
 
 </script>
