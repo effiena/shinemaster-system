@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
 import urllib.parse
@@ -10,6 +9,7 @@ import qrcode
 from io import BytesIO
 import os
 import logging
+
 logging.getLogger('engineio').setLevel(logging.WARNING)
 logging.getLogger('socketio').setLevel(logging.WARNING)
 
@@ -32,10 +32,8 @@ def inject_company():
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "shine.db")
 
-
 def now_kul():
     return datetime.now(TZ)
-
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -155,7 +153,6 @@ def init_db():
 
     # ===== SAFE COLUMN UPGRADES =====
     existing_columns = [row[1] for row in c.execute("PRAGMA table_info(inventory)").fetchall()]
-
     if "serial_number" not in existing_columns:
         c.execute("ALTER TABLE inventory ADD COLUMN serial_number TEXT")
     if "category" not in existing_columns:
@@ -167,13 +164,49 @@ def init_db():
     if "is_deleted" not in existing_columns:
         c.execute("ALTER TABLE inventory ADD COLUMN is_deleted INTEGER DEFAULT 0")
 
+    # Add retail_orders and retail_order_items tables
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS retail_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            invoice_no TEXT,
+            date TEXT,
+            payment_method TEXT,
+            total REAL,
+            paid REAL,
+            change REAL
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS retail_order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER,
+            item_name TEXT,
+            quantity INTEGER,
+            subtotal REAL,
+            FOREIGN KEY (order_id) REFERENCES retail_orders (id)
+        )
+    """)
+    
+    # Add receipts table
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS receipts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            car_plate TEXT,
+            car_type TEXT,
+            service_type TEXT,
+            price REAL,
+            payment_method TEXT,
+            receipt_type TEXT,
+            created_at TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
 def sync_old_orders_data():
     conn = get_db_connection()
     cur = conn.cursor()
-
     rows = cur.execute("""
         SELECT id, created_at, invoice_date, reported_date
         FROM orders
@@ -182,7 +215,6 @@ def sync_old_orders_data():
     for row in rows:
         updates = {}
         created_at = row["created_at"]
-
         if not created_at:
             dt = now_kul().strftime("%Y-%m-%d %H:%M:%S")
             updates["created_at"] = dt
@@ -199,25 +231,18 @@ def sync_old_orders_data():
             set_clause = ", ".join([f"{k}=?" for k in updates.keys()])
             values = list(updates.values()) + [row["id"]]
             cur.execute(f"UPDATE orders SET {set_clause} WHERE id=?", values)
-
     conn.commit()
     conn.close()
 
-
 # ================= HELPERS =================
-
 def generate_invoice_no(order_id, dt=None):
     if dt is None:
         dt = now_kul()
     return f"INV{dt.strftime('%Y%m%d')}{order_id:04d}"
 
-
-def insert_order_record(car_plate, car_type, service_type, payment_method, price,
-                        loyalty_status="Not Eligible", contact_number=None,
-                        address=None, invoice_date=None, reported_date=None):
+def insert_order_record(car_plate, car_type, service_type, payment_method, price, loyalty_status="Not Eligible", contact_number=None, address=None, invoice_date=None, reported_date=None):
     dt = now_kul()
     created_at = dt.strftime("%Y-%m-%d %H:%M:%S")
-
     if not invoice_date:
         invoice_date = dt.strftime("%Y-%m-%d")
     if not reported_date:
@@ -228,30 +253,17 @@ def insert_order_record(car_plate, car_type, service_type, payment_method, price
 
     cur.execute("""
         INSERT INTO orders (
-            car_plate, contact_number, address, service_type, price,
-            payment_method, payment_status, loyalty_status, created_at,
-            car_type, invoice_date, reported_date
+            car_plate, contact_number, address, service_type, price, payment_method, payment_status,
+            loyalty_status, created_at, car_type, invoice_date, reported_date
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        car_plate,
-        contact_number,
-        address,
-        service_type,
-        price,
-        payment_method,
-        "Paid",
-        loyalty_status,
-        created_at,
-        car_type,
-        invoice_date,
-        reported_date
+        car_plate, contact_number, address, service_type, price, payment_method, "Paid",
+        loyalty_status, created_at, car_type, invoice_date, reported_date
     ))
     conn.commit()
-
     order_id = cur.lastrowid
     invoice_no = generate_invoice_no(order_id, dt)
-
     cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
     conn.commit()
 
@@ -278,7 +290,6 @@ def insert_order_record(car_plate, car_type, service_type, payment_method, price
         "reported_date": reported_date
     }
 
-
 # ================= HOME =================
 @app.route("/home")
 def home():
@@ -289,7 +300,6 @@ def home():
     conn.close()
     return render_template("new_order.html", services=services)
 
-
 # ================= LOGIN =================
 @app.route("/")
 @app.route("/login", methods=["GET", "POST"])
@@ -297,25 +307,19 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
         conn = get_db_connection()
         user = conn.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (username, password)
+            "SELECT * FROM users WHERE username=? AND password=?", (username, password)
         ).fetchone()
         conn.close()
-
         if user:
             session["username"] = username
             session["role"] = user["role"]
             if user["role"] == "admin":
                 return redirect("/dashboard")
             return redirect("/pos")
-
         return "Invalid username or password"
-
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
@@ -330,8 +334,7 @@ def launch_page():
 # ==== QR-CODE ======
 @app.route('/qr_booking')
 def qr_booking():
-    booking_url = "https://shinemaster-system-production.up.railway.app/booking"
-
+    booking_url = "[shinemaster-system-production.up.railway.app](https://shinemaster-system-production.up.railway.app/booking)" # Replace with your actual deployed URL if different
     qr = qrcode.QRCode(
         version=1,
         box_size=10,
@@ -339,18 +342,13 @@ def qr_booking():
     )
     qr.add_data(booking_url)
     qr.make(fit=True)
-
     img = qr.make_image(fill_color="black", back_color="white")
-
     buffer = BytesIO()
     img.save(buffer, format="PNG")
     buffer.seek(0)
-
     return send_file(buffer, mimetype="image/png")
 
-
 # ================= POS =================
-
 # ================= POS RETAIL =================
 @app.route("/pos_retail", methods=["GET","POST"])
 def pos_retail():
@@ -361,14 +359,13 @@ def pos_retail():
     cart = data.get("cart", [])
     payment_method = data.get("payment_method", "cash")
     paid = float(data.get("paid", 0))
-
     total = sum(float(item["subtotal"]) for item in cart)
     change = max(0, paid - total)
 
     # Save order to DB
     conn = get_db_connection()
     cur = conn.cursor()
-    invoice_no = int(datetime.now().timestamp())
+    invoice_no = int(datetime.now().timestamp()) # Using timestamp for a simple retail invoice
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     cur.execute(
@@ -389,7 +386,7 @@ def pos_retail():
     qr_url = None
     if payment_method == "ewallet":
         qr_data = f"Pay RM {total} via E-Wallet"
-        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={urllib.parse.quote(qr_data)}"
+        qr_url = f"[api.qrserver.com](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={urllib.parse.quote(qr_data)})"
 
     order_data = {
         "invoice_no": invoice_no,
@@ -401,15 +398,14 @@ def pos_retail():
         "payment_method": payment_method,
         "qr_url": qr_url
     }
-
     return render_template("receipt_retail.html", order=order_data)
 
 #===========post_test========
 def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method, receipt_type):
-    conn = sqlite3.connect("shine.db")  # make sure path is correct
+    conn = get_db_connection() # Use the standardized get_db_connection
     cursor = conn.cursor()
 
-    # Make sure table exists
+    # Make sure table exists (already done in init_db, but good to ensure if run standalone)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS receipts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -425,11 +421,9 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
 
     # Insert receipt
     cursor.execute("""
-        INSERT INTO receipts 
-        (car_plate, car_type, service_type, price, payment_method, receipt_type, created_at)
+        INSERT INTO receipts (car_plate, car_type, service_type, price, payment_method, receipt_type, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (car_plate, car_type, service_type, price, payment_method, receipt_type, datetime.now().isoformat()))
-
     conn.commit()
     receipt_id = cursor.lastrowid
     conn.close()
@@ -437,77 +431,117 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
 
 @app.route('/pos', methods=['GET','POST'])
 def pos():
-
     if request.method == 'POST':
-
         car_plate = request.form['car_plate']
         car_type = request.form['car_type']
         service_type = request.form['service_type']
         price = float(request.form['price'])
         payment_method = request.form['payment_method']
-
         # ✅ ADD THIS LINE
-        receipt_type = request.form.get("receipt_type", "ORIGINAL")
+        receipt_type = request.form.get("receipt_type", "ORIGINAL") # Default to ORIGINAL if not provided
 
-        # save receipt data into DB
+        # save receipt data into DB (this is for a separate receipts table, not the main orders)
         receipt_id = save_receipt_to_db(
-             car_plate, car_type, service_type, price, payment_method, receipt_type
-            )
+            car_plate, car_type, service_type, price, payment_method, receipt_type
+        )
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
         cur = conn.cursor()
-
-        cur.execute("SELECT COUNT(*) FROM orders WHERE car_plate=?", (car_plate,))
-        count = cur.fetchone()[0]
+        cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
+        loyalty_row = cur.fetchone()
+        count = loyalty_row["paid_count"] if loyalty_row else 0
 
         loyalty_free = False
         loyalty_eligible = False
+        
+        # If this is a loyalty free wash, we don't increment count
+        if loyalty_row and loyalty_row["paid_count"] == 5: # If it's the 6th visit (free one)
+             loyalty_free = True
+             # Do not increment paid_count for a free wash, reset it later
+        elif count >= 4: # Eligible for free on next visit
+             loyalty_eligible = True
 
-        if count > 0 and count % 5 == 0:
-            loyalty_free = True
-        elif count >= 4:
-            loyalty_eligible = True
+        # Increment paid_count for actual paid orders
+        if not loyalty_free:
+            new_paid_count = count + 1
+            if loyalty_row:
+                cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (new_paid_count, car_plate))
+            else:
+                cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_paid_count))
+            conn.commit()
 
-        # ===== Insert order =====
-        now = datetime.now()
-        date = now.strftime("%d/%m/%Y")
-        time = now.strftime("%H:%M:%S")
+            # If the new count makes them eligible for a free wash next time, mark it
+            if new_paid_count == 5:
+                 loyalty_eligible = True
+            elif new_paid_count > 5: # Reset for next cycle after a free wash
+                 cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
+                 conn.commit()
+                 new_paid_count = 0 # For display purposes on the current receipt
+
+            # Update the count variable for display if a reset happened
+            count = new_paid_count
+        else: # It's a free wash, use previous count for display
+             current_display_count = loyalty_row["paid_count"] if loyalty_row else 0
+             # For the receipt, we might want to show it as the 6th visit (free) or reset to 0
+             # Let's show as 6th visit (the one that triggered free)
+             count = current_display_count + 1 
+             # After a free wash, reset the loyalty count to 0 for the next cycle
+             cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
+             conn.commit()
+
+
+        # ===== Insert order into main orders table =====
+        # The loyalty status here refers to the status *before* this order for display or *after* the order for next visit.
+        # This part might need careful adjustment based on when loyalty_status is determined.
+        # For this example, let's assume `loyalty_status` determines if THIS order is free.
+        final_loyalty_status = "Free Wash" if loyalty_free else ("Eligible" if loyalty_eligible else "Not Eligible")
+        
+        # Ensure price is 0 if loyalty_free is True
+        effective_price = 0.0 if loyalty_free else price
+
+        now = datetime.now(TZ) # Use TZ for consistency
+        date_str = now.strftime("%Y-%m-%d") 
+        time_str = now.strftime("%H:%M:%S")
 
         cur.execute("""
-        INSERT INTO orders (car_plate, car_type, service_type, price, payment_method, date, time)
-        VALUES (?,?,?,?,?,?,?)
-        """, (car_plate, car_type, service_type, price, payment_method, date, time))
+            INSERT INTO orders (car_plate, car_type, service_type, price, payment_method, payment_status, loyalty_status, created_at, invoice_date, reported_date)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
+        """, (car_plate, car_type, service_type, effective_price, payment_method, "Paid", final_loyalty_status, now.strftime("%Y-%m-%d %H:%M:%S"), date_str, date_str))
+        conn.commit()
+        order_id = cur.lastrowid
+        invoice_no = generate_invoice_no(order_id, now) # Use now for invoice_no generation
 
+        cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
         conn.commit()
 
-        order_id = cur.lastrowid
 
         order = {
             "id": order_id,
-            "invoice_no": f"INV{order_id:05}",
+            "invoice_no": invoice_no,
             "car_plate": car_plate,
-            "car_type": car_type,
+            "car_type": car_type, # This was missing in the original `order` dict
             "service_type": service_type,
-            "price": price,
+            "price": effective_price, # Use effective_price here
             "payment_method": payment_method,
-            "date": date,
-            "time": time,
-            "loyalty_count": count + 1,
+            "date": date_str, # Use consistent date format
+            "time": time_str, # Use consistent time format
+            "loyalty_count": count, # This is the count AFTER TRANSACTION / for NEXT transaction
             "loyalty_free": loyalty_free,
-            "loyalty_eligible": loyalty_eligible
+            "loyalty_eligible": loyalty_eligible,
+            "loyalty_status": final_loyalty_status # Pass the status to the template
         }
-
         conn.close()
 
         # ✅ PASS receipt_type to HTML
         return render_template("receipt.html", order=order, receipt_type=receipt_type)
+    
+    conn = get_db_connection()
+    services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
+    conn.close()
+    return render_template("pos.html", services=services) # Pass services to pos.html
 
-    return render_template("pos.html")
-
-
-
-# ================= CREATE ORDER =================
+# ================= CREATE ORDER (This route seems like a newer version of POS, consolidate if possible) =================
 @app.route("/create_order", methods=["POST"])
 def create_order():
     if "username" not in session:
@@ -520,36 +554,49 @@ def create_order():
     price = float(request.form["price"])
     invoice_date = request.form.get("invoice_date") or now_kul().strftime("%Y-%m-%d")
     reported_date = request.form.get("reported_date") or invoice_date
+    
+    # Get receipt_type from form, default to ORIGINAL
+    receipt_type = request.form.get("receipt_type", "ORIGINAL") 
 
     order = {
         "car_plate": car_plate,
         "car_type": car_type,
         "service_type": service_type,
         "payment_method": payment_method,
-        "price": price
+        "price": price,
+        "loyalty_status": "Not Eligible" # Default, will be updated by process_loyalty
     }
 
-    order = process_loyalty(order)
-
+    # Process loyalty *before* inserting the order to get the final price and loyalty status
+    processed_order = process_loyalty(order)
+    
     saved = insert_order_record(
-        car_plate=order["car_plate"],
-        car_type=order["car_type"],
-        service_type=order["service_type"],
-        payment_method=order["payment_method"],
-        price=order["price"],
-        loyalty_status=order["loyalty_status"],
+        car_plate=processed_order["car_plate"],
+        car_type=processed_order["car_type"],
+        service_type=processed_order["service_type"],
+        payment_method=processed_order["payment_method"],
+        price=processed_order["price"], # Use the potentially modified price from loyalty processing
+        loyalty_status=processed_order["loyalty_status"], # Use the loyalty status from loyalty processing
+        contact_number=request.form.get("contact_number"), # Added from form data
+        address=request.form.get("address"), # Added from form data
         invoice_date=invoice_date,
         reported_date=reported_date
     )
 
-    order["invoice_no"] = saved["invoice_no"]
-    order["id"] = saved["id"]
-    order["date"] = saved["date"]
-    order["time"] = saved["time"]
-    order["created_at"] = saved["created_at"]
-    order["reported_date"] = saved["reported_date"]
+    # Update the order dictionary with generated details and loyalty status
+    processed_order["invoice_no"] = saved["invoice_no"]
+    processed_order["id"] = saved["id"]
+    processed_order["date"] = saved["date"]
+    processed_order["time"] = saved["time"]
+    processed_order["created_at"] = saved["created_at"]
+    processed_order["reported_date"] = saved["reported_date"]
+    
+    # Store loyalty_count and loyalty_eligible for display
+    processed_order["loyalty_count"] = processed_order.get("loyalty_count", 0)
+    processed_order["loyalty_eligible"] = processed_order.get("loyalty_eligible", False)
+    # The loyalty processing already sets loyalty_free and loyalty_status correctly
 
-    return render_template("receipt.html", order=order)
+    return render_template("receipt.html", order=processed_order, receipt_type=receipt_type)
 
 
 # ================= LOYALTY =================
@@ -560,23 +607,34 @@ def process_loyalty(order):
 
     cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
     row = cur.fetchone()
-    paid_count = (row["paid_count"] if row else 0) + 1
+    current_paid_count = row["paid_count"] if row else 0
 
-    if paid_count == 6:
+    order["loyalty_free"] = False
+    order["loyalty_eligible"] = False
+
+    # Check for free wash eligibility for THIS transaction
+    if current_paid_count == 5: # This means the 6th wash is free
         order["price"] = 0.0
         order["loyalty_free"] = True
-        paid_count = 0
+        order["loyalty_status"] = "Free Wash"
+        # Reset loyalty count to 0 after providing free wash
+        cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
+        order["loyalty_count"] = 0 # For receipt display
     else:
-        order["loyalty_free"] = False
-
-    order["loyalty_count"] = paid_count
-    order["loyalty_eligible"] = paid_count >= 5
-    order["loyalty_status"] = "Eligible" if paid_count >= 5 else "Not Eligible"
-
-    if row:
-        cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (paid_count, car_plate))
-    else:
-        cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, paid_count))
+        # Increment paid_count for a regular paid wash
+        new_paid_count = current_paid_count + 1
+        if row:
+            cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (new_paid_count, car_plate))
+        else:
+            cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_paid_count))
+        
+        order["loyalty_count"] = new_paid_count # For receipt display
+        
+        if new_paid_count >= 5: # Mark as eligible for next free wash
+            order["loyalty_eligible"] = True
+            order["loyalty_status"] = "Eligible for Free Wash Next"
+        else:
+            order["loyalty_status"] = "Not Eligible"
 
     conn.commit()
     conn.close()
@@ -587,21 +645,18 @@ def process_loyalty(order):
 def check_loyalty(car_plate):
     conn = get_db_connection()
     row = conn.execute(
-        "SELECT paid_count FROM loyalty WHERE car_plate=?",
-        (car_plate.replace(" ", "").upper(),)
+        "SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate.replace(" ", "").upper(),)
     ).fetchone()
     conn.close()
     paid = row["paid_count"] if row else 0
     eligible = paid >= 5
-    return {"paid": paid, "eligible": eligible}
-
+    return jsonify({"paid": paid, "eligible": eligible})
 
 # ================= DASHBOARD =================
 @app.route("/dashboard")
 def dashboard():
     if session.get("role") != "admin":
         return redirect("/pos")
-
     data = get_revenue_data()
     low_stock = get_low_stock()
     return render_template(
@@ -614,13 +669,11 @@ def dashboard():
         low_stock=low_stock
     )
 
-
 @app.route("/dashboard_data")
 def dashboard_data():
     if session.get("role") != "admin":
         return jsonify({"error": "Unauthorized"}), 403
     return jsonify(get_revenue_data())
-
 
 def get_revenue_data():
     conn = get_db_connection()
@@ -629,37 +682,32 @@ def get_revenue_data():
     week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
     month_key = now.strftime("%Y-%m")
 
-    today_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price), 0)
-        FROM orders
-        WHERE payment_status='Paid' AND DATE(reported_date)=?
-    """, (today,)).fetchone()[0]
+    today_revenue = conn.execute(
+        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND DATE(reported_date)=? """,
+        (today,)
+    ).fetchone()[0]
 
-    week_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price), 0)
-        FROM orders
-        WHERE payment_status='Paid' AND DATE(reported_date) BETWEEN ? AND ?
-    """, (week_start, today)).fetchone()[0]
+    week_revenue = conn.execute(
+        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND DATE(reported_date) BETWEEN ? AND ? """,
+        (week_start, today)
+    ).fetchone()[0]
 
-    month_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price), 0)
-        FROM orders
-        WHERE payment_status='Paid' AND strftime('%Y-%m', reported_date)=?
-    """, (month_key,)).fetchone()[0]
+    month_revenue = conn.execute(
+        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND strftime('%Y-%m', reported_date)=? """,
+        (month_key,)
+    ).fetchone()[0]
 
-    cars_today = conn.execute("""
-        SELECT COUNT(*)
-        FROM orders
-        WHERE payment_status='Paid' AND DATE(reported_date)=?
-    """, (today,)).fetchone()[0]
+    cars_today = conn.execute(
+        """ SELECT COUNT(*) FROM orders WHERE payment_status='Paid' AND DATE(reported_date)=? """,
+        (today,)
+    ).fetchone()[0]
 
-    recent_sales_raw = conn.execute("""
-        SELECT invoice_no, car_plate, service_type, price, created_at, invoice_date, reported_date
-        FROM orders
-        WHERE payment_status='Paid'
-        ORDER BY created_at DESC, id DESC
-        LIMIT 10
-    """).fetchall()
+    recent_sales_raw = conn.execute(
+        """
+        SELECT id, invoice_no, car_plate, service_type, price, created_at, invoice_date, reported_date 
+        FROM orders WHERE payment_status='Paid' ORDER BY created_at DESC, id DESC LIMIT 10
+        """
+    ).fetchall()
 
     recent_sales = []
     for row in recent_sales_raw:
@@ -667,6 +715,7 @@ def get_revenue_data():
         date_part = dt_text[:10] if len(dt_text) >= 10 else "-"
         time_part = dt_text[11:19] if len(dt_text) >= 19 else "-"
         recent_sales.append({
+            "id": row["id"], # Added order ID for potential links
             "invoice": row["invoice_no"] or "-",
             "car_plate": row["car_plate"] or "-",
             "service_type": row["service_type"] or "-",
@@ -676,7 +725,6 @@ def get_revenue_data():
             "invoice_date": row["invoice_date"] or "-",
             "reported_date": row["reported_date"] or "-"
         })
-
     conn.close()
 
     return {
@@ -686,7 +734,6 @@ def get_revenue_data():
         "cars_today": cars_today,
         "recent_sales": recent_sales
     }
-
 
 @app.route("/recent_sales")
 def recent_sales():
@@ -699,8 +746,7 @@ def recent_sales():
 
     conn = get_db_connection()
     query = """
-        SELECT id, invoice_no, car_plate, car_type, service_type, payment_method,
-               price, invoice_date, reported_date, created_at
+        SELECT id, invoice_no, car_plate, car_type, service_type, payment_method, price, invoice_date, reported_date, created_at, loyalty_status
         FROM orders
         WHERE payment_status='Paid'
     """
@@ -713,12 +759,11 @@ def recent_sales():
         elif filter_type == "reported":
             query += " AND DATE(reported_date) BETWEEN ? AND ?"
             params.extend([date_from, date_to])
-        else:
+        else: # Default to created_at
             query += " AND DATE(created_at) BETWEEN ? AND ?"
             params.extend([date_from, date_to])
 
     query += " ORDER BY created_at DESC, id DESC"
-
     sales_rows = conn.execute(query, params).fetchall()
     conn.close()
 
@@ -730,13 +775,11 @@ def recent_sales():
         date_to=date_to
     )
 
-
 def get_low_stock():
     conn = get_db_connection()
-    rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5 ORDER BY quantity ASC, item ASC").fetchall()
+    rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5 AND is_deleted = 0 ORDER BY quantity ASC, item ASC").fetchall()
     conn.close()
     return [dict(x) for x in rows]
-
 
 # ================= RECEIPT =================
 @app.route("/receipt/<invoice>")
@@ -745,27 +788,35 @@ def receipt(invoice):
         return redirect("/login")
 
     conn = get_db_connection()
+    
+    # Check for order in the main 'orders' table
+    order = conn.execute(
+        """ SELECT * FROM orders WHERE invoice_no=? ORDER BY id DESC LIMIT 1 """,
+        (invoice,)
+    ).fetchone()
 
-    order = conn.execute("""
-        SELECT *
-        FROM orders
-        WHERE invoice_no=?
-        ORDER BY id DESC
-        LIMIT 1
-    """, (invoice,)).fetchone()
-
+    is_copy = request.args.get("copy", "false").lower() == "true"
+    
     if order:
         conn.close()
-        return render_template("receipt.html", order=order)
+        return render_template("receipt.html", order=order, is_copy=is_copy) # Pass is_copy here
 
+    # Fallback to legacy 'sales' table if not found in 'orders' (though ideally all should be in orders)
     sale = conn.execute("SELECT * FROM sales WHERE invoice=?", (invoice,)).fetchone()
     conn.close()
 
     if sale:
-        return render_template("receipt.html", sale=sale)
+        # If using legacy 'sales' table, you might need to map its fields to 'order' structure
+        # for a consistent receipt template.
+        # This part depends on how 'receipt.html' expects 'sale' or 'order' data.
+        # For simplicity, let's assume `receipt.html` can handle either `order` or `sale`.
+        # You'll need to adapt `receipt.html` to gracefully handle 'sale' data or convert 'sale' to 'order' format.
+        print("Legacy Sale found:", dict(sale)) # Debugging
+        # You might need to construct an 'order'-like dictionary from 'sale' data
+        # For a copy, you'd still just display the original `sale` data.
+        return render_template("receipt.html", sale=sale, is_copy=is_copy) # Pass is_copy here
 
     return f"Receipt not found for invoice {invoice}", 404
-
 
 # ================= PACKAGES =================
 @app.route("/packages")
@@ -790,14 +841,14 @@ def package_special():
 def package_polishing():
     return render_template("package_polishing.html")
 
+
 # ================= INVENTORY =================
 @app.route("/inventory")
 def inventory():
     if "username" not in session:
         return redirect("/login")
-
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row # Ensure row_factory is set for easier dictionary access
 
     filter_type = request.args.get("filter_type", "all")
     filter_month = request.args.get("filter_month", "").strip()
@@ -807,62 +858,99 @@ def inventory():
 
     query = "SELECT * FROM inventory WHERE is_deleted = 0"
     params = []
+    
+    filter_label = "All Dates" # Default label
 
     if filter_type == "month" and filter_month:
-        query += " WHERE strftime('%Y-%m', purchase_date) = ?"
+        query += " AND strftime('%Y-%m', purchase_date) = ?"
         params.append(filter_month)
         filter_label = filter_month
-
     elif filter_type == "year" and filter_year:
-        query += " WHERE strftime('%Y', purchase_date) = ?"
+        query += " AND strftime('%Y', purchase_date) = ?"
         params.append(filter_year)
         filter_label = filter_year
-
     elif filter_type == "custom" and filter_start and filter_end:
-        query += " WHERE purchase_date BETWEEN ? AND ?"
+        query += " AND purchase_date BETWEEN ? AND ?"
         params.extend([filter_start, filter_end])
         filter_label = f"{filter_start} to {filter_end}"
-
-    else:
-        filter_label = "All Dates"
-
+    
     query += " ORDER BY purchase_date DESC, id DESC"
+    
+    # Execute the filtered query for items
+    items = conn.execute(query, params).fetchall()
 
-    items = conn.execute("SELECT * FROM inventory WHERE is_deleted = 0 ORDER BY id DESC").fetchall()
-    total_spent = conn.execute("SELECT COALESCE(SUM(quantity * price),0) FROM inventory WHERE is_deleted = 0").fetchone()[0]
+    # Calculate total spent based on the current filter criteria
+    total_spent_query = "SELECT COALESCE(SUM(quantity * price),0) FROM inventory WHERE is_deleted = 0"
+    total_spent_params = []
+
+    if filter_type == "month" and filter_month:
+        total_spent_query += " AND strftime('%Y-%m', purchase_date) = ?"
+        total_spent_params.append(filter_month)
+    elif filter_type == "year" and filter_year:
+        total_spent_query += " AND strftime('%Y', purchase_date) = ?"
+        total_spent_params.append(filter_year)
+    elif filter_type == "custom" and filter_start and filter_end:
+        total_spent_query += " AND purchase_date BETWEEN ? AND ?"
+        total_spent_params.extend([filter_start, filter_end])
+
+    total_spent = conn.execute(total_spent_query, total_spent_params).fetchone()[0]
 
     conn.close()
-
     return render_template(
         "inventory.html",
         items=items,
         total_spent=f"{total_spent:.2f}",
-        filter_label=filter_label
+        filter_label=filter_label,
+        filter_type=filter_type, # Pass filter type back to retain selection
+        filter_month=filter_month, # Pass filter values back to retain selection
+        filter_year=filter_year,
+        filter_start=filter_start,
+        filter_end=filter_end
     )
+
 
 @app.route("/inventory/save", methods=["POST"])
 def save_item():
     data = request.json
     item_id = data.get("id")
-    name = data.get("name")
+    name = data.get("item") # Changed from 'name' to 'item' based on form field
     quantity = data.get("quantity")
     price = data.get("price")
+    company = data.get("company", "")
+    phone = data.get("phone", "")
+    address = data.get("address", "")
+    purchase_date = data.get("purchase_date", "")
+    serial_number = data.get("serial_number", "")
+    category = data.get("category", "")
+    unit = data.get("unit", "")
+    last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-    conn.execute(
-        "UPDATE inventory SET name=?, quantity=?, price=? WHERE id=?",
-        (name, quantity, price, item_id)
-    )
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
+    try:
+        conn.execute(
+            """
+            UPDATE inventory SET 
+                item=?, company=?, phone=?, address=?, purchase_date=?, 
+                quantity=?, price=?, serial_number=?, category=?, unit=?, last_updated=? 
+            WHERE id=?
+            """,
+            (name, company, phone, address, purchase_date, 
+             quantity, price, serial_number, category, unit, last_updated, item_id)
+        )
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route("/inventory/delete", methods=["POST"])
 def delete_item():
     data = request.json
     item_id = data.get("id")
     conn = get_db_connection()
-    conn.execute("UPDATE inventory SET is_deleted=1 WHERE id=?", (item_id,))
+    conn.execute("UPDATE inventory SET is_deleted=1, last_updated=? WHERE id=?", (now_kul().strftime("%Y-%m-%d %H:%M:%S"), item_id))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -885,32 +973,39 @@ def add_inventory():
     last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-
+    
+    # Check for existing item that might have been soft-deleted
     existing = conn.execute(
-        "SELECT id, is_deleted FROM inventory WHERE item=?",
-        (item,)
+        "SELECT id, is_deleted FROM inventory WHERE item=? COLLATE NOCASE", (item,) # Use COLLATE NOCASE for case-insensitive check
     ).fetchone()
 
-    if existing and existing["is_deleted"] == 1:
-        conn.execute("""
-            UPDATE inventory
-            SET company=?, phone=?, address=?, purchase_date=?, quantity=?, price=?,
-                serial_number=?, category=?, unit=?, is_deleted=0, last_updated=?
-            WHERE id=?
-        """, (
-            company, phone, address, purchase_date, quantity, price,
-            serial_number, category, unit, last_updated, existing["id"]
-        ))
-    else:
-        conn.execute("""
-            INSERT INTO inventory
-            (item, company, phone, address, purchase_date, quantity, price, serial_number, category, unit, last_updated, is_deleted)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-        """, (
-            item, company, phone, address, purchase_date, quantity, price,
-            serial_number, category, unit, last_updated
-        ))
 
+    if existing and existing["is_deleted"] == 1:
+        # If soft-deleted item with the same name exists, restore and update it
+        conn.execute(
+            """
+            UPDATE inventory SET 
+                company=?, phone=?, address=?, purchase_date=?, quantity=?, price=?, 
+                serial_number=?, category=?, unit=?, is_deleted=0, last_updated=? 
+            WHERE id=?
+            """,
+            (
+                company, phone, address, purchase_date, quantity, price,
+                serial_number, category, unit, last_updated, existing["id"]
+            )
+        )
+    else:
+        # Insert as a new item
+        conn.execute(
+            """
+            INSERT INTO inventory (item, company, phone, address, purchase_date, quantity, price, serial_number, category, unit, last_updated, is_deleted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            """,
+            (
+                item, company, phone, address, purchase_date, quantity, price,
+                serial_number, category, unit, last_updated
+            )
+        )
     conn.commit()
     conn.close()
     return redirect("/inventory")
@@ -937,28 +1032,30 @@ def edit_inventory(id):
             phone = request.form.get("phone", "").strip()
             address = request.form.get("address", "").strip()
             purchase_date = request.form.get("purchase_date", "").strip()
-
             quantity = request.form.get("quantity", "0").strip()
             quantity = int(quantity) if quantity else 0
-
             price = request.form.get("price", "0").strip()
             price = float(price) if price else 0.0
-
             serial_number = request.form.get("serial_number", "").strip()
+            category = request.form.get("category", "").strip() # Added category
+            unit = request.form.get("unit", "").strip() # Added unit
+            last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
             # Update database
-            conn.execute("""
-                UPDATE inventory
-                SET item=?, company=?, phone=?, address=?, purchase_date=?,
-                    quantity=?, price=?, serial_number=?, last_updated=CURRENT_TIMESTAMP
+            conn.execute(
+                """
+                UPDATE inventory SET 
+                    item=?, company=?, phone=?, address=?, purchase_date=?, 
+                    quantity=?, price=?, serial_number=?, category=?, unit=?, last_updated=? 
                 WHERE id=?
-            """, (item_name, company, phone, address, purchase_date,
-                  quantity, price, serial_number, id))
+                """,
+                (item_name, company, phone, address, purchase_date, quantity, price, 
+                 serial_number, category, unit, last_updated, id)
+            )
             conn.commit()
         except Exception as e:
             conn.close()
             return f"Error updating item: {e}", 500
-
         conn.close()
         return redirect("/inventory")
 
@@ -971,7 +1068,8 @@ def delete_inventory(id):
         return "Admin only"
 
     conn = get_db_connection()
-    conn.execute("DELETE FROM inventory WHERE id=?", (id,))
+    # Perform a soft delete instead of permanent delete
+    conn.execute("UPDATE inventory SET is_deleted=1, last_updated=? WHERE id=?", (now_kul().strftime("%Y-%m-%d %H:%M:%S"), id))
     conn.commit()
     conn.close()
     return redirect("/inventory")
@@ -980,22 +1078,19 @@ def delete_inventory(id):
 def inventory_deleted():
     if session.get("role") != "admin":
         return redirect("/pos")
-
     conn = get_db_connection()
     items = conn.execute(
         "SELECT * FROM inventory WHERE is_deleted = 1 ORDER BY last_updated DESC"
     ).fetchall()
     conn.close()
-
     return render_template("inventory_deleted.html", items=items)
 
 @app.route("/restore_inventory/<int:id>")
 def restore_inventory(id):
     conn = get_db_connection()
-    conn.execute("UPDATE inventory SET is_deleted = 0 WHERE id=?", (id,))
+    conn.execute("UPDATE inventory SET is_deleted = 0, last_updated=? WHERE id=?", (now_kul().strftime("%Y-%m-%d %H:%M:%S"), id))
     conn.commit()
     conn.close()
-
     return redirect("/inventory_deleted")
 
 # ================= BOOKING =================
@@ -1008,82 +1103,113 @@ def generate_timeslots():
         slots.append(f"{hour:02d}:30")
     return slots
 
-
 @app.route("/booking")
 def booking():
     plate = request.args.get("plate", "")
-    current_date = request.args.get("date") or now_kul().strftime("%Y-%m-%d")
+    current_date_str = request.args.get("date", now_kul().strftime("%Y-%m-%d"))
+    
+    # Ensure current_date is a datetime object for comparison
+    current_date = datetime.strptime(current_date_str, "%Y-%m-%d").date()
+    today_date = now_kul().date()
 
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
-
+    
     # Fetch confirmed bookings for this date
-    bookings = conn.execute("""
-        SELECT booking_time
-        FROM bookings
+    bookings = conn.execute(
+        """
+        SELECT booking_time FROM bookings 
         WHERE booking_date=? AND LOWER(status)='confirmed'
-    """, (current_date,)).fetchall()
+        """,
+        (current_date_str,)
+    ).fetchall()
+    
     conn.close()
-
+    
     booked_times = [row["booking_time"] for row in bookings]
-
     timeslots = generate_timeslots()
 
+    # Filter out past time slots if the selected date is today
+    if current_date == today_date:
+        now_time = now_kul().time()
+        available_timeslots = []
+        for ts in timeslots:
+            slot_hour, slot_minute = map(int, ts.split(':'))
+            slot_datetime = now_kul().replace(hour=slot_hour, minute=slot_minute, second=0, microsecond=0)
+            if slot_datetime > now_kul():
+                available_timeslots.append(ts)
+        timeslots = available_timeslots # Update timeslots to only include future times
+    
     return render_template(
         "booking.html",
         services=services,
         timeslots=timeslots,
         plate=plate,
-        current_date=current_date,
-        booked_times=booked_times
+        current_date=current_date_str,
+        booked_times=booked_times,
+        today_date_str=today_date.strftime("%Y-%m-%d") # Pass today's date string for client-side comparison
     )
-
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
     car_plate = request.form["car_plate"].upper()
     service = request.form["service_type"]
-    date = request.form["booking_date"]
-    time = request.form["booking_time"]
+    date_str = request.form["booking_date"]
+    time_str = request.form["booking_time"]
     contact = request.form["contact"]
-    car_type = request.form.get("car_type", "-")
+    car_type = request.form.get("car_type", "-") # Assuming car_type is potentially in the form
     created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-
+    
     # Check if the day is already full (3 bookings)
-    count_day = conn.execute("""
-        SELECT COUNT(*) FROM bookings
-        WHERE booking_date=? AND LOWER(status)='confirmed'
-    """, (date,)).fetchone()[0]
+    count_day = conn.execute(
+        """
+        SELECT COUNT(*) FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'
+        """,
+        (date_str,)
+    ).fetchone()[0]
 
     if count_day >= 3:
         conn.close()
         return "<script>alert('All slots for this date are full. Please pick a new date.');window.location='/booking';</script>"
 
     # Check if selected time is too close to existing bookings (3 hours apart)
-    existing_bookings = conn.execute("""
-        SELECT booking_time FROM bookings
+    existing_bookings = conn.execute(
+        """
+        SELECT booking_time FROM bookings 
         WHERE booking_date=? AND LOWER(status)='confirmed'
-    """, (date,)).fetchall()
+        """,
+        (date_str,)
+    ).fetchall()
 
     from datetime import datetime
-    slot_dt = datetime.strptime(time, "%H:%M")
+    selected_slot_dt = datetime.strptime(time_str, "%H:%M").time() # Only time part for comparison
 
     for row in existing_bookings:
-        booked_dt = datetime.strptime(row["booking_time"], "%H:%M")
-        diff_hours = abs((slot_dt - booked_dt).total_seconds() / 3600)
-        if diff_hours < 3:
+        booked_slot_dt = datetime.strptime(row["booking_time"], "%H:%M").time()
+        
+        # Calculate difference in minutes for better precision
+        # Convert times to minutes from midnight
+        selected_minutes = selected_slot_dt.hour * 60 + selected_slot_dt.minute
+        booked_minutes = booked_slot_dt.hour * 60 + booked_slot_dt.minute
+        
+        diff_minutes = abs(selected_minutes - booked_minutes)
+        
+        # 3 hours = 180 minutes
+        if diff_minutes < 180: 
             conn.close()
-            return "<script>alert('This time slot is unavailable. Please choose another.');window.location='/booking';</script>"
+            return "<script>alert('This time slot is too close to an existing booking. Please choose another.');window.location='/booking';</script>"
 
     # Insert booking
     cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO bookings
-        (car_plate, service_type, booking_date, booking_time, contact, created_at, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'confirmed')
-    """, (car_plate, service, date, time, contact, created_at))
+    cur.execute(
+        """
+        INSERT INTO bookings (car_plate, service_type, booking_date, booking_time, contact, created_at, status, car_type)
+        VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)
+        """,
+        (car_plate, service, date_str, time_str, contact, created_at, car_type)
+    )
     booking_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -1091,49 +1217,42 @@ def create_booking():
     booking_data = {
         "car_plate": car_plate,
         "service": service,
-        "car_type": car_type,
-        "date": date,
-        "time": time,
+        "car_type": car_type, # Ensure car_type is passed in booking_data
+        "date": date_str,
+        "time": time_str,
         "contact": contact,
         "booking_id": f"BK{now_kul().strftime('%Y%m%d')}{booking_id:03d}"
     }
-
     return render_template("booking_confirmed.html", booking=booking_data)
+
 
 @app.route("/booking_admin")
 def booking_admin():
     if session.get("role") != "admin":
         return redirect("/pos")
-
-    import calendar
-    from collections import defaultdict
-    from datetime import datetime
-    from flask import request
-
-    today = datetime.now()
+    
+    today = now_kul() # Use TZ-aware datetime for today
     year = request.args.get("year", default=today.year, type=int)
     month = request.args.get("month", default=today.month, type=int)
 
     conn = get_db_connection()
-
-    bookings = conn.execute("""
-        SELECT *
-        FROM bookings
-        WHERE strftime('%Y', booking_date) = ?
-          AND strftime('%m', booking_date) = ?
-          AND LOWER(status) = 'confirmed'
+    bookings = conn.execute(
+        """
+        SELECT * FROM bookings 
+        WHERE strftime('%Y', booking_date) = ? AND strftime('%m', booking_date) = ? 
+        AND LOWER(status) = 'confirmed' 
         ORDER BY booking_date ASC, booking_time ASC, id ASC
-    """, (str(year), f"{month:02d}")).fetchall()
-
+        """,
+        (str(year), f"{month:02d}")
+    ).fetchall()
     conn.close()
 
     grouped_bookings = defaultdict(list)
     for b in bookings:
         grouped_bookings[b["booking_date"]].append(b)
 
-    cal = calendar.Calendar(firstweekday=0)
+    cal = calendar.Calendar(firstweekday=0) # Monday is the first day of the week
     calendar_data = cal.monthdayscalendar(year, month)
-
     month_name = calendar.month_name[month]
 
     prev_month = month - 1
@@ -1150,7 +1269,7 @@ def booking_admin():
 
     total_confirmed = len(bookings)
     full_days = sum(1 for day_bookings in grouped_bookings.values() if len(day_bookings) >= 3)
-
+    
     return render_template(
         "booking_admin.html",
         calendar_data=calendar_data,
@@ -1163,7 +1282,8 @@ def booking_admin():
         next_month=next_month,
         next_year=next_year,
         total_confirmed=total_confirmed,
-        full_days=full_days
+        full_days=full_days,
+        today_date=today.date() # Pass today's date for highlighting
     )
 
 # ================= STAFF =================
@@ -1171,13 +1291,10 @@ def booking_admin():
 def staff():
     if session.get("role") != "admin":
         return redirect("/pos")
-
     conn = get_db_connection()
     staff = conn.execute("SELECT * FROM users ORDER BY id DESC").fetchall()
     conn.close()
-
     return render_template("staff.html", staff=staff)
-
 
 @app.route("/add_staff", methods=["POST"])
 def add_staff():
@@ -1189,15 +1306,21 @@ def add_staff():
     role = request.form["role"]
 
     conn = get_db_connection()
-    conn.execute("""
-        INSERT INTO users (username, password, role)
-        VALUES (?, ?, ?)
-    """, (username, password, role))
-    conn.commit()
-    conn.close()
-
+    try:
+        conn.execute("""
+            INSERT INTO users (username, password, role) VALUES (?, ?, ?)
+        """, (username, password, role))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        # Handle case where username might already exist (if username was UNIQUE)
+        conn.close()
+        return "<script>alert('Error: Username already exists.');window.location='/staff';</script>"
+    except Exception as e:
+        conn.close()
+        return f"Error adding staff: {e}", 500
+    finally:
+        conn.close()
     return redirect("/staff")
-
 
 # ================= FINANCE =================
 @app.route("/finance")
@@ -1208,30 +1331,33 @@ def finance():
     conn = get_db_connection()
     today = now_kul().strftime("%Y-%m-%d")
 
-    daily_orders = conn.execute("""
-        SELECT COUNT(*)
-        FROM orders
-        WHERE payment_status='Paid' AND reported_date=?
-    """, (today,)).fetchone()[0]
+    daily_orders = conn.execute(
+        """SELECT COUNT(*) FROM orders WHERE payment_status='Paid' AND reported_date=? """,
+        (today,)
+    ).fetchone()[0]
 
-    daily_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price), 0)
-        FROM orders
-        WHERE payment_status='Paid' AND reported_date=?
-    """, (today,)).fetchone()[0]
+    daily_revenue = conn.execute(
+        """SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND reported_date=? """,
+        (today,)
+    ).fetchone()[0]
 
     payment_methods = ["Cash", "Card", "QR", "E-Wallet"]
     by_method = []
-
     for method in payment_methods:
-        total = conn.execute("""
-            SELECT IFNULL(SUM(price), 0)
-            FROM orders
-            WHERE payment_status='Paid' AND reported_date=? AND payment_method=?
-        """, (today, method)).fetchone()[0]
+        total = conn.execute(
+            """SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND reported_date=? AND payment_method=? """,
+            (today, method)
+        ).fetchone()[0]
         by_method.append((method, total))
+    
+    total_revenue_from_methods = sum([x[1] for x in by_method])
+    # Ensure total_revenue also includes anything not covered by payment_methods for robustness
+    # This might not be strictly needed if all payments use one of the types, but good practice.
+    total_revenue = conn.execute(
+        """SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND reported_date=? """,
+        (today,)
+    ).fetchone()[0]
 
-    total_revenue = sum([x[1] for x in by_method])
     conn.close()
 
     report = {
@@ -1239,7 +1365,7 @@ def finance():
         "daily_orders": daily_orders,
         "daily_revenue": daily_revenue,
         "by_method": by_method,
-        "total_revenue": total_revenue
+        "total_revenue": total_revenue # Use the sum from database, not just payment_methods list
     }
     return render_template("finance.html", report=report)
 
@@ -1249,7 +1375,6 @@ if __name__ == "__main__":
     init_db()
     sync_old_orders_data()
     app.run(host="0.0.0.0", port=5000, debug=True)
-
 else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
