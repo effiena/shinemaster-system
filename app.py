@@ -653,24 +653,52 @@ def check_loyalty(car_plate):
     return jsonify({"paid": paid, "eligible": eligible})
 
 # ================= DASHBOARD =================
+# Mapping service codes to human-readable names
+SERVICE_NAMES = {
+    "wash_basic": "CAR WASH - BASIC",
+    "wash_special": "CAR WASH - SPECIAL",
+    "wash_maintain": "CAR WASH - MAINTENANCE",
+    "coat1": "COATING - 1 YEAR",
+    "coat2": "COATING - 2 YEAR",
+    "coat3": "COATING - 3 YEAR",
+    "disp2": "DISPOSABLE - 2 YEAR",
+    "disp3": "DISPOSABLE - 3 YEAR",
+    "wax": "WAXING",
+    "int_detail": "INTERIOR DETAILING",
+    "int_coat": "INTERIOR COATING"
+}
+
 @app.route("/dashboard")
 def dashboard():
     if session.get("role") != "admin":
         return redirect("/pos")
+
+    # Revenue & recent sales
     data = get_revenue_data()
     low_stock = get_low_stock()
- 
-    conn = get_db_connection()  # ✅ ADD THIS
 
-    new_bookings = conn.execute("""
+    # Latest 5 confirmed bookings
+    conn = get_db_connection()
+    raw_bookings = conn.execute("""
         SELECT car_plate, service_type, booking_date, booking_time
         FROM bookings
         WHERE LOWER(status)='confirmed'
         ORDER BY id DESC
         LIMIT 5
     """).fetchall()
-
     conn.close()
+
+
+   # Map service codes to human-readable names
+    new_bookings = []
+    for b in raw_bookings:
+        new_bookings.append({
+            "car_plate": b["car_plate"] or "-",
+            "service": SERVICE_NAMES.get(b["service_type"], b["service_type"] or "-"),
+            "date": b["booking_date"] or "-",
+            "time": b["booking_time"] or "-"
+        })
+
 
 
     return render_template(
@@ -680,7 +708,7 @@ def dashboard():
         month_revenue=data["month_revenue"],
         cars_today=data["cars_today"],
         recent_sales=data["recent_sales"],
-        new_bookings=new_bookings,  # ✅ THIS LINE
+        new_bookings=new_bookings,
         low_stock=low_stock
     )
 
@@ -697,6 +725,7 @@ def get_revenue_data():
     week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
     month_key = now.strftime("%Y-%m")
 
+    # Revenue
     today_revenue = conn.execute(
         """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND DATE(reported_date)=? """,
         (today,)
@@ -717,9 +746,10 @@ def get_revenue_data():
         (today,)
     ).fetchone()[0]
 
+    # Recent sales
     recent_sales_raw = conn.execute(
         """
-        SELECT id, invoice_no, car_plate, service_type, price, created_at, invoice_date, reported_date 
+        SELECT id, invoice_no, car_plate, service_type, price, created_at
         FROM orders WHERE payment_status='Paid' ORDER BY created_at DESC, id DESC LIMIT 10
         """
     ).fetchall()
@@ -730,16 +760,15 @@ def get_revenue_data():
         date_part = dt_text[:10] if len(dt_text) >= 10 else "-"
         time_part = dt_text[11:19] if len(dt_text) >= 19 else "-"
         recent_sales.append({
-            "id": row["id"], # Added order ID for potential links
+            "id": row["id"],
             "invoice": row["invoice_no"] or "-",
             "car_plate": row["car_plate"] or "-",
-            "service_type": row["service_type"] or "-",
+            "service_type": SERVICE_NAMES.get(row["service_type"], row["service_type"]),
             "price": row["price"] or 0,
             "date": date_part,
-            "time": time_part,
-            "invoice_date": row["invoice_date"] or "-",
-            "reported_date": row["reported_date"] or "-"
+            "time": time_part
         })
+
     conn.close()
 
     return {
