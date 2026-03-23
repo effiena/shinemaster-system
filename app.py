@@ -834,13 +834,16 @@ def package_basic():
     return render_template("package_basic.html")
 
 @app.route("/package_supreme")
-def package_special():
+def package_supreme():
     return render_template("package_supreme.html")
 
 @app.route("/package_polishing")
 def package_polishing():
     return render_template("package_polishing.html")
 
+@app.route("/special_package")
+def package_special():
+    return render_template("special_package.html")
 
 # ================= INVENTORY =================
 @app.route("/inventory")
@@ -1103,19 +1106,27 @@ def generate_timeslots():
         slots.append(f"{hour:02d}:30")
     return slots
 
+def get_disabled_slots(timeslots, booked_times):
+    disabled = set()
+    for slot in timeslots:
+        slot_dt = datetime.strptime(slot, "%H:%M").time()
+        for booked in booked_times:
+            booked_dt = datetime.strptime(booked, "%H:%M").time()
+            diff_minutes = abs((slot_dt.hour*60 + slot_dt.minute) - (booked_dt.hour*60 + booked_dt.minute))
+            if diff_minutes < 180:
+                disabled.add(slot)
+    return disabled
+
 @app.route("/booking")
 def booking():
     plate = request.args.get("plate", "")
     current_date_str = request.args.get("date", now_kul().strftime("%Y-%m-%d"))
-    
-    # Ensure current_date is a datetime object
+
     current_date = datetime.strptime(current_date_str, "%Y-%m-%d").date()
     today_date = now_kul().date()
 
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
-
-    # Fetch confirmed bookings for this date
     bookings = conn.execute(
         "SELECT booking_time FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
         (current_date_str,)
@@ -1125,13 +1136,12 @@ def booking():
     booked_times = [row["booking_time"] for row in bookings]
     timeslots = generate_timeslots()
 
-    # Filter out past time slots if today
+    # Filter out past slots for today
     if current_date == today_date:
         now_time = now_kul().time()
-        timeslots = [
-            ts for ts in timeslots
-            if datetime.strptime(ts, "%H:%M").time() > now_time
-        ]
+        timeslots = [ts for ts in timeslots if datetime.strptime(ts, "%H:%M").time() > now_time]
+
+    disabled_slots = get_disabled_slots(timeslots, booked_times)
 
     return render_template(
         "booking.html",
@@ -1140,75 +1150,93 @@ def booking():
         plate=plate,
         current_date=current_date_str,
         booked_times=booked_times,
+        disabled_slots=disabled_slots,
         today_date_str=today_date.strftime("%Y-%m-%d")
     )
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    car_plate = request.form["car_plate"].upper()
-    service = request.form["service_type"]
-    date_str = request.form["booking_date"]
-    time_str = request.form["booking_time"]
-    contact = request.form["contact"]
-    car_type = request.form.get("car_type", "-")
-    created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        car_plate = request.form.get("car_plate", "").upper()
+        service = request.form.get("service_type", "")
+        date_str = request.form.get("booking_date", "")
+        time_str = request.form.get("booking_time", "")
+        contact = request.form.get("contact", "")
+        car_type = request.form.get("car_type", "-")
 
-    conn = get_db_connection()
-    
-    # Check day capacity
-    count_day = conn.execute(
-        "SELECT COUNT(*) FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
-        (date_str,)
-    ).fetchone()[0]
+        if not all([car_plate, service, date_str, time_str, contact]):
+            return "Missing form data", 400
 
-    if count_day >= 3:
-        conn.close()
-        return "<script>alert('All slots for this date are full.');window.location='/booking';</script>"
+        created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Check time gap
-    existing_bookings = conn.execute(
-        "SELECT booking_time FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
-        (date_str,)
-    ).fetchall()
+        conn = get_db_connection()
 
-    from datetime import datetime
-    selected_slot_dt = datetime.strptime(time_str, "%H:%M").time()
-    for row in existing_bookings:
-        booked_slot_dt = datetime.strptime(row["booking_time"], "%H:%M").time()
-        diff_minutes = abs((selected_slot_dt.hour*60 + selected_slot_dt.minute) - 
-                           (booked_slot_dt.hour*60 + booked_slot_dt.minute))
-        if diff_minutes < 180:  # less than 3 hours
+        # Day limit
+        count_day = conn.execute(
+            "SELECT COUNT(*) FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
+            (date_str,)
+        ).fetchone()[0]
+
+        if count_day >= 3:
             conn.close()
-            return "<script>alert('This time slot is too close to an existing booking.');window.location='/booking';</script>"
+            return "<script>alert('Date full');window.location='/booking';</script>"
 
-    # Insert booking
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT INTO bookings (car_plate, service_type, booking_date, booking_time, contact, created_at, status, car_type)
-        VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)
-        """,
-        (car_plate, service, date_str, time_str, contact, created_at, car_type)
-    )
-    booking_id = cur.lastrowid
-    conn.commit()
-    conn.close()
+        # Time gap check
+        existing_bookings = conn.execute(
+            "SELECT booking_time FROM bookings WHERE booking_date=? AND LOWER(status)='confirmed'",
+            (date_str,)
+        ).fetchall()
 
-    # Generate booking ID
-    booking_data = {
-        "car_plate": car_plate,
-        "service": service,
-        "car_type": car_type,
-        "date": date_str,
-        "time": time_str,
-        "contact": contact,
-        "booking_id": f"BK{now_kul().strftime('%Y%m%d')}{booking_id:03d}"
-    }
+        from datetime import datetime
+        selected_slot_dt = datetime.strptime(time_str, "%H:%M").time()
 
-    # ✅ Save booking in session and redirect
-    session["latest_booking"] = booking_data
-    return redirect(url_for("booking_confirmed"))
+        for row in existing_bookings:
+            if not row["booking_time"]:
+                continue
+            try:
+                booked_slot_dt = datetime.strptime(row["booking_time"], "%H:%M").time()
+            except:
+                continue
 
+            diff_minutes = abs(
+                (selected_slot_dt.hour*60 + selected_slot_dt.minute) -
+                (booked_slot_dt.hour*60 + booked_slot_dt.minute)
+            )
+
+            if diff_minutes < 180:
+                conn.close()
+                return "<script>alert('Time too close');window.location='/booking';</script>"
+
+        # Insert
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO bookings 
+            (car_plate, service_type, booking_date, booking_time, contact, created_at, status, car_type)
+            VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)
+            """,
+            (car_plate, service, date_str, time_str, contact, created_at, car_type)
+        )
+
+        booking_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+
+        session["latest_booking"] = {
+            "car_plate": car_plate,
+            "service": service,
+            "car_type": car_type,
+            "date": date_str,
+            "time": time_str,
+            "contact": contact,
+            "booking_id": f"BK{now_kul().strftime('%Y%m%d')}{booking_id:03d}"
+        }
+
+        return redirect(url_for("booking_confirmed"))
+
+    except Exception as e:
+        print("BOOKING ERROR:", e)
+        return str(e), 500
 
 @app.route("/booking_confirmed")
 def booking_confirmed():
@@ -1228,20 +1256,19 @@ def latest_bookings():
         LIMIT 5
     """).fetchall()
     conn.close()
-    
+
     # Convert to list of dicts for JSON
     bookings_list = [
         {
             "car_plate": b["car_plate"],
-            "service_type": b["service_type"],
+            "service": b["service_type"],  # map DB column to 'service'
             "date": b["booking_date"],
             "time": b["booking_time"]
         }
         for b in bookings
     ]
-    
-    return {"new_bookings": bookings_list}
 
+    return {"new_bookings": bookings_list}
 
 @app.route("/booking_admin")
 def booking_admin():
