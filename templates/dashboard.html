@@ -189,24 +189,20 @@ color:#aaa;
 
 
 <div class="section">
-
 <h3>New Confirmed Booking Alert</h3>
 
-<ul>
-
+<ul id="bookingAlertList">
 {% for booking in new_bookings %}
-
 <li class="lowstock">
-{{booking.car_plate}} - {{booking.service}} ({{booking.date}} {{booking.time}})
+{{ booking.car_plate }} - {{ booking.service }} ({{ booking.date }} {{ booking.time }})
 </li>
-
 {% else %}
 <li>No new bookings</li>
 {% endfor %}
-
 </ul>
+</div><div class="section">
+<h3>New Confirmed Booking Alert</h3>
 
-</div>
 
 
 <div class="section">
@@ -277,7 +273,8 @@ document.getElementById("time").innerText = time;
 setInterval(updateClock,1000);
 updateClock();
 
-let seenBookings = new Set(); // Track booking IDs we've already displayed
+// ✅ Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
 
 function fetchNewBookings() {
     fetch("/latest_bookings")
@@ -345,6 +342,7 @@ document.getElementById("recentSales").innerHTML = table;
 
 // ✅ INITIAL LOAD
 loadDashboard();
+
 
 </script>
 
