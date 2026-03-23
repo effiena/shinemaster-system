@@ -204,20 +204,11 @@
     <label>Pick a Time Slot</label>
     <div class="timeslots">
         {% for slot in timeslots %}
-            {% set slot_disabled = false %}
-            {% for booked in booked_times %}
-                {% set booked_dt = datetime.strptime(booked, '%H:%M') %}
-                {% set slot_dt = datetime.strptime(slot, '%H:%M') %}
-                {% set diff = abs((slot_dt - booked_dt).total_seconds() / 3600) %}
-                {% if diff < 3 %}
-                    {% set slot_disabled = true %}
-                {% endif %}
-            {% endfor %}
-            <div class="timeslot {% if slot_disabled %}disabled{% endif %}" 
-                 onclick="selectSlot(this)" 
-                 {% if slot_disabled %}style='opacity:0.3;pointer-events:none;' title='Unavailable'{% endif %}>
+            <div class="timeslot {% if slot in disabled_slots %}disabled{% endif %}"
+                 onclick="selectSlot(this)"
+                 {% if slot in disabled_slots %}style='opacity:0.3;pointer-events:none;' title='Unavailable'{% endif %}>
                 {{ slot }}
-                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required {% if slot_disabled %}disabled{% endif %}>
+                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required {% if slot in disabled_slots %}disabled{% endif %}>
             </div>
         {% endfor %}
     </div>
