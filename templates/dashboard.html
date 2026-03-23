@@ -133,7 +133,7 @@ color:#aaa;
 <h2>SHINE MASTER SOLUTION</h2>
 
 <div class="clock">
-<span id="date"></span> |
+<span id="date"></span> 
 <span id="time"></span>
 </div>
 
@@ -200,9 +200,7 @@ color:#aaa;
 <li>No new bookings</li>
 {% endfor %}
 </ul>
-</div><div class="section">
-<h3>New Confirmed Booking Alert</h3>
-
+</div>
 
 
 <div class="section">
@@ -251,31 +249,31 @@ Shine Master Solution | Powered by AsliTech
 
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
-
-function updateClock(){
-
-let now = new Date();
-
-let date = now.toLocaleDateString("en-MY",{
-weekday:"long",
-year:"numeric",
-month:"long",
-day:"numeric"
-});
-
-let time = now.toLocaleTimeString();
-
-document.getElementById("date").innerText = date;
-document.getElementById("time").innerText = time;
-
-}
-
-setInterval(updateClock,1000);
-updateClock();
-
-// ✅ Wait until the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", function() {
 
+const seenBookings = new Set(); // ✅ FIX
+
+function updateClock(){
+    let now = new Date();
+
+    let date = now.toLocaleDateString("en-MY",{
+        weekday:"long",
+        year:"numeric",
+        month:"long",
+        day:"numeric"
+    });
+
+    let time = now.toLocaleTimeString();
+
+    document.getElementById("date").innerText = date;
+    document.getElementById("time").innerText = time;
+}
+
+// ✅ CLOCK START
+updateClock();
+setInterval(updateClock,1000);
+
+// ================= BOOKINGS =================
 function fetchNewBookings() {
     fetch("/latest_bookings")
     .then(res => res.json())
@@ -288,28 +286,28 @@ function fetchNewBookings() {
         }
 
         data.new_bookings.forEach(booking => {
-            // Create a unique key per booking
             const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
+
             if (!seenBookings.has(key)) {
                 seenBookings.add(key);
 
-                // Remove "No new bookings" placeholder if exists
                 if (list.innerText.includes("No new bookings")) list.innerHTML = "";
 
                 const item = document.createElement("li");
                 item.className = "lowstock";
-                item.innerText = `${booking.car_plate} - ${booking.service_type} (${booking.date} ${booking.time})`;
 
-                // Prepend newest bookings at the top
+                // ✅ FIXED
+                item.innerText = `${booking.car_plate} - ${booking.service} (${booking.date} ${booking.time})`;
+
                 list.prepend(item);
             }
         });
     });
 }
 
-// Poll every 5 seconds
 setInterval(fetchNewBookings, 5000);
 
+// ================= DASHBOARD =================
 function loadDashboard(){
 fetch("/dashboard_data")
 .then(res => res.json())
@@ -321,7 +319,6 @@ document.getElementById("carsToday").innerText = data.cars_today;
 let table = "";
 
 data.recent_sales.forEach(sale => {
-
 table += `
 <tr>
 <td>${sale.invoice}</td>
@@ -331,21 +328,18 @@ table += `
 <td>${sale.time}</td>
 </tr>
 `;
-
 });
 
 document.getElementById("recentSales").innerHTML = table;
 
 });
-
 }
 
 // ✅ INITIAL LOAD
 loadDashboard();
 
-
+});
 </script>
-
 </body>
 
 </html>
