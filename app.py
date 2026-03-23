@@ -1179,6 +1179,7 @@ def booking():
         plate=plate,
         current_date=current_date_str,
         booked_times=booked_times,
+        datetime=datetime,
         disabled_slots=disabled_slots,
         today_date_str=today_date.strftime("%Y-%m-%d")
     )
