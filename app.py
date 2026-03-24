@@ -240,9 +240,20 @@ def generate_invoice_no(order_id, dt=None):
         dt = now_kul()
     return f"INV{dt.strftime('%Y%m%d')}{order_id:04d}"
 
-def insert_order_record(car_plate, car_type, service_type, payment_method, price, loyalty_status="Not Eligible", contact_number=None, address=None, invoice_date=None, reported_date=None):
+def insert_order_record(
+    car_plate, car_type, service_type, payment_method,
+    price, paid_amount=0, loyalty_status="Not Eligible",
+    contact_number=None, address=None, invoice_date=None, reported_date=None
+):
     dt = now_kul()
     created_at = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # ensure numeric
+    price = float(price)
+    paid_amount = float(paid_amount)
+    balance = price - paid_amount
+    payment_status = "Paid" if balance <= 0 else "Partial"
+
     if not invoice_date:
         invoice_date = dt.strftime("%Y-%m-%d")
     if not reported_date:
@@ -251,23 +262,27 @@ def insert_order_record(car_plate, car_type, service_type, payment_method, price
     conn = get_db_connection()
     cur = conn.cursor()
 
+    # INSERT into orders including paid_amount, balance, payment_status
     cur.execute("""
         INSERT INTO orders (
-            car_plate, contact_number, address, service_type, price, payment_method, payment_status,
-            loyalty_status, created_at, car_type, invoice_date, reported_date
+            car_plate, contact_number, address, service_type, price, paid_amount,
+            balance, payment_method, payment_status, loyalty_status, created_at, car_type,
+            invoice_date, reported_date
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        car_plate, contact_number, address, service_type, price, payment_method, "Paid",
-        loyalty_status, created_at, car_type, invoice_date, reported_date
+        car_plate, contact_number, address, service_type, price, paid_amount,
+        balance, payment_method, payment_status, loyalty_status, created_at, car_type,
+        invoice_date, reported_date
     ))
     conn.commit()
     order_id = cur.lastrowid
     invoice_no = generate_invoice_no(order_id, dt)
+
     cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
     conn.commit()
 
-    # optional legacy insert for compatibility with old pages
+    # optional legacy insert for old pages
     sale_date = invoice_date
     sale_time = dt.strftime("%H:%M:%S")
     cur.execute("""
@@ -287,7 +302,10 @@ def insert_order_record(car_plate, car_type, service_type, payment_method, price
         "created_at": created_at,
         "date": invoice_date,
         "time": sale_time,
-        "reported_date": reported_date
+        "reported_date": reported_date,
+        "paid_amount": paid_amount,
+        "balance": balance,
+        "payment_status": payment_status
     }
 
 # ================= HOME =================
@@ -437,13 +455,7 @@ def pos():
         service_type = request.form['service_type']
         price = float(request.form['price'])
         payment_method = request.form['payment_method']
-        # ✅ ADD THIS LINE
-        receipt_type = request.form.get("receipt_type", "ORIGINAL") # Default to ORIGINAL if not provided
-
-        # save receipt data into DB (this is for a separate receipts table, not the main orders)
-        receipt_id = save_receipt_to_db(
-            car_plate, car_type, service_type, price, payment_method, receipt_type
-        )
+        receipt_type = request.form.get("receipt_type", "ORIGINAL")  # Default
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
@@ -454,92 +466,91 @@ def pos():
 
         loyalty_free = False
         loyalty_eligible = False
-        
-        # If this is a loyalty free wash, we don't increment count
-        if loyalty_row and loyalty_row["paid_count"] == 5: # If it's the 6th visit (free one)
-             loyalty_free = True
-             # Do not increment paid_count for a free wash, reset it later
-        elif count >= 4: # Eligible for free on next visit
-             loyalty_eligible = True
 
-        # Increment paid_count for actual paid orders
+        if loyalty_row and loyalty_row["paid_count"] == 5:
+            # This is the free wash
+            loyalty_free = True
+        elif count >= 4:
+            loyalty_eligible = True
+
+        # Increment paid_count only for paid orders
         if not loyalty_free:
-            new_paid_count = count + 1
+            new_count = count + 1
             if loyalty_row:
-                cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (new_paid_count, car_plate))
+                cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (new_count, car_plate))
             else:
-                cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_paid_count))
+                cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_count))
             conn.commit()
 
-            # If the new count makes them eligible for a free wash next time, mark it
-            if new_paid_count == 5:
-                 loyalty_eligible = True
-            elif new_paid_count > 5: # Reset for next cycle after a free wash
-                 cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
-                 conn.commit()
-                 new_paid_count = 0 # For display purposes on the current receipt
+            if new_count == 5:
+                loyalty_eligible = True
+            elif new_count > 5:
+                # Reset after free wash
+                cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
+                conn.commit()
+                new_count = 0
 
-            # Update the count variable for display if a reset happened
-            count = new_paid_count
-        else: # It's a free wash, use previous count for display
-             current_display_count = loyalty_row["paid_count"] if loyalty_row else 0
-             # For the receipt, we might want to show it as the 6th visit (free) or reset to 0
-             # Let's show as 6th visit (the one that triggered free)
-             count = current_display_count + 1 
-             # After a free wash, reset the loyalty count to 0 for the next cycle
-             cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
-             conn.commit()
+            count = new_count
+        else:
+            # Free wash: reset count after
+            count = 6  # show as 6th visit
+            cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
+            conn.commit()
 
-
-        # ===== Insert order into main orders table =====
-        # The loyalty status here refers to the status *before* this order for display or *after* the order for next visit.
-        # This part might need careful adjustment based on when loyalty_status is determined.
-        # For this example, let's assume `loyalty_status` determines if THIS order is free.
         final_loyalty_status = "Free Wash" if loyalty_free else ("Eligible" if loyalty_eligible else "Not Eligible")
-        
-        # Ensure price is 0 if loyalty_free is True
         effective_price = 0.0 if loyalty_free else price
 
-        now = datetime.now(TZ) # Use TZ for consistency
-        date_str = now.strftime("%Y-%m-%d") 
+        # ===== Insert into orders table =====
+        now = datetime.now(TZ)
+        date_str = now.strftime("%Y-%m-%d")
         time_str = now.strftime("%H:%M:%S")
 
+        paid_amount = effective_price
+        balance = effective_price - paid_amount
+        payment_status = "Paid" if balance <= 0 else "Partial"
+
         cur.execute("""
-            INSERT INTO orders (car_plate, car_type, service_type, price, payment_method, payment_status, loyalty_status, created_at, invoice_date, reported_date)
-            VALUES (?,?,?,?,?,?,?,?,?,?)
-        """, (car_plate, car_type, service_type, effective_price, payment_method, "Paid", final_loyalty_status, now.strftime("%Y-%m-%d %H:%M:%S"), date_str, date_str))
+            INSERT INTO orders
+            (car_plate, car_type, service_type, price, paid_amount, balance, payment_method, payment_status, loyalty_status, created_at, invoice_date, reported_date)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            car_plate, car_type, service_type, effective_price, paid_amount, balance,
+            payment_method, payment_status, final_loyalty_status, now.strftime("%Y-%m-%d %H:%M:%S"),
+            date_str, date_str
+        ))
         conn.commit()
         order_id = cur.lastrowid
-        invoice_no = generate_invoice_no(order_id, now) # Use now for invoice_no generation
-
+        invoice_no = generate_invoice_no(order_id, now)
         cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
         conn.commit()
 
-
+        # ===== Prepare order dict for template =====
         order = {
             "id": order_id,
             "invoice_no": invoice_no,
             "car_plate": car_plate,
-            "car_type": car_type, # This was missing in the original `order` dict
+            "car_type": car_type,
             "service_type": service_type,
-            "price": effective_price, # Use effective_price here
+            "price": effective_price,
+            "paid_amount": paid_amount,
+            "balance": balance,
             "payment_method": payment_method,
-            "date": date_str, # Use consistent date format
-            "time": time_str, # Use consistent time format
-            "loyalty_count": count, # This is the count AFTER TRANSACTION / for NEXT transaction
+            "date": date_str,
+            "time": time_str,
+            "loyalty_count": count,
             "loyalty_free": loyalty_free,
             "loyalty_eligible": loyalty_eligible,
-            "loyalty_status": final_loyalty_status # Pass the status to the template
+            "loyalty_status": final_loyalty_status
         }
-        conn.close()
 
-        # ✅ PASS receipt_type to HTML
+        conn.close()
         return render_template("receipt.html", order=order, receipt_type=receipt_type)
-    
+
+    # GET request
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
     conn.close()
-    return render_template("pos.html", services=services) # Pass services to pos.html
+    return render_template("pos.html", services=services)
 
 # ================= CREATE ORDER (This route seems like a newer version of POS, consolidate if possible) =================
 @app.route("/create_order", methods=["POST"])
@@ -579,6 +590,7 @@ def create_order():
         loyalty_status=processed_order["loyalty_status"], # Use the loyalty status from loyalty processing
         contact_number=request.form.get("contact_number"), # Added from form data
         address=request.form.get("address"), # Added from form data
+        paid_amount=float(request.form.get("paid_amount", 0)),
         invoice_date=invoice_date,
         reported_date=reported_date
     )
@@ -832,17 +844,22 @@ def receipt(invoice):
         return redirect("/login")
 
     conn = get_db_connection()
-    order = conn.execute(
+    row = conn.execute(
         "SELECT * FROM orders WHERE invoice_no=? ORDER BY id DESC LIMIT 1",
         (invoice,)
     ).fetchone()
 
-    is_copy = request.args.get("copy", "false").lower() == "true"
-    is_reprint = request.args.get("reprint", "false").lower() == "true"
+    if row:
+        # Convert to dict
+        order = dict(row)
+        
+        # Ensure these keys exist for the template
+        order.setdefault("paid_amount", 0.0)
+        order.setdefault("balance", order.get("price", 0.0))
+        order.setdefault("payment_status", "Paid")
 
-    if order:
         conn.close()
-        return render_template("receipt.html", order=order, is_copy=is_copy, is_reprint=is_reprint)
+        return render_template("receipt.html", order=order, is_copy=request.args.get("copy","false").lower()=="true", is_reprint=request.args.get("reprint","false").lower()=="true")
 
     conn.close()
     return f"Receipt not found for invoice {invoice}", 404
