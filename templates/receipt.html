@@ -64,8 +64,10 @@ width:180px;
 
 <body>
 
-{% if receipt_type == "COPY" %}
+{% if is_copy %}
 <p class="center"><strong>*** COPY OF RECEIPT ***</strong></p>
+{% elif request.args.get('reprint') == 'true' %}
+<p class="center"><strong>*** REPRINT RECEIPT ***</strong></p>
 {% else %}
 <p class="center"><strong>*** ORIGINAL RECEIPT ***</strong></p>
 {% endif %}
@@ -139,12 +141,28 @@ Tel: +6018-2096907
 <hr>
 
 <div class="line">
-<span class="left"><strong>Total</strong></span>
-<span class="right"><strong>RM {{ "%.2f"|format(order["price"]) }}</strong></span>
-<div class="clear"></div>
+    <span class="left"><strong>Total</strong></span>
+    <span class="right"><strong>RM {{ "%.2f"|format(order["price"]) }}</strong></span>
+    <div class="clear"></div>
 </div>
 
-<hr>
+<div class="line">
+    <span class="left">Paid</span>
+    <span class="right">RM {{ "%.2f"|format(order["paid_amount"]) }}</span>
+    <div class="clear"></div>
+</div>
+
+<div class="line">
+    <span class="left">Balance</span>
+    <span class="right">RM {{ "%.2f"|format(order["balance"]) }}</span>
+    <div class="clear"></div>
+</div>
+
+<div class="line">
+    <span class="left">Status</span>
+    <span class="right">{{ order["payment_status"] }}</span>
+    <div class="clear"></div>
+</div>
 
 <p><strong>Loyalty Status</strong></p>
 
@@ -214,9 +232,7 @@ function printLocal(){
     window.print();
 }
 
-
 // Simple Bluetooth print (Android)
-
 function printBluetooth(){
 
 let receipt = `
@@ -228,35 +244,38 @@ Reg.no:202603063234
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
 Time: {{ order["time"] }}
+Order: #00{{ order["id"] }}
 
 Car Plate: {{ order["car_plate"] }}
+Car Type: {{ order.get("car_type","-") }}
 Service: {{ order["service_type"] }}
+Payment: {{ order["payment_method"] }}
 
 Total: RM {{ "%.2f"|format(order["price"]) }}
+Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
+Balance: RM {{ "%.2f"|format(order["balance"]) }}
+Status: {{ order["payment_status"] }}
 
 Paid Wash: {{ order["loyalty_count"] }}/5
-Thank You For Your Supports,Hope To See You Again, (^^,)b
+Thank You For Your Supports, Hope To See You Again, (^^,)b
 `;
 
 let url = "rawbt://print?text=" + encodeURIComponent(receipt);
-
 window.location.href = url;
 
 }
 
-
 // Auto print when receipt opens
-
 window.onload = function(){
-
-setTimeout(function(){
-window.print();
-},500);
-
+    setTimeout(function(){
+        window.print();
+    },500);
 }
+
 if (window.parent && window.parent.document.getElementById("last_invoice_no")) {
     window.parent.document.getElementById("last_invoice_no").value = "{{ order.invoice_no }}";
 }
+
 function printReceiptCopy(invoice) {
     window.open(`/receipt/${invoice}?copy=true`, '_blank');
 }
