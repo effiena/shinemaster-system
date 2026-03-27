@@ -450,12 +450,14 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
 @app.route('/pos', methods=['GET','POST'])
 def pos():
     if request.method == 'POST':
+        # ===== Gather form data =====
         car_plate = request.form['car_plate']
         car_type = request.form['car_type']
         service_type = request.form['service_type']
         price = float(request.form['price'])
         payment_method = request.form['payment_method']
-        receipt_type = request.form.get("receipt_type", "ORIGINAL")  # Default
+        receipt_type = request.form.get("receipt_type", "ORIGINAL")  # Default to ORIGINAL
+        paid_amount_input = request.form.get("paid_amount")  # optional form override
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
@@ -467,6 +469,7 @@ def pos():
         loyalty_free = False
         loyalty_eligible = False
 
+        # Determine loyalty
         if loyalty_row and loyalty_row["paid_count"] == 5:
             # This is the free wash
             loyalty_free = True
@@ -482,6 +485,7 @@ def pos():
                 cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_count))
             conn.commit()
 
+            # If new count reaches 5, mark eligible for next visit
             if new_count == 5:
                 loyalty_eligible = True
             elif new_count > 5:
@@ -492,31 +496,40 @@ def pos():
 
             count = new_count
         else:
-            # Free wash: reset count after
-            count = 6  # show as 6th visit
+            # Free wash: display as 6th visit, reset counter after
+            count = 6
             cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
             conn.commit()
 
+        # ===== Final loyalty status & effective price =====
         final_loyalty_status = "Free Wash" if loyalty_free else ("Eligible" if loyalty_eligible else "Not Eligible")
         effective_price = 0.0 if loyalty_free else price
+
+        # ===== Paid amount & balance =====
+        paid_amount = float(request.form.get("paid_amount", effective_price))
+        balance = effective_price - paid_amount
+        payment_status = "Paid" if balance <= 0 else "Partial"
+
 
         # ===== Insert into orders table =====
         now = datetime.now(TZ)
         date_str = now.strftime("%Y-%m-%d")
         time_str = now.strftime("%H:%M:%S")
+        
 
-        paid_amount = effective_price
-        balance = effective_price - paid_amount
-        payment_status = "Paid" if balance <= 0 else "Partial"
-
+        print("DEBUG PRICE:", effective_price)
+        print("DEBUG PAID:", paid_amount)
+        print("DEBUG BALANCE:", balance)
+        
         cur.execute("""
             INSERT INTO orders
-            (car_plate, car_type, service_type, price, paid_amount, balance, payment_method, payment_status, loyalty_status, created_at, invoice_date, reported_date)
+            (car_plate, car_type, service_type, price, paid_amount, balance, payment_method,
+             payment_status, loyalty_status, created_at, invoice_date, reported_date)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             car_plate, car_type, service_type, effective_price, paid_amount, balance,
-            payment_method, payment_status, final_loyalty_status, now.strftime("%Y-%m-%d %H:%M:%S"),
-            date_str, date_str
+            payment_method, payment_status, final_loyalty_status,
+            now.strftime("%Y-%m-%d %H:%M:%S"), date_str, date_str
         ))
         conn.commit()
         order_id = cur.lastrowid
@@ -546,7 +559,7 @@ def pos():
         conn.close()
         return render_template("receipt.html", order=order, receipt_type=receipt_type)
 
-    # GET request
+    # ===== GET request: show POS page =====
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
     conn.close()
