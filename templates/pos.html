@@ -96,6 +96,38 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
     visibility: hidden;
 }
 
+.service-box {
+    background: #333;         /* slightly darker than left panel */
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 300px;        /* adjust as needed */
+    overflow-y: auto;         /* scroll if too many buttons */
+    margin-bottom: 10px;
+}
+
+.service-box .service-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* two columns */
+    gap: 6px;
+}
+
+.service-box .service-buttons button {
+    padding: 10px;            /* bigger for easier click */
+    font-size: 14px;          /* larger text */
+    font-weight: bold;
+    border-radius: 8px;
+    background: #9C27B0;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.service-box .service-buttons button:hover {
+    background: #7B1FA2;
+    transform: scale(1.05);
+}
+
+
 
 .car-info-card {
     text-align: center;
@@ -226,22 +258,23 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 </div>
 <input type="hidden" id="car_type">
 
-<label>Packages</label>
-<div class="service-buttons">
-<button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
-<button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
-<button onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
-<button onclick="selectService('coat1')">COATING - 1 YEAR</button>
-<button onclick="selectService('coat2')">COATING - 2 YEAR</button>
-<button onclick="selectService('coat3')">COATING - 3 YEAR</button>
-<button onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
-<button onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
-<button onclick="selectService('wax')">WAXING</button>
-<button onclick="selectService('int_detail')">INTERIOR DETAILING</button>
-<button onclick="selectService('int_coat')">INTERIOR COATING</button>
-</div>
-</div>
-
+        <label>Packages</label>
+        <div class="service-box">
+            <div class="service-buttons">
+                <button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
+                <button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
+                <button onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
+                <button onclick="selectService('coat1')">COATING - 1 YEAR</button>
+                <button onclick="selectService('coat2')">COATING - 2 YEAR</button>
+                <button onclick="selectService('coat3')">COATING - 3 YEAR</button>
+                <button onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
+                <button onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
+                <button onclick="selectService('wax')">WAXING</button>
+                <button onclick="selectService('int_detail')">INTERIOR DETAILING</button>
+                <button onclick="selectService('int_coat')">INTERIOR COATING</button>
+            </div>
+        </div>
+    </div>
 <!-- MIDDLE PANEL -->
 <div class="middle">
 <div class="time-box" id="live_time"></div>
@@ -264,13 +297,15 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 <div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
 </div>
 
-<div class="cash-box" id="cash_box" style="display:none;">
-    <input 
-        type="number" 
-        id="cash_input" 
-        placeholder="Enter cash" 
-        oninput="calculateBalance()"
-    >
+<div class="cash-box" id="cash_box" style="display:block;">
+        <input
+            type="number"
+            id="cash_input"
+            name="paid_amount"
+            step="0.01"
+            placeholder="Enter cash"
+            oninput="calculateBalance()"
+       >
     <div id="balance_display">Balance: RM 0.00</div>
 </div>
 
@@ -328,7 +363,14 @@ function calculatePrice(){ const carType=document.getElementById('car_type').val
 
 function selectPayment(el,method){document.querySelectorAll('.pay-option').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedPayment=method; document.getElementById('cash_box').style.display=(method==='Cash')?'block':'none'; document.getElementById('qr_box').style.display=(method==='E-Wallet'||method==='QR Code')?'block':'none';}
 
-function calculateBalance(){let total=parseFloat(document.getElementById('price_display').textContent.replace('RM',''))||0; let cash=parseFloat(document.getElementById('cash_input').value)||0; let balance=cash-total; document.getElementById('balance_display').textContent= balance>=0?"Balance: RM "+balance.toFixed(2):"Insufficient amount";}
+function calculateBalance() {
+    let price = parseFloat(document.getElementById("price").value) || 0;
+    let cash = parseFloat(document.getElementById("cash_input").value) || 0;
+    let balance = price - cash;
+
+    document.getElementById("balance_display").innerText =
+        "Balance: RM " + balance.toFixed(2);
+}
 
 function completePayment(){if(!selectedService||!selectedPayment){alert("Missing input"); return;} submitReceipt("ORIGINAL","receipt_frame");}
 
