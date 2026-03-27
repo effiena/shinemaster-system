@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master</title>
+
+<style>
+* {
+    margin: 2;
+    padding: 2;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #000;
+    color: #fff;
+}
+
+/* CENTER CONTAINER */
+.wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.video-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #000;
+}
+
+/* FIX: prevent cropping */
+video {
+    width: 100%;
+    height: auto;
+    display: block;
+
+
+
+/* CONTENT SAME WIDTH AS VIDEO */
+.content {
+    width: 100%;
+    text-align: center;
+
+    padding: 14px 12px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+
+    margin-top: 10px;
+}
+
+/* TEXT (SMALL + BALANCED) */
+h1 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.promo {
+    font-size: 14px;
+    background: red;
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.benefits {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+.cta {
+    display: inline-block;
+    font-size: 13px;
+    padding: 10px 16px;
+    background: #00c853;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- VIDEO -->
+    <div class="video-container">
+        <video autoplay muted loop playsinline>
+            <source src="/static/audio/team.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+        <h1>SHINE MASTER</h1>
+        <div class="subtitle">Auto Detailing Specialist</div>
+
+        <div class="promo">RM200 OFF</div>
+
+        <div class="benefits">
+            DISPO GRAPHENE COATING<br>
+            EASY CARE • LESS MAINTENANCE<br>
+            PROTECTION UP TO 1 YEAR
+        </div>
+
+        <a href="/booking" class="cta">BOOK WITH US NOW</a>
+    </div>
+
+</div>
+
+<audio id="bg-music" loop>
+    <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
+</audio>
+
+<script>
+let music = document.getElementById("bg-music");
+let started = false;
+
+/* 🎵 START MUSIC ON FIRST INTERACTION */
+function startMusic() {
+    if (started) return;
+    started = true;
+
+    if (!music) return;
+
+    music.volume = 0;
+
+    music.play().catch(err => console.log("Autoplay blocked:", err));
+
+    // smooth fade in
+    let fade = setInterval(() => {
+        if (music.volume < 1) {
+            music.volume = Math.min(music.volume + 0.03, 1);
+        } else {
+            clearInterval(fade);
+        }
+    }, 200);
+
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+}
+
+document.addEventListener("click", startMusic);
+document.addEventListener("touchstart", startMusic);
+
+/* 🔊 TOGGLE SOUND */
+function toggleSound() {
+    if (!music) return;
+    music.muted = !music.muted;
+}
+</script>
+
+</body>
+</html>
