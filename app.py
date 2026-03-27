@@ -565,6 +565,12 @@ def pos():
     conn.close()
     return render_template("pos.html", services=services)
 
+
+###promo
+@app.route("/promo")
+def promo():
+    return render_template("promo.html")
+
 # ================= CREATE ORDER (This route seems like a newer version of POS, consolidate if possible) =================
 @app.route("/create_order", methods=["POST"])
 def create_order():
