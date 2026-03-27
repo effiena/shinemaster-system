@@ -66,14 +66,56 @@
         font-size: 12px;
         color: #bbb;
     }
+
+.slider {
+    position: relative;
+    max-width: 420px;
+    margin: auto;
+}
+
+.slide {
+    width: 100%;
+    border-radius: 10px;
+    display: none;
+}
+
+.slide.active {
+    display: block;
+}
+
+.prev, .next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
 </style>
 </head>
 <body>
     <div class="container">
         <h1>Shine Master Solution</h1>
+    <div class="slider">
+        <img src="{{ url_for('static', filename='images/team.png') }}" class="slide active">
+        <img src="{{ url_for('static', filename='images/team8.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team1.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team2.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team3.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team4.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team5.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team6.png') }}" class="slide">
+        <img src="{{ url_for('static', filename='images/team7.png') }}" class="slide">
 
-        <img src="{{ url_for('static', filename='poster.png') }}" alt="Poster" class="poster">
-
+        <button class="prev">&#10094;</button>
+        <button class="next">&#10095;</button>
+    </div>
         <div class="scan-text">Scan QR Code to Book Now</div>
 
         <div class="qr-box">
@@ -90,5 +132,32 @@
             @Shine Master Solution - Powered by AsliTech
         </div>
     </div>
+
+<script>
+let slides = document.querySelectorAll('.slide');
+let index = 0;
+
+function showSlide(i) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    slides[i].classList.add('active');
+}
+
+document.querySelector('.next').onclick = () => {
+    index = (index + 1) % slides.length;
+    showSlide(index);
+};
+
+document.querySelector('.prev').onclick = () => {
+    index = (index - 1 + slides.length) % slides.length;
+    showSlide(index);
+};
+
+// OPTIONAL: Auto slide every 3 seconds
+setInterval(() => {
+    index = (index + 1) % slides.length;
+    showSlide(index);
+}, 3000);
+</script>
+
 </body>
 </html>
