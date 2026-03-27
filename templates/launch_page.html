@@ -132,7 +132,9 @@
             @Shine Master Solution - Powered by AsliTech
         </div>
     </div>
-
+<audio id="bg-music" loop>
+    <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
+</audio>
 <script>
 let slides = document.querySelectorAll('.slide');
 let index = 0;
@@ -157,7 +159,29 @@ setInterval(() => {
     index = (index + 1) % slides.length;
     showSlide(index);
 }, 3000);
-</script>
 
+// MUSIC (SAFE INIT)
+let music = document.getElementById("bg-music");
+
+function startMusic() {
+    if (!music) return;
+
+    music.volume = 1.0;
+
+    if (music.paused) {
+        music.play().catch(err => console.log("Blocked:", err));
+    }
+
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("scroll", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+}
+
+// multiple triggers (mobile + desktop)
+document.addEventListener("click", startMusic);
+document.addEventListener("scroll", startMusic);
+document.addEventListener("touchstart", startMusic);
+
+</script>
 </body>
 </html>
