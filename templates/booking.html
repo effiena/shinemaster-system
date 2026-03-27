@@ -4,36 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master Solution - Book Your Service</title>
+
 <style>
-    /* ===== Body & Background ===== */
-    body {
-        font-family: Arial, sans-serif;
-        background: #000; /* Black background */
-        margin:0; padding:0;
-        color: #fff;
-    }
+/* ===== BODY ===== */
+body {
+    font-family: Arial, sans-serif;
+    background: #000;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ===== GLOW HEADER ===== */
+.glow-box-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
 
 .glow-box {
-    display: inline-block;           /* box wraps tightly around text */
-    text-align: center;              /* center text */
-    font-size: 20px;                 /* adjust font size */
+    display: inline-block;
+    text-align: center;
+    font-size: 20px;
     font-weight: bold;
-    color: #fff;                     /* white font */
-    background: rgba(106, 27, 154, 0.5); /* semi-transparent purple (water-like) */
-    padding: 6px 16px;               /* smaller padding */
-    border-radius: 8px;              /* rounded corners */
-    box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A; /* glow */
+    color: #fff;
+    background: rgba(106, 27, 154, 0.5);
+    padding: 6px 16px;
+    border-radius: 8px;
+    box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
     animation: pulseGlow 1.8s infinite alternate;
-    margin: 0 auto;                  /* center horizontally */
 }
 
-/* Center wrapper if needed */
-.glow-box-wrapper {
-    text-align: center;
-    margin-top: 20px;    /* adds space at the top */
-    margin-bottom: 20px; /* keeps space below the box */
-}
-/* Glowing pulse animation */
 @keyframes pulseGlow {
     0% {
         box-shadow: 0 0 6px #fff, 0 0 12px #FFD700, 0 0 18px #6A1B9A;
@@ -46,126 +53,122 @@
     }
 }
 
+/* ===== CONTAINER ===== */
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 20px auto;
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #ffeb3b;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
 
+/* ===== LABELS ===== */
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #ffeb3b;
+}
 
-    /* ===== Container Card ===== */
-    .container {
-        max-width: 480px;
-        margin: 20px auto;
-        background:#1a1a1a; /* Dark grey/black card */
-        padding:20px;
-        border-radius:12px;
-        border: 2px solid #ffeb3b; /* Yellow border */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
+/* ===== INPUTS ===== */
+input[type=text], select, input[type=date] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #9c27b0;
+    background: #222;
+    color: #fff;
+}
 
-    h2 {
-        text-align:center;
-        color:#9c27b0; /* Shine Master purple */
-        margin-bottom:20px;
-    }
+/* ===== TIMESLOTS ===== */
+.timeslots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+}
 
-    label {
-        display:block;
-        margin-top:15px;
-        font-weight:bold;
-        color:#ffeb3b; /* Yellow labels */
-    }
+.timeslot {
+    padding: 10px 12px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #9c27b0;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    transition: 0.2s;
+}
 
-    input[type=text], select {
-        width:92%;
-        padding:10px;
-        margin-top:5px;
-        border-radius:6px;
-        border:1px solid #9c27b0;
-        background: #222;
-        color: #fff;
-    }
-
-    input[type=text]::placeholder {
-        color: #ccc;
-    }
-
-    /* ===== Timeslots ===== */
-    .timeslots {
-        display:flex;
-        flex-wrap:wrap;
-        margin-top:10px;
-    }
-
-    .timeslot {
-        padding:10px 12px;
-        margin:5px;
-        border-radius:6px;
-        border:1px solid #9c27b0;
-        cursor:pointer;
-        color:white;
-        font-weight:bold;
-    }
-
-    .timeslot.selected {
-        background-color:#9c27b0;
-        color:white;
-        border-color:#ffeb3b;
-    }
-
-    /* ===== Price Box ===== */
-    .price-box {
-        margin-top:20px;
-        font-size:24px;
-        font-weight:bold;
-        color:#ffeb3b;
-        text-align:center;
-        background-color:#222;
-        padding:12px;
-        border-radius:10px;
-        border:1px solid #9c27b0;
-    }
-
-    /* ===== Buttons ===== */
-    button {
-        width:100%;
-        padding:12px;
-        margin-top:20px;
-        background: linear-gradient(90deg,#9c27b0,#ffeb3b);
-        border:none;
-        border-radius:6px;
-        color:black;
-        font-size:16px;
-        font-weight:bold;
-        cursor:pointer;
-        transition:0.3s;
-    }
-
-    button:hover {
-        background: linear-gradient(90deg,#ffeb3b,#9c27b0);
-        transform: translateY(-2px);
-    }
-
-    /* ===== Footer ===== */
-    .footer {
-        text-align:center;
-        font-size:12px;
-        margin-top:15px;
-        color:#ccc;
-    }
-
+.timeslot.selected {
+    background-color: #9c27b0;
+    border-color: #ffeb3b;
+}
 
 .timeslot.disabled {
     background-color: #555 !important;
     color: #aaa !important;
     border-color: #444 !important;
     cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+/* ===== PRICE BOX ===== */
+.price-box {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffeb3b;
+    text-align: center;
+    background: #222;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #9c27b0;
+}
+
+/* ===== BUTTON ===== */
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background: linear-gradient(90deg,#9c27b0,#ffeb3b);
+    border: none;
+    border-radius: 6px;
+    color: black;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: linear-gradient(90deg,#ffeb3b,#9c27b0);
+    transform: translateY(-2px);
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 15px;
+    color: #ccc;
 }
 </style>
 </head>
+
 <body>
+
+<!-- HEADER -->
 <div class="glow-box-wrapper">
     <div class="glow-box">Shine Master Solution</div>
 </div>
 
-
-<form action="/create_booking" method="POST">
+<!-- FORM -->
+<form action="/create_booking" method="POST" class="container">
 
     <label>Car Plate</label>
     <input type="text" name="car_plate" value="{{ plate }}" required>
@@ -204,14 +207,21 @@
     <label>Pick a Time Slot</label>
     <div class="timeslots">
         {% for slot in timeslots %}
-            <div class="timeslot {% if slot in disabled_slots %}disabled{% endif %}"
-                 onclick="selectSlot(this)"
-                 {% if slot in disabled_slots %}style='opacity:0.3;pointer-events:none;' title='Unavailable'{% endif %}>
-                {{ slot }}
-                <input type="radio" name="booking_time" value="{{ slot }}" style="display:none;" required {% if slot in disabled_slots %}disabled{% endif %}>
-            </div>
+        <div class="timeslot {% if slot in disabled_slots %}disabled{% endif %}"
+             onclick="selectSlot(this)">
+            {{ slot }}
+            <input type="radio" name="booking_time" value="{{ slot }}" hidden
+                   {% if slot in disabled_slots %}disabled{% endif %}>
+        </div>
         {% endfor %}
     </div>
+
+    <!-- PRICE BOX (FIXED) -->
+    <div class="price-box">
+        Price: RM <span id="price_display">0.00</span>
+        <input type="hidden" name="price" id="price">
+    </div>
+
     <label>Contact Number</label>
     <input type="text" name="contact" placeholder="e.g 018-1234567" required>
 
@@ -225,41 +235,44 @@
 
 <script>
 const priceTable = {
-wash_basic: { Sedan:20, SUV_MPV:24, "LARGE-MPV_4X4":28 },
-wash_special: { Sedan:48, SUV_MPV:58, "LARGE-MPV_4X4":68 },
-wash_maintain: { Sedan:98, SUV_MPV:108, "LARGE-MPV_4X4":118 },
-coat1: { Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688 },
-coat2: { Sedan:688, SUV_MPV:788, "LARGE-MPV_4X4":888 },
-coat3: { Sedan:888, SUV_MPV:988, "LARGE-MPV_4X4":1088 },
-disp2: { Sedan:588, SUV_MPV:688, "LARGE-MPV_4X4":788 },
-disp3: { Sedan:788, SUV_MPV:888, "LARGE-MPV_4X4":988 },
-wax: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 },
-int_detail: { Sedan:188, SUV_MPV:288, "LARGE-MPV_4X4":388 },
-int_coat: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 }
+    wash_basic: { Sedan:20, SUV_MPV:24, "LARGE-MPV_4X4":28 },
+    wash_special: { Sedan:48, SUV_MPV:58, "LARGE-MPV_4X4":68 },
+    wash_maintain: { Sedan:98, SUV_MPV:108, "LARGE-MPV_4X4":118 },
+    coat1: { Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688 },
+    coat2: { Sedan:688, SUV_MPV:788, "LARGE-MPV_4X4":888 },
+    coat3: { Sedan:888, SUV_MPV:988, "LARGE-MPV_4X4":1088 },
+    disp2: { Sedan:588, SUV_MPV:688, "LARGE-MPV_4X4":788 },
+    disp3: { Sedan:788, SUV_MPV:888, "LARGE-MPV_4X4":988 },
+    wax: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 },
+    int_detail: { Sedan:188, SUV_MPV:288, "LARGE-MPV_4X4":388 },
+    int_coat: { Sedan:288, SUV_MPV:388, "LARGE-MPV_4X4":488 }
 };
 
 function calculatePrice() {
-    const service = document.getElementById("service_type").value
-    const carType = document.getElementById("car_type").value
-    const priceDisplay = document.getElementById("price_display")
-    const hiddenPrice = document.getElementById("price")
-    if(service && carType && priceTable[service]){
-        const price = priceTable[service][carType]
-        priceDisplay.textContent = price.toFixed(2)
-        hiddenPrice.value = price
+    const service = document.getElementById("service_type").value;
+    const carType = document.getElementById("car_type").value;
+
+    const priceDisplay = document.getElementById("price_display");
+    const hiddenPrice = document.getElementById("price");
+
+    if (priceTable[service] && priceTable[service][carType]) {
+        const price = priceTable[service][carType];
+        priceDisplay.textContent = price.toFixed(2);
+        hiddenPrice.value = price;
     } else {
-        priceDisplay.textContent = "0.00"
-        hiddenPrice.value = 0
+        priceDisplay.textContent = "0.00";
+        hiddenPrice.value = 0;
     }
 }
 
-function selectSlot(el){
-    document.querySelectorAll('.timeslot').forEach(x => x.classList.remove('selected'))
-    el.classList.add('selected')
-    el.querySelector('input[type=radio]').checked = true
+function selectSlot(el) {
+    document.querySelectorAll('.timeslot').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
 }
 
-document.addEventListener("DOMContentLoaded", calculatePrice)
+document.addEventListener("DOMContentLoaded", calculatePrice);
 </script>
+
 </body>
 </html>
