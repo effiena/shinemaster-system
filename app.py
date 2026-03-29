@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, send_file
 import sqlite3
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import calendar
 from collections import defaultdict
 from zoneinfo import ZoneInfo
@@ -575,10 +575,25 @@ def promo():
 @app.route('/book_promo', methods=['GET', 'POST'])
 def book_promo():
     if request.method == 'POST':
-        return "Promo booking submitted"  # temporary test
+        return "Promo booking submitted"
 
-    return render_template('book_promo.html')
+    timeslots = [
+        "10:00 AM",
+        "11:30 AM",
+        "1:00 PM",
+        "2:30 PM",
+        "4:00 PM",
+        "5:30 PM"
+    ]
 
+    disabled_slots = []  # later you can load from DB
+
+    return render_template(
+        'book_promo.html',
+        timeslots=timeslots,
+        disabled_slots=disabled_slots,
+        current_date=date.today().strftime("%Y-%m-%d")
+    )
 # ================= CREATE ORDER (This route seems like a newer version of POS, consolidate if possible) =================
 @app.route("/create_order", methods=["POST"])
 def create_order():
