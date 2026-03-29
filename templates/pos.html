@@ -444,7 +444,6 @@ function selectPayment(el,method){
         (method==='E-Wallet'||method==='QR Code') ? 'block':'none';
 }
 
-
 function applyDiscount(){
 
     let discount = parseFloat(document.getElementById("discount_value").value) || 0;
@@ -453,11 +452,12 @@ function applyDiscount(){
 
     if(finalPrice < 0) finalPrice = 0;
 
+    // ✅ display only
     document.getElementById('price_display').textContent =
         "RM " + finalPrice.toFixed(2);
 
-    // ✅ update hidden input for Flask
-    document.getElementById("price").value = finalPrice;
+    // ❌ DO NOT overwrite original price
+    document.getElementById("price").value = currentBasePrice;
 
     calculateBalance();
 }
@@ -467,15 +467,19 @@ function applyDiscount(){
 ========================= */
 function calculateBalance() {
 
-    let price = parseFloat(document.getElementById("price").value || 0);
-    let discount = 0; // ✅ you can upgrade later
+    let price = currentBasePrice;
+    let discount = parseFloat(document.getElementById("discount_value").value || 0);
     let cash = parseFloat(document.getElementById("cash_input").value || 0);
 
-    let balance = cash - price;
+    let net = price - discount;
+    if(net < 0) net = 0;
+
+    let balance = cash - net;
 
     document.getElementById("balance_display").innerText =
         "Balance: RM " + balance.toFixed(2);
 }
+
 
 /* =========================
    SUBMIT RECEIPT (FIXED)
@@ -491,7 +495,7 @@ function completePayment(){
     const carType = document.getElementById('car_type').value;
     const price = parseFloat(document.getElementById("price").value || 0);
     const paid = parseFloat(document.getElementById("cash_input").value || 0);
-    const discount = 0;
+    const discount = parseFloat(document.getElementById("discount_value").value || 0);
 
     let form = document.createElement("form");
     form.method = "POST";
