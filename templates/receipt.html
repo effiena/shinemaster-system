@@ -177,7 +177,7 @@ Tel: +6018-2096907
     <span class="right">
         RM {{
             "%.2f"|format(
-                (order["paid_amount"] - order.get("discount", 0)) - order["price"] | abs
+                order["paid_amount"] - (order["price"] - order.get("discount", 0))
             )
         }}
     </span>
