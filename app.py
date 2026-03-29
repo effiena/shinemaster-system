@@ -446,6 +446,9 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
     receipt_id = cursor.lastrowid
     conn.close()
     return receipt_id
+#####===================#########
+
+####=====POS ROUTES======#####
 
 @app.route('/pos', methods=['GET','POST'])
 def pos():
@@ -458,6 +461,7 @@ def pos():
         payment_method = request.form['payment_method']
         receipt_type = request.form.get("receipt_type", "ORIGINAL")  # Default to ORIGINAL
         paid_amount_input = request.form.get("paid_amount")  # optional form override
+        discount = float(request.form.get('discount', 0))
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
@@ -523,11 +527,11 @@ def pos():
         
         cur.execute("""
             INSERT INTO orders
-            (car_plate, car_type, service_type, price, paid_amount, balance, payment_method,
+            (car_plate, car_type, service_type, price, discount, paid_amount, balance, payment_method,
              payment_status, loyalty_status, created_at, invoice_date, reported_date)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
-            car_plate, car_type, service_type, effective_price, paid_amount, balance,
+            car_plate, car_type, service_type, effective_price, discount, paid_amount, balance,
             payment_method, payment_status, final_loyalty_status,
             now.strftime("%Y-%m-%d %H:%M:%S"), date_str, date_str
         ))
@@ -545,6 +549,7 @@ def pos():
             "car_type": car_type,
             "service_type": service_type,
             "price": effective_price,
+            "discount": discount,
             "paid_amount": paid_amount,
             "balance": balance,
             "payment_method": payment_method,
