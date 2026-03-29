@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master</title>
+
+<style>
+* {
+    margin: 2;
+    padding: 2;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #000;
+    color: #fff;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.video-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #000;
+}
+
+video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.content {
+    width: 100%;
+    text-align: center;
+    padding: 14px 12px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-top: 10px;
+}
+
+h1 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.promo {
+    font-size: 14px;
+    background: red;
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+}
+
+/* PRICE BOX */
+.price-box {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+}
+
+.old-price {
+    text-decoration: line-through;
+    color: #aaa;
+}
+
+.discount {
+    color: #ff4d4d;
+    font-weight: bold;
+}
+
+.final-price {
+    font-size: 22px;
+    color: #ffd500;
+    font-weight: bold;
+}
+
+.cta {
+    display: inline-block;
+    padding: 14px 35px;
+    background: linear-gradient(135deg, #9b5cff, #ffd500);
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    font-size: 18px;
+    text-decoration: none;
+    margin-top: 12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- VIDEO -->
+    <div class="video-container">
+        <video autoplay muted loop playsinline>
+            <source src="/static/audio/team.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+        <h1>SHINE MASTER</h1>
+        <div class="subtitle">Auto Detailing Specialist</div>
+
+        <div class="promo">RM200 OFF</div>
+
+        <!-- SERVICE DROPDOWN -->
+        <select id="serviceSelect" onchange="showPrice()">
+            <option value="">Select Service</option>
+            <option value="disposable">Disposable Graphene (1 Year)</option>
+        </select>
+
+        <!-- PRICE DISPLAY -->
+        <div class="price-box" id="priceBox">
+            <div class="old-price">Original Price: RM488</div>
+            <div class="discount">Discount: -RM200</div>
+            <div class="final-price">Total: RM288</div>
+        </div>
+
+        <a href="/book_promo" class="cta">BOOK WITH US NOW</a>
+    </div>
+
+</div>
+
+<!-- MUSIC -->
+<audio id="bg-music" loop>
+    <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
+</audio>
+
+<script>
+let music = document.getElementById("bg-music");
+let started = false;
+
+function startMusic() {
+    if (started) return;
+    started = true;
+
+    music.volume = 0;
+    music.play().catch(err => console.log(err));
+
+    let fade = setInterval(() => {
+        if (music.volume < 1) {
+            music.volume += 0.03;
+        } else {
+            clearInterval(fade);
+        }
+    }, 200);
+
+    document.removeEventListener("click", startMusic);
+}
+
+document.addEventListener("click", startMusic);
+
+/* SHOW PRICE WHEN SELECTED */
+function showPrice() {
+    let service = document.getElementById("serviceSelect").value;
+    let box = document.getElementById("priceBox");
+
+    if (service === "disposable") {
+        box.style.display = "block";
+    } else {
+        box.style.display = "none";
+    }
+}
+</script>
+
+</body>
+</html>
