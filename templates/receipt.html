@@ -140,9 +140,29 @@ Tel: +6018-2096907
 
 <hr>
 
+<hr>
+
 <div class="line">
-    <span class="left"><strong>Total</strong></span>
+    <span class="left"><strong>Subtotal</strong></span>
     <span class="right"><strong>RM {{ "%.2f"|format(order["price"]) }}</strong></span>
+    <div class="clear"></div>
+</div>
+
+<div class="line">
+    <span class="left">Discount</span>
+    <span class="right">
+        RM {{ "%.2f"|format(order.get("discount", 0)) }}
+    </span>
+    <div class="clear"></div>
+</div>
+
+<div class="line">
+    <span class="left"><strong>Net Total</strong></span>
+    <span class="right"><strong>
+        RM {{
+            "%.2f"|format(order["price"] - order.get("discount", 0))
+        }}
+    </strong></span>
     <div class="clear"></div>
 </div>
 
@@ -154,7 +174,13 @@ Tel: +6018-2096907
 
 <div class="line">
     <span class="left">Balance</span>
-    <span class="right">RM {{ "%.2f"|format(order["balance"]) }}</span>
+    <span class="right">
+        RM {{
+            "%.2f"|format(
+                (order["paid_amount"] - order.get("discount", 0)) - order["price"] | abs
+            )
+        }}
+    </span>
     <div class="clear"></div>
 </div>
 
