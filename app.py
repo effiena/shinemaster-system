@@ -566,10 +566,18 @@ def pos():
     return render_template("pos.html", services=services)
 
 
-###promo
-@app.route("/promo")
+###===============PROMO==============================
+@app.route('/promo_booking')
+@app.route('/promo')
 def promo():
-    return render_template("promo.html")
+    return render_template('promo_booking.html')
+
+@app.route('/book_promo', methods=['GET', 'POST'])
+def book_promo():
+    if request.method == 'POST':
+        return "Promo booking submitted"  # temporary test
+
+    return render_template('book_promo.html')
 
 # ================= CREATE ORDER (This route seems like a newer version of POS, consolidate if possible) =================
 @app.route("/create_order", methods=["POST"])
@@ -1223,6 +1231,8 @@ def booking():
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
+
+    print("FORM DATA:", request.form)
     try:
         car_plate = request.form.get("car_plate", "").upper()
         service = request.form.get("service_type", "")
@@ -1230,6 +1240,16 @@ def create_booking():
         time_str = request.form.get("booking_time", "")
         contact = request.form.get("contact", "")
         car_type = request.form.get("car_type", "-")
+
+
+# Promo check
+        promo = request.args.get("promo")  # from URL ?promo=1
+
+        if promo == "1":
+            if service not in ["disp1", "disp2", "disp3"]:
+                return "❌ Invalid promo booking", 400
+
+
 
         if not all([car_plate, service, date_str, time_str, contact]):
             return "Missing form data", 400
@@ -1303,6 +1323,56 @@ def create_booking():
 
     except Exception as e:
         print("BOOKING ERROR:", e)
+        return str(e), 500
+
+
+@app.route("/create_promo_booking", methods=["POST"])
+def create_promo_booking():
+    try:
+        car_plate = request.form.get("car_plate", "").upper()
+        car_type = request.form.get("car_type")
+        date_str = request.form.get("booking_date")
+        time_str = request.form.get("booking_time")
+        contact = request.form.get("contact")
+
+        service = "DISPO Graphene Coating"
+
+        if not all([car_plate, car_type, date_str, time_str, contact]):
+            return "Missing form data", 400
+
+        price_map = {
+            "Sedan": 488,
+            "SUV_MPV": 588,
+            "LARGE-MPV_4X4": 688
+        }
+
+        original_price = price_map.get(car_type, 0)
+        discount = 200
+        final_price = max(original_price - discount, 0)
+
+        created_at = now_kul().strftime("%Y-%m-%d %H:%M:%S")
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO promo_bookings
+            (car_plate, car_type, service_type, booking_date, booking_time, contact,
+             original_price, discount, final_price, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            car_plate, car_type, service,
+            date_str, time_str, contact,
+            original_price, discount, final_price, created_at
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("promo_result"))
+
+    except Exception as e:
+        print("PROMO ERROR:", e)
         return str(e), 500
 
 @app.route("/booking_confirmed")
