@@ -63,8 +63,18 @@ body{
     margin-top:10px;
 }
 
+.service-box{
+    overflow-x: hidden;  /* remove left-right scroll */
+    overflow-y: hidden;  /* remove up-down scroll */
+}
+
+.service-buttons{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    font-size: 11px;
+}
 .time-box{background:#6A1B9A;text-align:center;padding:8px;margin-bottom:10px;font-size:16px;border-radius:6px;}
-.service-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
 .service-buttons button{padding:6px;font-size:12px;background:#9C27B0;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
 .service-buttons button:hover{background:#7B1FA2;}
 
@@ -335,28 +345,28 @@ body{
 
 .service-buttons{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
     gap: 8px;
 }
 
+
 .service-buttons button{
-    padding: 12px;
-    font-size: 13px;
-    font-weight: bold;
+    padding: 8px 6px;
+    font-size: 11px;
     border-radius: 10px;
-    border: none;
-    cursor: pointer;
-
     background: #2a2a2a;
-    color: white;
-
-    transition: all 0.2s ease;
+    border: 1px solid #333;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
 }
 
 .service-buttons button:hover{
-    background: linear-gradient(135deg, #9C27B0, #BA68C8);
+    background: linear-gradient(135deg,#9C27B0,#BA68C8);
     transform: scale(1.03);
 }
+
 </style>
 </head>
 
@@ -366,48 +376,61 @@ body{
 <!-- LEFT PANEL -->
 <div class="left">
 
-<input type="text" id="car_plate" name="car_plate" onkeyup="checkLoyalty()"  placeholder="Enter Car Plate">
+<!-- CAR PLATE -->
+<div class="panel-card">
+    <label>🚗 Car Plate</label>
+    <input type="text" id="car_plate" name="car_plate"
+        onkeyup="checkLoyalty()" placeholder="Enter Car Plate">
 
-<div class="car-plate-keypad"></div>
-
-
-<label>Car Type</label>
-<div class="car-type-buttons">
-    <button onclick="selectCarType(this,'Sedan')">SEDAN</button>
-    <button onclick="selectCarType(this,'SUV_MPV')">SUV / MPV</button>
-    <button onclick="selectCarType(this,'LARGE-MPV_4X4')">LARGE 4X4</button>
+    <div class="car-plate-keypad"></div>
 </div>
-<input type="hidden" id="car_type">
 
-    <div class="service-card">
-    
-        <div class="service-header">
-            <h3>Packages</h3>
-            <span>Select a service</span>
-        </div>
+<!-- CAR TYPE -->
+<div class="panel-card">
+    <label>⚙️ Car Type</label>
 
-        <div class="service-box">
-            <div class="service-buttons">
+    <div class="car-type-buttons">
+        <button onclick="selectCarType(this,'Sedan')">SEDAN</button>
+        <button onclick="selectCarType(this,'SUV_MPV')">SUV / MPV</button>
+        <button onclick="selectCarType(this,'LARGE-MPV_4X4')">4X4</button>
+    </div>
 
-                <button onclick="selectService('wash_basic')">🚗 Wash Basic</button>
-                <button onclick="selectService('wash_special')">✨ Wash Special</button>
-                <button onclick="selectService('wash_maintain')">🧼 Maintenance Wash</button>
+    <input type="hidden" id="car_type">
+</div>
 
-                <button onclick="selectService('coat1')">🛡️ Coating 1Y</button>
-                <button onclick="selectService('coat2')">🛡️ Coating 2Y</button>
-                <button onclick="selectService('coat3')">🛡️ Coating 3Y</button>
+<!-- PACKAGES -->
+<div class="panel-card service-panel">
 
-                <button onclick="selectService('disp2')">♻️ Disposable 2Y</button>
-                <button onclick="selectService('disp3')">♻️ Disposable 3Y</button>
+    <div class="service-header">
+        <h3>🧾 Packages</h3>
+        <span>Tap to select service</span>
+    </div>
 
-                <button onclick="selectService('wax')">🧽 Waxing</button>
-                <button onclick="selectService('int_detail')">🪑 Interior Detail</button>
-                <button onclick="selectService('int_coat')">🛡️ Interior Coat</button>
+    <div class="service-box">
+        <div class="service-buttons">
 
-            </div>
+            <button onclick="selectService('wash_basic')">🚗 Basic</button>
+            <button onclick="selectService('wash_special')">✨ Special</button>
+            <button onclick="selectService('wash_maintain')">🧼 Maintain</button>
+
+            <button onclick="selectService('coat1')">🛡️ 1Y Coat</button>
+            <button onclick="selectService('coat2')">🛡️ 2Y Coat</button>
+            <button onclick="selectService('coat3')">🛡️ 3Y Coat</button>
+
+            <button onclick="selectService('disp2')">♻️ 2Y Disp</button>
+            <button onclick="selectService('disp3')">♻️ 3Y Disp</button>
+
+            <button onclick="selectService('wax')">🧽 Wax</button>
+            <button onclick="selectService('int_detail')">🪑 Detail</button>
+            <button onclick="selectService('int_coat')">🛡️ Int Coat</button>
+
         </div>
     </div>
+
 </div>
+
+</div>
+
 <!-- MIDDLE PANEL -->
 
 <div class="middle">
