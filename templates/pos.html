@@ -8,7 +8,41 @@
 
 <title>Shine Master POS</title>
 <style>
-body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F5);}
+body{
+    margin:0;
+    font-family:Arial;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    color: white;
+}
+
+.left, .middle, .right{
+    margin: 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+#price_display{
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #00e676;
+    background: linear-gradient(135deg, #1c1c1c, #2a2a2a);
+    padding: 20px;
+    border-radius: 12px;
+    letter-spacing: 1px;
+}
+
+.sales-card{
+    background: #6A1B9A;
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
 .wrapper{display:flex;height:100vh;}
 /* Logo fade-in */
 #logo_img {
@@ -21,16 +55,22 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 }
 
 /* LEFT PANEL */
-.left{width:33%;background:#2c2c2c;color:white;padding:10px;box-sizing:border-box;overflow-y:auto;}
+
+.left{width:40%;background:#2c2c2c;color:white;padding:10px;box-sizing:border-box;overflow-y:auto;}
 .left label{display:block;margin-top:5px;font-weight:bold;font-size:14px;}
 .left input{width:100%;padding:6px;margin-bottom:5px;border:none;border-radius:6px;font-size:14px;}
+.left label{
+    margin-top:10px;
+}
+
 .time-box{background:#6A1B9A;text-align:center;padding:8px;margin-bottom:10px;font-size:16px;border-radius:6px;}
 .service-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
 .service-buttons button{padding:6px;font-size:12px;background:#9C27B0;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
 .service-buttons button:hover{background:#7B1FA2;}
 
+
 /* MIDDLE PANEL */
-.middle{width:34%;background:#111;color:white;padding:10px;box-sizing:border-box;}
+.middle{width:33%;background:#111;color:white;padding:10px;box-sizing:border-box;}
 #price_display{font-size:28px;font-weight:bold;text-align:center;margin-bottom:10px;color:#00e676;background:#1c1c1c;padding:10px;border-radius:8px;}
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;}
 .pay-option{padding:10px;text-align:center;background:#2a2a2a;border-radius:6px;cursor:pointer;font-size:12px;}
@@ -38,11 +78,34 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 .cash-box input{width:100%;padding:8px;border-radius:6px;border:none;background:#2a2a2a;color:#fff;font-size:12px;}
 #balance_display{font-size:12px;color:#00e676;margin-top:3px;}
 #qr_box{display:none;text-align:center;margin-top:5px;}
-.pay-btn{width:100%;padding:10px;background:#9C27B0;color:white;border:none;border-radius:8px;margin-top:5px;cursor:pointer;font-size:12px;}
+.pay-btn{
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg,#9C27B0,#BA68C8);
+    color:white;
+    border:none;
+    border-radius:10px;
+    margin-top:8px;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:bold;
+    transition: all 0.2s ease;
+}
+
+.pay-btn:hover{
+    transform: scale(1.03);
+}
 .pay-btn:hover{background:#7B1FA2;}
 
 /* RIGHT PANEL */
-.right{width:33%;background:#fff;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;}
+.right{
+    width: 22%;              /* 👈 smaller */
+    background: #fff;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
 .right h3{text-align:center;margin-bottom:5px;font-size:14px;}
 .right iframe{flex:1;width:100%;border:none;border-radius:6px;}
 
@@ -153,7 +216,7 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 
 /* Text */
 #loyalty_status {
-    width: 100%;
+    width: 70%;
     padding: 12px;              /* match input height */
     margin-top: 5px;
     border: 2px solid #B39DDB;  /* same purple border */
@@ -218,12 +281,13 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 }
 
 #cash_input {
-    width: 100%;
+    width: 90%;
     padding: 12px;
     font-size: 18px;   /* slightly bigger */
     border-radius: 8px;
     border: none;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 #balance_display {
@@ -235,6 +299,63 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
     display: none; /* hide initially */
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
+}
+
+.service-card{
+    background: linear-gradient(135deg, #1c1c1c, #111);
+    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    margin-top: 10px;
+}
+
+.service-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.service-header h3{
+    margin: 0;
+    color: #f1c40f;
+    font-size: 16px;
+}
+
+.service-header span{
+    font-size: 12px;
+    color: #aaa;
+}
+
+.service-box{
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.service-buttons{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.service-buttons button{
+    padding: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+
+    background: #2a2a2a;
+    color: white;
+
+    transition: all 0.2s ease;
+}
+
+.service-buttons button:hover{
+    background: linear-gradient(135deg, #9C27B0, #BA68C8);
+    transform: scale(1.03);
 }
 </style>
 </head>
@@ -258,24 +379,37 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#9C27B0,#F3E5F
 </div>
 <input type="hidden" id="car_type">
 
-        <label>Packages</label>
+    <div class="service-card">
+    
+        <div class="service-header">
+            <h3>Packages</h3>
+            <span>Select a service</span>
+        </div>
+
         <div class="service-box">
             <div class="service-buttons">
-                <button onclick="selectService('wash_basic')">CAR WASH - BASIC</button>
-                <button onclick="selectService('wash_special')">CAR WASH - SPECIAL</button>
-                <button onclick="selectService('wash_maintain')">CAR WASH - MAINTAINANCE</button>
-                <button onclick="selectService('coat1')">COATING - 1 YEAR</button>
-                <button onclick="selectService('coat2')">COATING - 2 YEAR</button>
-                <button onclick="selectService('coat3')">COATING - 3 YEAR</button>
-                <button onclick="selectService('disp2')">DISPOSABLE - 2 YEAR</button>
-                <button onclick="selectService('disp3')">DISPOSABLE - 3 YEAR</button>
-                <button onclick="selectService('wax')">WAXING</button>
-                <button onclick="selectService('int_detail')">INTERIOR DETAILING</button>
-                <button onclick="selectService('int_coat')">INTERIOR COATING</button>
+
+                <button onclick="selectService('wash_basic')">🚗 Wash Basic</button>
+                <button onclick="selectService('wash_special')">✨ Wash Special</button>
+                <button onclick="selectService('wash_maintain')">🧼 Maintenance Wash</button>
+
+                <button onclick="selectService('coat1')">🛡️ Coating 1Y</button>
+                <button onclick="selectService('coat2')">🛡️ Coating 2Y</button>
+                <button onclick="selectService('coat3')">🛡️ Coating 3Y</button>
+
+                <button onclick="selectService('disp2')">♻️ Disposable 2Y</button>
+                <button onclick="selectService('disp3')">♻️ Disposable 3Y</button>
+
+                <button onclick="selectService('wax')">🧽 Waxing</button>
+                <button onclick="selectService('int_detail')">🪑 Interior Detail</button>
+                <button onclick="selectService('int_coat')">🛡️ Interior Coat</button>
+
             </div>
         </div>
     </div>
+</div>
 <!-- MIDDLE PANEL -->
+
 <div class="middle">
 <div class="time-box" id="live_time"></div>
 
@@ -611,13 +745,6 @@ function generateKeypad(){
     addBtn('⌫','backspace', backspaceCarPlate);
 }
 
-// Add letters
-for(let char of letters){
-    const btn = document.createElement('button');
-    btn.textContent = char;
-    btn.onclick = ()=>appendCarPlate(char);
-    keypadContainer.appendChild(btn);
-}
 
 // Add numbers
 for(let num of numbers){
