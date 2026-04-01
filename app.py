@@ -541,6 +541,20 @@ def pos():
         cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
         conn.commit()
 
+
+
+#++++++++=========status payment=================
+
+
+
+        net_total = effective_price - discount
+
+        balance = paid_amount - net_total
+
+        if paid_amount >= net_total:
+            payment_status = "PAID"
+        else:
+            payment_status = "PARTIAL"
         # ===== Prepare order dict for template =====
         order = {
             "id": order_id,
