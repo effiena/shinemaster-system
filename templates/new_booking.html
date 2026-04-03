@@ -16,21 +16,24 @@
 body {
     font-family: Arial, sans-serif;
     color: #fff;
+    margin: 0;
+
     display: flex;
     justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 
-    background: radial-gradient(circle at 20% 20%, #9c27b0, #000);
-    animation: bgMove 10s infinite alternate;
+    background: #0d001a; /* deep purple */
 }
 
-/* ANIMATION */
-@keyframes bgMove {
-    0% {
-        background: radial-gradient(circle at 20% 20%, #9c27b0, #000);
-    }
-    100% {
-        background: radial-gradient(circle at 80% 80%, #ffeb3b, #000);
-    }
+
+
+.page {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* IMPORTANT */
 }
 
 /* CONTAINER */
@@ -46,13 +49,12 @@ body {
 
 
 /* ===== WELCOME HEADER ===== */
-.welcome-header {
-    width: 100%;
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 10px;
+.welcome-header h1 {
+    font-size: 28px;        /* bigger */
+    font-weight: bold;
+    color: #000;            /* black */
+    margin-bottom: 5px;     /* reduce gap below */
 }
-
 .welcome-header h1 {
     font-size: 22px;
     font-weight: bold;
@@ -107,11 +109,19 @@ body {
     font-weight: bold;
     text-align: center;
     padding: 8px;
-    width: 100%;
     letter-spacing: 1px;
     animation: pulseBadge 1.5s infinite;
-}
 
+    /* ✅ MATCH CONTAINER */
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px 12px 0 0;
+
+    border: 2px solid #ffeb3b;
+    border-bottom: none;
+
+    box-sizing: border-box;
+}
 @keyframes pulseBadge {
     0% { opacity: 1; }
     50% { opacity: 0.7; }
@@ -268,85 +278,133 @@ button.submit-btn {
     border: none;
     font-weight: bold;
 }
+
+.rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+/* REAL DROPLETS */
+.drop {
+    position: absolute;
+    top: -20px;
+    width: 3px;
+    height: 8px;              /* ✅ short = no long lines */
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;       /* makes it droplet-like */
+    animation: fall linear infinite;
+}
+
+/* FALL + SLIGHT SWAY */
+@keyframes fall {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) translateX(15px);
+        opacity: 0;
+    }
+}
+
+.page, .container, .welcome-header {
+    position: relative;
+    z-index: 1;
+}
 </style>
 </head>
-
 <body>
-<div class="promo-badge">
-    🟣 DISPO SPECIAL PROMO
+<div class="rain"></div>
+<div class="page">
 
-<div class="welcome-header">
-    <h1>✨ Welcome to Shine Master ✨</h1>
-    <p>Our Booking Page</p>
-</div>
-<form action="/new_booking" method="POST" class="container">
-
-<label>Car Plate</label>
- <input type="text" name="car_plate" required>
-
-<label>Car Type</label>
-<select name="car_type" id="car_type" onchange="calculatePrice()">
-    <option value="Sedan">Sedan</option>
-    <option value="SUV_MPV">SUV / MPV</option>
-    <option value="LARGE-MPV_4X4">LARGE-MPV / 4X4</option>
-</select>
-
-<label>Service</label>
-<select name="service_type" id="service_type" onchange="calculatePrice()">
-    <option value="disp1">DISPO Coating 1 Year</option>
-</select>
-
-<!-- CALENDAR -->
-<div class="calendar-header">
-    <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
-
-    <div id="monthLabel" class="month-label">Month</div>
-
-    <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
-</div>
-
-<label>Select Date</label>
-<div class="calendar-wrapper">
-    <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
-    
-    <div class="calendar-track" id="calendar"></div>
-
-    <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
-</div>
-<input type="hidden" name="booking_date" id="booking_date" required>
-
-<!-- SERVICE MODE -->
-<label>Service Mode</label>
-<div class="options">
-    <div class="option" onclick="selectMode(this)">
-        SELF DROP
-        <input type="radio" name="service_mode" value="SELF_DROP" hidden required>
+    <!-- PROMO BADGE -->
+    <div class="promo-badge">
+        🟣 DISPO SPECIAL PROMO
+    </div>
+    <!-- WELCOME -->
+    <div class="welcome-header">
+        <h1>✨ Welcome to Shine Master ✨</h1>
     </div>
 
-    <div class="option" onclick="selectMode(this)">
-        PICKUP
-        <input type="radio" name="service_mode" value="PICKUP" hidden required>
-    </div>
+    <!-- FORM -->
+    <form action="/new_booking" method="POST" class="container">
+
+        <label>Car Plate</label>
+        <input type="text" name="car_plate" required>
+
+        <label>Car Type</label>
+        <select name="car_type" id="car_type" onchange="calculatePrice()">
+            <option value="Sedan">Sedan</option>
+            <option value="SUV_MPV">SUV / MPV</option>
+            <option value="LARGE-MPV_4X4">LARGE-MPV / 4X4</option>
+        </select>
+
+        <label>Service</label>
+        <select name="service_type" id="service_type" onchange="calculatePrice()">
+            <option value="disp1">DISPO Coating 1 Year</option>
+        </select>
+
+        <!-- CALENDAR -->
+        <div class="calendar-header">
+            <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
+            <div id="monthLabel" class="month-label">Month</div>
+            <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
+        </div>
+
+        <label>Select Date</label>
+        <div class="calendar-wrapper">
+            <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
+            <div class="calendar-track" id="calendar"></div>
+            <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
+        </div>
+
+        <input type="hidden" name="booking_date" id="booking_date" required>
+
+        <!-- SERVICE MODE -->
+        <label>Service Mode</label>
+        <div class="options">
+            <div class="option" onclick="selectMode(this)">
+                SELF DROP
+                <input type="radio" name="service_mode" value="SELF_DROP" hidden required>
+            </div>
+
+            <div class="option" onclick="selectMode(this)">
+                PICKUP
+                <input type="radio" name="service_mode" value="PICKUP" hidden required>
+            </div>
+        </div>
+
+        <!-- CONTACT -->
+        <label>Contact</label>
+        <input type="text" name="contact" required>
+
+        <!-- PRICE -->
+        <div class="price-box">
+            RM <span id="price_display">0.00</span>
+        </div>
+        <input type="hidden" name="price" id="price">
+
+        <button type="submit" class="submit-btn">Confirm Booking</button>
+
+    </form>
+
 </div>
 
-<!-- TIMESLOTS 
-<label>Time Slot</label>
-<div class="timeslots" id="timeslots"></div>
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/60182096907" class="wa-btn" target="_blank">
+    💬
+</a>
 
-<!-- CONTACT -->
-<label>Contact</label>
-<input type="text" name="contact" required>
-
-<!-- PRICE -->
-<div class="price-box">
-    RM <span id="price_display">0.00</span>
-</div>
-<input type="hidden" name="price" id="price">
-
-<button type="submit" class="submit-btn">Confirm Booking</button>
-
-</form>
-</div>
+</body>
 <script>
 /* PRICE TABLE */
 const priceTable = {
@@ -494,9 +552,20 @@ document.addEventListener("DOMContentLoaded", ()=>{
     generateWeek();
     calculatePrice();
 });
+
+const rainContainer = document.createElement("div");
+rainContainer.classList.add("rain");
+document.body.appendChild(rainContainer);
+
+for (let i = 0; i < 80; i++) {
+    let drop = document.createElement("div");
+    drop.classList.add("drop");
+
+    drop.style.left = Math.random() * 100 + "vw";
+    drop.style.animationDuration = (0.5 + Math.random()) + "s";
+    drop.style.opacity = Math.random();
+
+    rainContainer.appendChild(drop);
+}
 </script>
-<a href="https://wa.me/60182096907" class="wa-btn" target="_blank">
-    💬
-</a>
-</body>
 </html>
