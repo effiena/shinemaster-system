@@ -273,147 +273,123 @@ Shine Master Solution | Powered by AsliTech
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-const seenBookings = new Set(); // ✅ FIX
+    // ================= GLOBAL =================
+    const seenBookings = new Set();
 
-function updateClock(){
-    let now = new Date();
+    // ================= CLOCK =================
+    function updateClock(){
+        let now = new Date();
 
-    let date = now.toLocaleDateString("en-MY",{
-        weekday:"long",
-        year:"numeric",
-        month:"long",
-        day:"numeric"
-    });
+        let date = now.toLocaleDateString("en-MY",{
+            weekday:"long",
+            year:"numeric",
+            month:"long",
+            day:"numeric"
+        });
 
-    let time = now.toLocaleTimeString();
+        let time = now.toLocaleTimeString();
 
-    document.getElementById("date").innerText = date;
-    document.getElementById("time").innerText = time;
-}
+        document.getElementById("date").innerText = date;
+        document.getElementById("time").innerText = time;
+    }
 
-// ✅ CLOCK START
-updateClock();
-setInterval(updateClock,1000);
+    updateClock();
+    setInterval(updateClock, 1000);
 
-// ================= BOOKINGS =================
-function fetchNewBookings() {
-    fetch("/latest_bookings")
-    .then(res => res.json())
-    .then(data => {
 
-        const list = document.getElementById("bookingAlertList");
-        list.innerHTML = "";
+    // ================= BOOKINGS =================
+    function fetchNewBookings() {
+        fetch("/latest_bookings")
+        .then(res => res.json())
+        .then(data => {
 
-        if (!data.new_bookings.length) {
-            list.innerHTML = "<li>No new bookings</li>";
-            return;
-        }
+            const list = document.getElementById("bookingAlertList");
 
-        data.new_bookings.forEach(b => {
-
-            let label = "";
-            if (b.type === "promo") {
-                label = "🟣 PROMO - ";
+            // FIRST LOAD CLEAR
+            if (seenBookings.size === 0) {
+                list.innerHTML = "";
             }
 
-            list.innerHTML += `
-                <li class="lowstock">
-                    ${label}${b.car_plate} - ${b.service} (${b.date} ${b.time})
-                </li>
-            `;
-        });
+            if (!data.new_bookings.length && seenBookings.size === 0) {
+                list.innerHTML = "<li>No new bookings</li>";
+                return;
+            }
 
-    });
-}
+            data.new_bookings.forEach(booking => {
+
+                const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
+
+                // PREVENT DUPLICATE
+                if (!seenBookings.has(key)) {
+
+                    seenBookings.add(key);
+
+                    // REMOVE "No bookings"
+                    if (list.innerText.includes("No new bookings")) {
+                        list.innerHTML = "";
+                    }
+
+                    const item = document.createElement("li");
+
+                    // STYLE BASED ON TYPE
+                    item.className = booking.type === "promo"
+                        ? "dispo-booking"
+                        : "normal-booking";
+
+                    let label = booking.type === "promo" ? "🟣 PROMO - " : "";
+
+                    item.innerText =
+                        `${label}${booking.car_plate} - ${booking.service} (${booking.date} ${booking.time})`;
+
+                    list.prepend(item);
+                }
+
+            });
+
+        })
+        .catch(err => console.error("Booking fetch error:", err));
+    }
+
+    // RUN EVERY 5s
+    setInterval(fetchNewBookings, 5000);
 
 
-setInterval(fetchNewBookings, 5000);
+    // ================= DASHBOARD =================
+    function loadDashboard(){
+        fetch("/dashboard_data")
+        .then(res => res.json())
+        .then(data => {
 
-// ================= DASHBOARD =================
-function loadDashboard(){
-fetch("/dashboard_data")
-.then(res => res.json())
-.then(data => {
+            document.getElementById("todayRevenue").innerText = "RM " + data.today_revenue;
+            document.getElementById("carsToday").innerText = data.cars_today;
 
-document.getElementById("todayRevenue").innerText = "RM " + data.today_revenue;
-document.getElementById("carsToday").innerText = data.cars_today;
+            let table = "";
 
-let table = "";
+            data.recent_sales.forEach(sale => {
+                table += `
+                <tr>
+                    <td>${sale.invoice}</td>
+                    <td>${sale.car_plate}</td>
+                    <td>${sale.service_type}</td>
+                    <td>RM ${sale.price}</td>
+                    <td>${sale.time}</td>
+                </tr>
+                `;
+            });
 
-data.recent_sales.forEach(sale => {
-table += `
-<tr>
-<td>${sale.invoice}</td>
-<td>${sale.car_plate}</td>
-<td>${sale.service_type}</td>
-<td>RM ${sale.price}</td>
-<td>${sale.time}</td>
-</tr>
-`;
-});
+            document.getElementById("recentSales").innerHTML = table;
 
-document.getElementById("recentSales").innerHTML = table;
+        })
+        .catch(err => console.error("Dashboard error:", err));
+    }
 
-});
-}
-
-function fetchNewBookings() {
-    fetch("/latest_bookings")
-    .then(res => res.json())
-    .then(data => {
-
-        // ================= NORMAL =================
-        const list = document.getElementById("bookingAlertList");
-
-        if (!data.new_bookings.length && seenBookings.size === 0) {
-            list.innerHTML = "<li>No new bookings</li>";
-            return;
-        }
-
-        data.new_bookings.forEach(booking => {
-            const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
-
-            if (!seenBookings.has(key)) {
-                seenBookings.add(key);
-
-                if (list.innerText.includes("No new bookings")) list.innerHTML = "";
-
-                const item = document.createElement("li");
-                item.className = "lowstock";
-
-                // ✅ FIXED
-                item.innerText = `${booking.car_plate} - ${booking.service} (${booking.date} ${booking.time})`;
-
-                list.prepend(item);
-            } 
-
-        });
-
-        // ================= PROMO =================
-        const promoList = document.getElementById("promoBookingList");
-        promoList.innerHTML = "";
-
-        if (data.promo_bookings.length === 0) {
-            promoList.innerHTML = "<li>No promo bookings</li>";
-        }
-
-        data.promo_bookings.forEach(b => {
-            promoList.innerHTML += `
-                <li class="lowstock">
-                    🟣 ${b.car_plate} - ${b.service} (${b.date} ${b.time})
-                </li>
-            `;
-        });
-
-    });
-}
-
-// ✅ INITIAL LOAD
-loadDashboard();
+    // ================= INIT =================
+    loadDashboard();
+    fetchNewBookings(); // 🔥 initial load
 
 });
-
 </script>
+
 </body>
 
 </html>
