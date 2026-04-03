@@ -1456,9 +1456,10 @@ def latest_bookings():
     conn = get_db_connection()
 
     rows = conn.execute("""
-        SELECT car_plate, service_type, booking_date, booking_time, type
+        SELECT DISTINCT car_plate, service_type, booking_date, booking_time, type
         FROM bookings
-        ORDER BY id DESC
+        WHERE status='confirmed'
+        ORDER BY booking_date DESC, booking_time DESC
         LIMIT 10
     """).fetchall()
 
@@ -1466,16 +1467,25 @@ def latest_bookings():
 
     bookings = []
 
+    seen = set()
+
     for r in rows:
+        key = (r["car_plate"], r["booking_date"], r["booking_time"])
+
+        if key in seen:
+            continue
+        seen.add(key)
+
         bookings.append({
             "car_plate": r["car_plate"],
             "service": r["service_type"],
             "date": r["booking_date"],
             "time": r["booking_time"],
-            "type": r["type"] if r["type"] else "normal"
+            "type": r["type"] or "normal"
         })
 
     return {"new_bookings": bookings}
+
 @app.route("/booking_admin")
 def booking_admin():
     if session.get("role") != "admin":
