@@ -111,15 +111,34 @@ padding:10px;
 border-bottom:1px solid #333;
 }
 
-.lowstock{
-color:#ff6b6b;
-font-weight:bold;
+.normal-booking {
+    background: #d6eaff;
+    color: #003a75;
+    padding: 6px 10px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    border-left: 5px solid #1e90ff;
+}
+
+.dispo-booking {
+    background: #d7f8dd;
+    color: #0b5d1e;
+    padding: 6px 10px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    border-left: 5px solid #22c55e;
 }
 
 .footer{
 text-align:center;
 margin-top:20px;
 color:#aaa;
+}
+
+.status {
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 6px;
 }
 
 </style>
@@ -151,6 +170,8 @@ color:#aaa;
 <a href="/launch_page"><button>Launch Page</button></a>
 
 <a href="/booking_admin"><button>Service Bookings</button></a>
+
+<a href="/new_booking"><button>DISPO Booking</button></a>
 
 <a href="/inventory"><button>Inventory</button></a>
 
@@ -188,20 +209,19 @@ color:#aaa;
 
 </div>
 
-
-
 <div class="section">
 <h3>New Confirmed Booking Alert</h3>
 
 <ul id="bookingAlertList">
 {% for booking in new_bookings %}
-<li class="lowstock">
+<li class="lowstock {% if booking.type == 'promo' %}dispo-booking{% else %}normal-booking{% endif %}">
 {{ booking.car_plate }} - {{ booking.service }} ({{ booking.date }} {{ booking.time }})
 </li>
 {% else %}
 <li>No new bookings</li>
 {% endfor %}
 </ul>
+
 </div>
 
 
@@ -280,32 +300,32 @@ function fetchNewBookings() {
     fetch("/latest_bookings")
     .then(res => res.json())
     .then(data => {
-        const list = document.getElementById("bookingAlertList");
 
-        if (!data.new_bookings.length && seenBookings.size === 0) {
+        const list = document.getElementById("bookingAlertList");
+        list.innerHTML = "";
+
+        if (!data.new_bookings.length) {
             list.innerHTML = "<li>No new bookings</li>";
             return;
         }
 
-        data.new_bookings.forEach(booking => {
-            const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
+        data.new_bookings.forEach(b => {
 
-            if (!seenBookings.has(key)) {
-                seenBookings.add(key);
-
-                if (list.innerText.includes("No new bookings")) list.innerHTML = "";
-
-                const item = document.createElement("li");
-                item.className = "lowstock";
-
-                // ✅ FIXED
-                item.innerText = `${booking.car_plate} - ${booking.service} (${booking.date} ${booking.time})`;
-
-                list.prepend(item);
+            let label = "";
+            if (b.type === "promo") {
+                label = "🟣 PROMO - ";
             }
+
+            list.innerHTML += `
+                <li class="lowstock">
+                    ${label}${b.car_plate} - ${b.service} (${b.date} ${b.time})
+                </li>
+            `;
         });
+
     });
 }
+
 
 setInterval(fetchNewBookings, 5000);
 
@@ -337,10 +357,62 @@ document.getElementById("recentSales").innerHTML = table;
 });
 }
 
+function fetchNewBookings() {
+    fetch("/latest_bookings")
+    .then(res => res.json())
+    .then(data => {
+
+        // ================= NORMAL =================
+        const list = document.getElementById("bookingAlertList");
+
+        if (!data.new_bookings.length && seenBookings.size === 0) {
+            list.innerHTML = "<li>No new bookings</li>";
+            return;
+        }
+
+        data.new_bookings.forEach(booking => {
+            const key = `${booking.car_plate}_${booking.date}_${booking.time}`;
+
+            if (!seenBookings.has(key)) {
+                seenBookings.add(key);
+
+                if (list.innerText.includes("No new bookings")) list.innerHTML = "";
+
+                const item = document.createElement("li");
+                item.className = "lowstock";
+
+                // ✅ FIXED
+                item.innerText = `${booking.car_plate} - ${booking.service} (${booking.date} ${booking.time})`;
+
+                list.prepend(item);
+            } 
+
+        });
+
+        // ================= PROMO =================
+        const promoList = document.getElementById("promoBookingList");
+        promoList.innerHTML = "";
+
+        if (data.promo_bookings.length === 0) {
+            promoList.innerHTML = "<li>No promo bookings</li>";
+        }
+
+        data.promo_bookings.forEach(b => {
+            promoList.innerHTML += `
+                <li class="lowstock">
+                    🟣 ${b.car_plate} - ${b.service} (${b.date} ${b.time})
+                </li>
+            `;
+        });
+
+    });
+}
+
 // ✅ INITIAL LOAD
 loadDashboard();
 
 });
+
 </script>
 </body>
 
