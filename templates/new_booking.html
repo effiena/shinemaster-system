@@ -6,12 +6,31 @@
 <title>Shine Master Solution - Booking</title>
 
 <style>
-body {
+<!--body {
     font-family: Arial, sans-serif;
     background: #000;
     color: #fff;
     display: flex;
     justify-content: center;
+}-->
+body {
+    font-family: Arial, sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+
+    background: radial-gradient(circle at 20% 20%, #9c27b0, #000);
+    animation: bgMove 10s infinite alternate;
+}
+
+/* ANIMATION */
+@keyframes bgMove {
+    0% {
+        background: radial-gradient(circle at 20% 20%, #9c27b0, #000);
+    }
+    100% {
+        background: radial-gradient(circle at 80% 80%, #ffeb3b, #000);
+    }
 }
 
 /* CONTAINER */
@@ -25,6 +44,79 @@ body {
     border: 2px solid #ffeb3b;
 }
 
+
+/* ===== WELCOME HEADER ===== */
+.welcome-header {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.welcome-header h1 {
+    font-size: 22px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #ffeb3b, #9c27b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glowText 2s ease-in-out infinite alternate;
+}
+
+.welcome-header p {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #ccc;
+    letter-spacing: 1px;
+}
+
+/* ===== WHATSAPP BUTTON ===== */
+.wa-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #25D366;
+    color: white;
+    font-size: 24px;
+    padding: 14px 16px;
+    border-radius: 50%;
+    text-decoration: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    transition: 0.3s;
+    z-index: 999;
+}
+
+.wa-btn:hover {
+    transform: scale(1.1);
+    background: #1ebe5d;
+}
+
+/* GLOW EFFECT */
+@keyframes glowText {
+    from {
+        text-shadow: 0 0 5px #ffeb3b, 0 0 10px #9c27b0;
+    }
+    to {
+        text-shadow: 0 0 10px #ffeb3b, 0 0 20px #9c27b0;
+    }
+}
+
+/* ===== PROMO BADGE ===== */
+.promo-badge {
+    background: linear-gradient(90deg,#9c27b0,#ffeb3b);
+    color: black;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+    width: 100%;
+    letter-spacing: 1px;
+    animation: pulseBadge 1.5s infinite;
+}
+
+@keyframes pulseBadge {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
 /* LABEL */
 label {
     margin-top: 15px;
@@ -180,9 +272,14 @@ button.submit-btn {
 </head>
 
 <body>
+<div class="promo-badge">
+    🟣 DISPO SPECIAL PROMO
 
+<div class="welcome-header">
+    <h1>✨ Welcome to Shine Master ✨</h1>
+    <p>Our Booking Page</p>
+</div>
 <form action="/new_booking" method="POST" class="container">
-    <input type="hidden" name="promo" value="1">
 
 <label>Car Plate</label>
  <input type="text" name="car_plate" required>
@@ -232,7 +329,7 @@ button.submit-btn {
     </div>
 </div>
 
-<!-- TIMESLOTS -->
+<!-- TIMESLOTS 
 <label>Time Slot</label>
 <div class="timeslots" id="timeslots"></div>
 
@@ -249,7 +346,7 @@ button.submit-btn {
 <button type="submit" class="submit-btn">Confirm Booking</button>
 
 </form>
-
+</div>
 <script>
 /* PRICE TABLE */
 const priceTable = {
@@ -398,6 +495,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     calculatePrice();
 });
 </script>
-
+<a href="https://wa.me/60182096907" class="wa-btn" target="_blank">
+    💬
+</a>
 </body>
 </html>
