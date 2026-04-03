@@ -6,6 +6,7 @@ import calendar
 from collections import defaultdict
 from zoneinfo import ZoneInfo
 import qrcode
+from flask_socketio import SocketIO, emit, join_room
 from io import BytesIO
 import os
 import logging
@@ -15,6 +16,7 @@ logging.getLogger('socketio').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 COMPANY_INFO = {
     "name": "SHINEMASTER AUTO",
@@ -365,6 +367,10 @@ def qr_booking():
     img.save(buffer, format="PNG")
     buffer.seek(0)
     return send_file(buffer, mimetype="image/png")
+
+@app.route('/web')
+def web():
+    return render_template("web.html")
 
 # ================= POS =================
 # ================= POS RETAIL =================
@@ -753,12 +759,20 @@ def dashboard():
     # Latest 5 confirmed bookings
     conn = get_db_connection()
     raw_bookings = conn.execute("""
-        SELECT car_plate, service_type, booking_date, booking_time
+        SELECT car_plate, service_type, booking_date, booking_time, type
         FROM bookings
         WHERE LOWER(status)='confirmed'
         ORDER BY id DESC
-        LIMIT 5
+        LIMIT 20
     """).fetchall()
+    promo_raw = conn.execute("""
+        SELECT car_plate, service_type, booking_date, booking_time, type
+        FROM bookings
+        WHERE LOWER(status)='confirmed'
+        ORDER BY id DESC
+        LIMIT 20
+    """).fetchall()
+
     conn.close()
 
 
@@ -769,9 +783,21 @@ def dashboard():
             "car_plate": b["car_plate"] or "-",
             "service": SERVICE_NAMES.get(b["service_type"], b["service_type"] or "-"),
             "date": b["booking_date"] or "-",
-            "time": b["booking_time"] or "-"
+            "time": b["booking_time"] or "-",
+            "type": b["type"] or "normal"
+        })
+    promo_bookings = []
+    for b in promo_raw:
+        promo_bookings.append({
+            "car_plate": b["car_plate"] or "-",
+            "service": SERVICE_NAMES.get(b["service_type"], b["service_type"] or "-"),
+            "date": b["booking_date"] or "-",
+            "time": b["booking_time"] or "-",
+            "type": "promo"
         })
 
+
+    new_bookings = promo_bookings + new_bookings
 
 
     return render_template(
@@ -1333,10 +1359,19 @@ def create_booking():
         cur.execute(
             """
             INSERT INTO bookings 
-            (car_plate, service_type, booking_date, booking_time, contact, created_at, status, car_type)
-            VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)
+            (car_plate, service_type, booking_date, booking_time, contact, created_at, status, car_type, type)
+            VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)
             """,
-            (car_plate, service, date_str, time_str, contact, created_at, car_type)
+            (
+                car_plate,
+                service,
+                date_str,
+                time_str,
+                contact,
+                created_at,
+                car_type,
+                "normal"
+            )
         )
 
         booking_id = cur.lastrowid
@@ -1419,28 +1454,28 @@ def booking_confirmed():
 @app.route("/latest_bookings")
 def latest_bookings():
     conn = get_db_connection()
-    bookings = conn.execute("""
-        SELECT car_plate, service_type, booking_date, booking_time
+
+    rows = conn.execute("""
+        SELECT car_plate, service_type, booking_date, booking_time, type
         FROM bookings
-        WHERE LOWER(status)='confirmed'
         ORDER BY id DESC
-        LIMIT 5
+        LIMIT 10
     """).fetchall()
+
     conn.close()
 
-    # Convert to list of dicts for JSON
-    bookings_list = [
-        {
-            "car_plate": b["car_plate"],
-            "service": b["service_type"],  # map DB column to 'service'
-            "date": b["booking_date"],
-            "time": b["booking_time"]
-        }
-        for b in bookings
-    ]
+    bookings = []
 
-    return {"new_bookings": bookings_list}
+    for r in rows:
+        bookings.append({
+            "car_plate": r["car_plate"],
+            "service": r["service_type"],
+            "date": r["booking_date"],
+            "time": r["booking_time"],
+            "type": r["type"] if r["type"] else "normal"
+        })
 
+    return {"new_bookings": bookings}
 @app.route("/booking_admin")
 def booking_admin():
     if session.get("role") != "admin":
@@ -1501,6 +1536,60 @@ def booking_admin():
         today_date=today.date() # Pass today's date for highlighting
     )
 
+
+
+#====NEW BOOKING PAGE ===
+@app.route("/new_booking", methods=["GET", "POST"])
+def new_booking():
+    if request.method == "POST":
+
+        car_plate = request.form.get("car_plate")
+        car_type = request.form.get("car_type")
+        service = request.form.get("service_type")
+        date = request.form.get("booking_date")
+        service_mode = request.form.get("service_mode")
+        time = "09:00"
+
+        if not all([car_plate, car_type, service, date, service_mode]):
+            return "Missing form data", 400
+
+        conn = get_db_connection()
+
+        conn.execute("""
+            INSERT INTO bookings 
+            (car_plate, car_type, service_type, booking_date, booking_time, service_mode, status, type)
+            VALUES (?, ?, ?, ?, ?, ?, 'confirmed', 'promo')
+        """, (car_plate, car_type, service, date, time, service_mode))
+
+        conn.commit()
+        conn.close()
+
+        return render_template(
+            "booking_success.html",
+            car_plate=car_plate,
+            car_type=car_type,
+            date=date
+        )
+
+    return render_template("new_booking.html")
+
+@app.route("/get_slots")
+def get_slots():
+    date = request.args.get("date")
+
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT booking_time 
+        FROM bookings 
+        WHERE booking_date=? AND LOWER(status)='confirmed'
+    """, (date,)).fetchall()
+
+    conn.close()
+
+    booked_slots = [r["booking_time"] for r in rows if r["booking_time"]]
+
+    return {"booked": booked_slots}
 # ================= STAFF =================
 @app.route("/staff")
 def staff():
@@ -1584,12 +1673,68 @@ def finance():
     }
     return render_template("finance.html", report=report)
 
+
+
+
+
+#=============
+#SOCKET
+#=============
+# =====================
+# SOCKET EVENTS
+# =====================
+
+@socketio.on('join')
+def on_join(data):
+    user_id = data['user_id']
+    join_room(str(user_id))   # user room
+    join_room("admin")       # admin room
+
+# USER SEND MESSAGE
+@socketio.on('send_message')
+def handle_message(data):
+    user_id = data['user_id']
+    message = data['message']
+
+    db = get_db()
+    db.execute(
+        "INSERT INTO chat (user_id, sender, message) VALUES (?, ?, ?)",
+        (user_id, "user", message)
+    )
+    db.commit()
+
+    # send to admin dashboard
+    emit('receive_message', {
+        "user_id": user_id,
+        "sender": "user",
+        "message": message
+    }, room="admin")
+
+# ADMIN REPLY
+@socketio.on('admin_reply')
+def admin_reply(data):
+    user_id = data['user_id']
+    message = data['message']
+
+    db = get_db()
+    db.execute(
+        "INSERT INTO chat (user_id, sender, message) VALUES (?, ?, ?)",
+        (user_id, "admin", message)
+    )
+    db.commit()
+
+    # send back to that user only
+    emit('receive_message', {
+        "sender": "admin",
+        "message": message
+    }, room=str(user_id))
+
 # ================= RUN =================
 if __name__ == "__main__":
     # Only for local dev
     init_db()
     sync_old_orders_data()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
 else:
     # When using Gunicorn/WSGI, run init once per process
     init_db()
