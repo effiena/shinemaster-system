@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Success</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: radial-gradient(circle, #111, #000);
+            color: white;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .center {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.08);
+            padding: 30px;
+            border-radius: 18px;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0,255,200,0.3);
+            animation: popIn 0.8s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h2 {
+            color: #00ffcc;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #00ffcc;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #00c9a7;
+        }
+    </style>
+</head>
+
+
+<body>
+<canvas id="fx"></canvas>
+<div class="center">
+    <div class="card">
+        <h2>🎉 Booking Confirmed</h2>
+
+        <p><b>Service:</b> Dispo Graphene Coating - DISCOUNT RM200</p>
+        <p><b>Plate No:</b> {{ car_plate }}</p>
+        <p><b>Type:</b> {{ car_type }}</p>
+        <p><b>Date:</b> {{ date }}</p>
+
+        <a href="/launch_page"><button>View Other Packages</button></a>
+        <a href="/new_booking"><button>New Booking</button></a>
+    </div>
+</div>
+
+<audio autoplay>
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const canvas = document.getElementById("fx");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+let confetti = [];
+
+/* 🎆 FIREWORK PARTICLE */
+class Firework {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = Math.random() * 3 + 1;
+        this.color = `hsl(${Math.random()*360},100%,60%)`;
+        this.speedX = (Math.random() - 0.5) * 10;
+        this.speedY = (Math.random() - 0.5) * 10;
+        this.alpha = 1;
+    }
+
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.015;
+    }
+
+    draw() {
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+}
+
+/* 🎊 CONFETTI */
+class Confetti {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height;
+        this.size = Math.random() * 6 + 4;
+        this.speedY = Math.random() * 3 + 2;
+        this.color = `hsl(${Math.random()*360},100%,60%)`;
+    }
+
+    update() {
+        this.y += this.speedY;
+        if (this.y > canvas.height) {
+            this.y = -10;
+            this.x = Math.random() * canvas.width;
+        }
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+}
+
+/* 🎆 CREATE FIREWORK BURST */
+function burst() {
+    let x = Math.random() * canvas.width;
+    let y = Math.random() * canvas.height / 2;
+
+    for (let i = 0; i < 60; i++) {
+        particles.push(new Firework(x, y));
+    }
+}
+
+/* 🎊 CREATE CONFETTI */
+for (let i = 0; i < 120; i++) {
+    confetti.push(new Confetti());
+}
+
+/* 🔁 ANIMATION LOOP */
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // fireworks
+    particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) particles.splice(i, 1);
+    });
+
+    // confetti
+    confetti.forEach(c => {
+        c.update();
+        c.draw();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+/* 🎆 LOOP FIREWORKS */
+setInterval(burst, 700);
+animate();
+</script>
+</body>
+</html>
