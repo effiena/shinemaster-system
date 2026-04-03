@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master Solution - Booking</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+}
+
+/* CONTAINER */
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 20px;
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #ffeb3b;
+}
+
+/* LABEL */
+label {
+    margin-top: 15px;
+    display: block;
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+/* INPUT */
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #9c27b0;
+    background: #222;
+    color: white;
+}
+
+.calendar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* HIDE SCROLLBAR + ENABLE SWIPE */
+.calendar-track {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding: 5px 0;
+
+    /* HIDE SCROLLBAR (ALL BROWSERS) */
+    scrollbar-width: none; /* Firefox */
+}
+
+.calendar-track::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+/* DAY BOX */
+.day {
+    min-width: 70px;
+    flex: 0 0 auto;
+    padding: 10px;
+    background: #222;
+    border-radius: 10px;
+    border: 1px solid #9c27b0;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.day.selected {
+    background: #9c27b0;
+    border-color: #ffeb3b;
+    transform: scale(1.05);
+}
+
+/* NAV BUTTON */
+.nav-btn {
+    background: #9c27b0;
+    border: none;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* OPTIONS */
+.options {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.option {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border: 1px solid #9c27b0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.option.selected {
+    background: #9c27b0;
+    border-color: #ffeb3b;
+}
+
+/* TIMESLOTS */
+.timeslots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.timeslot {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #9c27b0;
+    cursor: pointer;
+}
+
+.timeslot.selected {
+    background: #9c27b0;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.month-label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffeb3b;
+}
+
+/* FULL DAY STYLE */
+.day.full {
+    background: #333 !important;
+    color: #777 !important;
+    border: 1px solid #555 !important;
+    pointer-events: none;
+    opacity: 0.5;
+}
+/* PRICE */
+.price-box {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 20px;
+    color: #ffeb3b;
+}
+
+/* BUTTON */
+button.submit-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: linear-gradient(90deg,#9c27b0,#ffeb3b);
+    border: none;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<form action="/new_booking" method="POST" class="container">
+    <input type="hidden" name="promo" value="1">
+
+<label>Car Plate</label>
+ <input type="text" name="car_plate" required>
+
+<label>Car Type</label>
+<select name="car_type" id="car_type" onchange="calculatePrice()">
+    <option value="Sedan">Sedan</option>
+    <option value="SUV_MPV">SUV / MPV</option>
+    <option value="LARGE-MPV_4X4">LARGE-MPV / 4X4</option>
+</select>
+
+<label>Service</label>
+<select name="service_type" id="service_type" onchange="calculatePrice()">
+    <option value="disp1">DISPO Coating 1 Year</option>
+</select>
+
+<!-- CALENDAR -->
+<div class="calendar-header">
+    <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
+
+    <div id="monthLabel" class="month-label">Month</div>
+
+    <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
+</div>
+
+<label>Select Date</label>
+<div class="calendar-wrapper">
+    <button type="button" class="nav-btn" onclick="prevWeek()">‹</button>
+    
+    <div class="calendar-track" id="calendar"></div>
+
+    <button type="button" class="nav-btn" onclick="nextWeek()">›</button>
+</div>
+<input type="hidden" name="booking_date" id="booking_date" required>
+
+<!-- SERVICE MODE -->
+<label>Service Mode</label>
+<div class="options">
+    <div class="option" onclick="selectMode(this)">
+        SELF DROP
+        <input type="radio" name="service_mode" value="SELF_DROP" hidden required>
+    </div>
+
+    <div class="option" onclick="selectMode(this)">
+        PICKUP
+        <input type="radio" name="service_mode" value="PICKUP" hidden required>
+    </div>
+</div>
+
+<!-- TIMESLOTS -->
+<label>Time Slot</label>
+<div class="timeslots" id="timeslots"></div>
+
+<!-- CONTACT -->
+<label>Contact</label>
+<input type="text" name="contact" required>
+
+<!-- PRICE -->
+<div class="price-box">
+    RM <span id="price_display">0.00</span>
+</div>
+<input type="hidden" name="price" id="price">
+
+<button type="submit" class="submit-btn">Confirm Booking</button>
+
+</form>
+
+<script>
+/* PRICE TABLE */
+const priceTable = {
+    disp1: { Sedan:488, SUV_MPV:588, "LARGE-MPV_4X4":688 }
+};
+
+/* PRICE */
+function calculatePrice(){
+    let service = document.getElementById("service_type").value;
+    let car = document.getElementById("car_type").value;
+
+    let price = priceTable[service][car] || 0;
+
+    document.getElementById("price_display").innerText = price.toFixed(2);
+    document.getElementById("price").value = price;
+}
+
+let bookingData = {
+    "2026-03-29": 1,
+    "2026-03-30": 1, // FULL
+    "2026-03-31": 0
+};
+
+const MAX_SLOT = 1;
+
+/* CALENDAR */
+let startDate = new Date();
+
+function generateWeek(){
+    const cal = document.getElementById("calendar");
+    cal.innerHTML = "";
+
+    let monthSet = new Set();
+
+    for(let i=0;i<7;i++){
+        let d = new Date(startDate);
+        d.setDate(d.getDate()+i);
+
+        let dateStr = d.toISOString().split('T')[0];
+
+        monthSet.add(d.getMonth());
+
+        let booked = bookingData[dateStr] || 0;
+        let isFull = booked === 1;
+
+        let div = document.createElement("div");
+        div.className = "day";
+
+        if (isFull) div.classList.add("full");
+
+        div.innerHTML = `
+            <div>${d.toLocaleDateString('en-US',{weekday:'short'})}</div>
+            <div>${d.getDate()}</div>
+        `;
+
+        if(!isFull){
+            div.onclick = () => {
+                document.querySelectorAll('.day').forEach(x=>x.classList.remove('selected'));
+                div.classList.add('selected');
+
+                document.getElementById("booking_date").value = dateStr;
+
+                loadSlots(dateStr);
+                scrollToActive();
+            };
+        }
+
+        cal.appendChild(div);
+    }
+
+    updateMonthLabel(startDate);
+}
+
+function updateMonthLabel(date){
+    const monthNames = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+    ];
+
+    document.getElementById("monthLabel").innerText =
+        monthNames[date.getMonth()] + " " + date.getFullYear();
+}
+
+function scrollToActive() {
+    const selected = document.querySelector(".day.selected");
+    if (selected) {
+        selected.scrollIntoView({
+            behavior: "smooth",
+            inline: "center",
+            block: "nearest"
+        });
+    }
+}
+
+function prevWeek(){
+    startDate.setDate(startDate.getDate()-7);
+    generateWeek();
+}
+
+function nextWeek(){
+    startDate.setDate(startDate.getDate()+7);
+    generateWeek();
+}
+
+/* MODE */
+function selectMode(el){
+    document.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+}
+
+/* TIMESLOTS LOAD */
+function loadSlots(date){
+    fetch(`/get_slots?date=${date}`)
+    .then(res=>res.json())
+    .then(data=>{
+        let container = document.getElementById("timeslots");
+        container.innerHTML="";
+
+        data.slots.forEach(slot=>{
+            let div = document.createElement("div");
+            div.className="timeslot";
+            div.innerText=slot;
+
+            div.onclick=()=>{
+                document.querySelectorAll('.timeslot').forEach(x=>x.classList.remove('selected'));
+                div.classList.add('selected');
+                radio.checked=true;
+            };
+
+            let radio=document.createElement("input");
+            radio.type="radio";
+            radio.name="booking_time";
+            radio.value=slot;
+            radio.hidden=true;
+
+            div.appendChild(radio);
+            container.appendChild(div);
+        });
+    });
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded", ()=>{
+    generateWeek();
+    calculatePrice();
+});
+</script>
+
+</body>
+</html>
