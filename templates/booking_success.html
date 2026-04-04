@@ -3,13 +3,16 @@
 <head>
     <title>Booking Success</title>
 
+    <!-- ✅ IMPORTANT FOR MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
         body {
             margin: 0;
             font-family: Arial;
             background: radial-gradient(circle, #111, #000);
             color: white;
-            overflow: hidden;
+            /* ❌ removed overflow hidden */
         }
 
         canvas {
@@ -25,14 +28,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh; /* better for mobile */
+            padding: 15px;
         }
 
         .card {
             background: rgba(255,255,255,0.08);
-            padding: 30px;
+            padding: 20px;
             border-radius: 18px;
-            width: 360px;
+            width: 90%;
+            max-width: 380px;
             text-align: center;
             box-shadow: 0 0 25px rgba(0,255,200,0.3);
             animation: popIn 0.8s ease;
@@ -51,27 +56,56 @@
 
         h2 {
             color: #00ffcc;
+            font-size: 22px;
+        }
+
+        p {
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         button {
-            margin-top: 10px;
-            padding: 10px 15px;
+            padding: 12px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             background: #00ffcc;
             font-weight: bold;
+            width: 100%;
+            font-size: 14px;
         }
 
         button:hover {
             background: #00c9a7;
         }
+
+        /* 📱 SMALL DEVICES */
+        @media (max-width: 400px) {
+            h2 {
+                font-size: 18px;
+            }
+
+            p {
+                font-size: 13px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 
-
 <body>
 <canvas id="fx"></canvas>
+
 <div class="center">
     <div class="card">
         <h2>🎉 Booking Confirmed</h2>
@@ -81,8 +115,10 @@
         <p><b>Type:</b> {{ car_type }}</p>
         <p><b>Date:</b> {{ date }}</p>
 
-        <a href="/launch_page"><button>View Other Packages</button></a>
-        <a href="/new_booking"><button>New Booking</button></a>
+        <div class="btn-group">
+            <a href="/launch_page"><button>View Other Packages</button></a>
+            <a href="/new_booking"><button>New Booking</button></a>
+        </div>
     </div>
 </div>
 
@@ -94,13 +130,17 @@
 const canvas = document.getElementById("fx");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+/* ✅ RESPONSIVE CANVAS */
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 let particles = [];
 let confetti = [];
 
-/* 🎆 FIREWORK PARTICLE */
 class Firework {
     constructor(x, y) {
         this.x = x;
@@ -124,10 +164,10 @@ class Firework {
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
+        ctx.globalAlpha = 1;
     }
 }
 
-/* 🎊 CONFETTI */
 class Confetti {
     constructor() {
         this.x = Math.random() * canvas.width;
@@ -151,7 +191,6 @@ class Confetti {
     }
 }
 
-/* 🎆 CREATE FIREWORK BURST */
 function burst() {
     let x = Math.random() * canvas.width;
     let y = Math.random() * canvas.height / 2;
@@ -161,23 +200,19 @@ function burst() {
     }
 }
 
-/* 🎊 CREATE CONFETTI */
 for (let i = 0; i < 120; i++) {
     confetti.push(new Confetti());
 }
 
-/* 🔁 ANIMATION LOOP */
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // fireworks
     particles.forEach((p, i) => {
         p.update();
         p.draw();
         if (p.alpha <= 0) particles.splice(i, 1);
     });
 
-    // confetti
     confetti.forEach(c => {
         c.update();
         c.draw();
@@ -186,7 +221,6 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-/* 🎆 LOOP FIREWORKS */
 setInterval(burst, 700);
 animate();
 </script>
