@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master Solution</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 body {
     margin:0;
@@ -43,29 +43,36 @@ body {
 /* ================= NAVBAR GLASS ================= */
 .navbar {
     position: fixed;
-    top:0;
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:15px 30px;
-    background: rgba(20,20,20,0.6);
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 20px; /* tighter padding */
+    background: rgba(20,20,20,0.7);
     backdrop-filter: blur(12px);
-    z-index:10;
+
+    z-index: 1000;
+    box-sizing: border-box;
 }
 
-.navbar h2 {
-    color:#ffd700;
+/* FIX RIGHT SIDE LINKS */
+.navbar div {
+    display: flex;
+    gap: 15px;
 }
 
+/* CLEAN LINKS */
 .navbar a {
-    color:#be2ed6;
-    margin:0 10px;
-    text-decoration:none;
+    color: #be2ed6;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.2s;
 }
 
 .navbar a:hover {
-    color:#a855f7;
+    color: #ffd700;
 }
 
 /* ================= SECTIONS ================= */
@@ -81,20 +88,48 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+
     text-align: center;
 
-    min-height: 100vh; /* full screen height */
-    padding: 120px 20px 60px; /* space for navbar */
+    min-height: 100vh;
+
+    /* IMPORTANT: prevent navbar overlap */
+    padding-top: 90px;
+    padding-bottom: 40px;
 
     background: linear-gradient(45deg,#111,#2a0f3a,#111);
 }
 
 .logo {
-    display: block;
-    margin: 0 auto;
-    width: 40vw;   /* 40% of screen width */
-    max-width: 360px;
-    height: auto;
+    width: 35vw;
+    max-width: 260px;
+    min-width: 140px;
+    margin-bottom: 10px;
+
+    /* glow base */
+    filter: drop-shadow(0 0 10px #be2ed6);
+
+    /* animation */
+    animation: logoPulse 2.5s infinite ease-in-out;
+}
+
+/* PULSE + GLOW ANIMATION */
+@keyframes logoPulse {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 8px #be2ed6);
+    }
+
+    50% {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 25px #be2ed6)
+                drop-shadow(0 0 45px #ffd700);
+    }
+
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 8px #be2ed6);
+    }
 }
 
 /* TITLE */
@@ -133,8 +168,21 @@ body {
 }
 
 @keyframes glow {
-    from { text-shadow:0 0 10px #ffd700; }
+    from { text-shadow:0 0 10px #be2ed6; }
     to { text-shadow:0 0 25px #be2ed6; }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        text-shadow:
+            0 0 6px #be2ed6,
+            0 0 14px #be2ed6;
+    }
+    50% {
+        text-shadow:
+            0 0 12px #be2ed6,
+            0 0 25px #be2ed6;
+    }
 }
 
 /* ================= CARDS ================= */
@@ -240,6 +288,85 @@ body {
     transform: scale(1.03);
     box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
+
+.shine-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 42px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+
+    text-align: center;
+}
+
+.shine-title span {
+    position: relative;
+    display: inline-block;
+    margin: 0 10px;
+
+    color: #ffffff;
+
+    text-shadow:
+        0 0 8px #be2ed6,
+        0 0 18px #be2ed6;
+
+    animation: glowPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0%; }
+    100% { background-position: 200%; }
+}
+
+
+
+@keyframes shineSweep {
+    0% { left: -80%; }
+    100% { left: 130%; }
+}
+
+.top-banner {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.top-banner img {
+    width: 50%;
+    max-width: 700px;
+    height: 220px;
+    object-fit: cover;
+    justify-content: center;
+    border-radius: 14px;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+    border: 2px solid #9b5cff;
+
+    transition: transform 0.3s ease;
+}
+
+.top-banner img:hover {
+    transform: scale(1.02);
+}
+
+/* VIDEO SECTION */
+.video-section {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 2; /* above rain */
+}
+
+.video-section video {
+    width: 95%;
+    max-width: 900px;
+    border-radius: 14px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+
+    object-fit: cover;
+}
 </style>
 </head>
 
@@ -250,7 +377,7 @@ body {
 
 <!-- NAVBAR -->
 <div class="navbar">
-    <h2 class="shine">Shine Master</h2>
+    <h2 class="shine">SHINE MASTER SOLUTION (SA0650100-H)</h2>
     <div>
         <a href="#home">Home</a>
         <a href="#package">Package</a>
@@ -263,7 +390,11 @@ body {
 
     <img src="{{ url_for('static', filename='logoa.png') }}" alt="Shine Master Logo" class="logo">
 
-    <h1>✨ SHINE MASTER SOLUTION ✨</h1>
+    <h1 class="shine-title">
+          <span>SHINE</span>
+          <span>MASTER</span>
+          <span>SOLUTION</span>
+    </h1>
 
     <p>Polishing • Coating • Waxing</p>
 
@@ -276,7 +407,7 @@ body {
 
 
     <div class="card-container">
-        <a onclick="goToLaunch()" class="card-link">
+        <a onclick="goToDispo()" class="card-link">
         
             <div class="card">
                 <h3>DISPO Graphene Coating</h3>
@@ -301,6 +432,13 @@ body {
         </a>
         </div>
     </div>
+</div>
+
+<!-- VIDEO SECTION -->
+<div class="video-section">
+    <video autoplay muted loop playsinline>
+        <source src="/static/launch.mp4" type="video/mp4">
+    </video>
 </div>
 
 <!-- LOCATION 2 PANEL -->
@@ -331,6 +469,9 @@ body {
 
 <!-- FLOAT WHATSAPP BUTTON -->
 <div class="chat-toggle" onclick="openWhatsApp()">💬</div>
+<audio id="bg-music" loop>
+    <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
+</audio>
 
 <script>
 /* ================= WHATSAPP ================= */
@@ -356,8 +497,8 @@ function createRain() {
 
 createRain();
 
-function goToLaunch() {
-    window.location.href = "/launch_page";
+function goToDispo() {
+    window.location.href = "/dispo";
 }
 
 function goToMembers() {
@@ -367,6 +508,40 @@ function goToMembers() {
 function goToCoating() {
     window.location.href = "/coating";
 }
+
+let music = document.getElementById("bg-music");
+let started = false;
+
+function startMusic() {
+    if (started) return;
+    started = true;
+
+    if (!music) return;
+
+    music.muted = false;   // 🔥 important
+    music.volume = 0;
+
+    music.play().catch(err => console.log("Blocked:", err));
+
+    // smooth fade-in
+    let fade = setInterval(() => {
+        if (music.volume < 1) {
+            music.volume += 0.03;
+        } else {
+            clearInterval(fade);
+        }
+    }, 200);
+
+    // remove listeners after start
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("scroll", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+}
+
+// triggers
+document.addEventListener("click", startMusic);
+document.addEventListener("scroll", startMusic);
+document.addEventListener("touchstart", startMusic);
 
 </script>
 
