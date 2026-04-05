@@ -351,6 +351,15 @@ def logout():
 def launch_page():
     return render_template('launch_page.html')
 
+@app.route('/members')
+def members():
+    return render_template('members.html')
+
+@app.route('/coating')
+def coating():
+    return render_template('coating.html')
+
+
 # ==== QR-CODE ======
 @app.route('/qr_booking')
 def qr_booking():
