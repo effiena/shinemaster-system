@@ -31,7 +31,7 @@ body {
     position: absolute;
     width: 2px;
     height: 60px;
-    background: linear-gradient(to bottom, #ffd700, transparent);
+    background: linear-gradient(to bottom, #be2ed6, transparent);
     animation: fall linear infinite;
     opacity: 0.6;
 }
@@ -59,7 +59,7 @@ body {
 }
 
 .navbar a {
-    color:white;
+    color:#be2ed6;
     margin:0 10px;
     text-decoration:none;
 }
@@ -88,7 +88,7 @@ body {
 
 @keyframes glow {
     from { text-shadow:0 0 10px #ffd700; }
-    to { text-shadow:0 0 25px #ffd700; }
+    to { text-shadow:0 0 25px #be2ed6; }
 }
 
 /* ================= CARDS ================= */
@@ -174,6 +174,16 @@ body {
     50% { filter: brightness(1.4); }
     100% { filter: brightness(1); }
 }
+
+#home {
+    text-align: center; /* centers text + inline elements */
+}
+
+.logo {
+    width: 120px;
+    display: block;
+    margin: 0 auto 15px; /* centers logo */
+}
 </style>
 </head>
 
@@ -193,11 +203,16 @@ body {
 </div>
 
 <!-- HOME -->
-<div class="section home" id="home">
-    <h1>Shine Master Solution ✨</h1>
-    <p>Premium Car Wash & Detailing Service</p>
-</div>
 
+<div class="section home" id="home">
+
+    <!-- LOGO -->
+    <img src="your-logo.png" alt="Shine Master Logo" class="logo">
+
+    <h1>✨ SHINE MASTER SOLUTION ✨</h1>
+    <p>Polishing - Coating - Waxing</p>
+
+</div>
 <!-- PACKAGE -->
 <div class="section" id="package">
     <h2>Packages</h2>
