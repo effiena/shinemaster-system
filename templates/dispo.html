@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #000;
+    color: #fff;
+}
+
+/* CENTER CONTAINER */
+.wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* IMAGE CONTAINER (REPLACED VIDEO) */
+.image-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #000;
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    object-fit: cover;
+}
+
+/* CONTENT SAME WIDTH AS IMAGE */
+.content {
+    width: 100%;
+    text-align: center;
+
+    padding: 14px 12px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+
+    margin-top: 10px;
+}
+
+/* TEXT */
+h1 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.promo {
+    font-size: 14px;
+    background: red;
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.benefits {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    color: #ddd;
+}
+
+/* BUTTON */
+.cta {
+    display: inline-block;
+    padding: 14px 35px;
+    background: linear-gradient(135deg, #9b5cff, #ffd500);
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    font-size: 18px;
+    text-decoration: none;
+    box-shadow: 0 0 20px rgba(155, 92, 255, 0.4);
+    transition: 0.3s ease;
+}
+
+.cta:hover {
+    transform: scale(1.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- IMAGE (REPLACES VIDEO) -->
+    <div class="image-container">
+        <img src="/static/4.png" alt="Shine Master Banner">
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+        <h1>SHINE MASTER</h1>
+        <div class="subtitle">Auto Detailing Specialist</div>
+
+        <div class="promo">RM200 OFF</div>
+
+        <div class="benefits">
+            DISPO GRAPHENE COATING<br>
+            EASY CARE • LESS MAINTENANCE<br>
+            PROTECTION UP TO 1 YEAR
+        </div>
+
+        <a href="/new_booking" class="cta">BOOK WITH US NOW</a>
+    </div>
+
+</div>
+
+<!-- AUDIO -->
+<audio id="bg-music" loop>
+    <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
+</audio>
+
+<script>
+let music = document.getElementById("bg-music");
+let started = false;
+
+/* START MUSIC ON FIRST CLICK */
+function startMusic() {
+    if (started) return;
+    started = true;
+
+    if (!music) return;
+
+    music.volume = 0;
+    music.play().catch(err => console.log("Autoplay blocked:", err));
+
+    let fade = setInterval(() => {
+        if (music.volume < 1) {
+            music.volume = Math.min(music.volume + 0.03, 1);
+        } else {
+            clearInterval(fade);
+        }
+    }, 200);
+
+    document.removeEventListener("click", startMusic);
+    document.removeEventListener("touchstart", startMusic);
+}
+
+document.addEventListener("click", startMusic);
+document.addEventListener("touchstart", startMusic);
+
+/* OPTIONAL TOGGLE */
+function toggleSound() {
+    if (!music) return;
+    music.muted = !music.muted;
+}
+</script>
+
+</body>
+</html>
