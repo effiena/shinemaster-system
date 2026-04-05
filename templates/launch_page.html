@@ -69,8 +69,8 @@
 
 .slider {
     position: relative;
-    max-width: 420px;
-    margin: auto;
+    width: 100%;
+    max-width: 100%;
 }
 
 .slide {
@@ -154,12 +154,11 @@ document.querySelector('.prev').onclick = () => {
     showSlide(index);
 };
 
-<!--// OPTIONAL: Auto slide every 3 seconds
-setInterval(() => {
-    index = (index + 1) % slides.length;
-    showSlide(index);
-}, 3000);
--->
+// OPTIONAL: Auto slide every 3 seconds
+//setInterval(() => {
+//    index = (index + 1) % slides.length;
+//    showSlide(index);
+//}, 3000);
 
 // MUSIC (SAFE INIT)
 let music = document.getElementById("bg-music");
