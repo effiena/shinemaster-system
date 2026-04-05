@@ -2,201 +2,114 @@
 <html>
 <head>
 <title>Shine Master Packages</title>
+
 <style>
-body { background:#0f0f0f; font-family:Arial; color:white; margin:0; }
-.header { text-align:center; padding:30px; }
+body {
+    background:#0f0f0f;
+    font-family:Arial;
+    color:white;
+    margin:0;
+    text-align:center;
+}
+
+/* HEADER */
+.header {
+    padding:30px;
+}
 .header h1 { color:#ffd500; }
 .header h2 { color:#9b5cff; }
-.container { display:flex; flex-wrap:wrap; justify-content:center; gap:25px; padding:20px; }
 
-.card-link {
-  text-decoration:none; /* remove underline */
-  color:inherit;        /* keep text colors */
-  width:320px;
+/* SLIDER */
+.slider {
+    position: relative;
+    max-width: 500px;
+    margin: 20px auto;
 }
 
-.section h2{
-text-align:center; padding:30px; 
+/* IMAGES */
+.slide {
+    width: 100%;
+    border-radius: 12px;
+    display: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
 }
 
-.card {
-  background:#1a1a1a;
-  border-radius:10px;
-  padding:20px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.6);
-  border-top:4px solid #ffd500;
-  transition: transform 0.2s;
-}
-.card:hover {
-  transform: translateY(-4px);
-  cursor:pointer;
+.slide.active {
+    display: block;
 }
 
-.card h3 { color:#ffd500; }
-.price { color:#9b5cff; font-size:18px; margin-bottom:10px; }
-ul { padding-left:18px; }
-li { margin-bottom:6px; font-size:14px; }
+/* BUTTONS */
+.prev, .next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
+
+.prev:hover, .next:hover {
+    background: #9b5cff;
+}
+
+/* MOBILE */
+@media (max-width:600px){
+    .slider { max-width: 90%; }
+}
 </style>
 </head>
+
 <body>
 
 <div class="header">
-<h1>Shine Master</h1>
-<h2>Auto Detailing Packages</h2>
-<p>Nano Graphene Coating</p>
+    <h1>SHINE MASTER SOLUTION</h1>
+    <h2>Auto Detailing Packages</h2>
+    <p>Coating - Polish - Waxing</p>
 </div>
 
-<div class="container">
+<!-- SLIDER -->
+<div class="slider">
 
-<!-- MAINTENANCE -->
+    <img src="/static/allphotos/condcoat.png" class="slide active">
+    <img src="/static/allphotos/dispoc.png" class="slide">
+    <img src="/static/allphotos/dispoe.png" class="slide">
+    <img src="/static/allphotos/graph123.png" class="slide">
+    <img src="/static/allphotos/graphene.png" class="slide">
+    <img src="/static/allphotos/maint.png" class="slide">
+    <img src="/static/allphotos/notes.png" class="slide">
+    <img src="/static/allphotos/polishw.png" class="slide">
 
-<div class="card">
-
-<h3>Maintenance Wash</h3>
-
-<div class="price">
-Sedan RM98<br>
-SUV / MPV RM108<br>
-Large MPV / 4x4 RM118
-</div>
-
-<ul>
-<li>Pre wash shampoo</li>
-<li>Snow wash shampoo</li>
-<li>Clay cloth processing 粘土布处理</li>
-<li>Nano graphene sealant</li>
-<li>Interior dust removal</li>
-<li>Interior vacuum</li>
-<li>Interior cleaner wipe</li>
-<li>Air disinfectant</li>
-<li>Engine bay detailing</li>
-<li>(Dressing)</li>
-<li>Rim wash</li>
-<li>Tyre shine</li>
-</ul>
+    <button class="prev">&#10094;</button>
+    <button class="next">&#10095;</button>
 
 </div>
 
-<!-- POLISHING -->
+<script>
+let slides = document.querySelectorAll('.slide');
+let index = 0;
 
-<div class="card">
+function showSlide(i) {
+    slides.forEach(slide => slide.classList.remove('active'));
+    slides[i].classList.add('active');
+}
 
-<h3>Polishing + Waxing</h3>
+document.querySelector('.next').onclick = () => {
+    index = (index + 1) % slides.length;
+    showSlide(index);
+};
 
-<div class="price">
-Sedan RM288<br>
-SUV / MPV RM388<br>
-Large MPV / 4x4 RM488
-</div>
+document.querySelector('.prev').onclick = () => {
+    index = (index - 1 + slides.length) % slides.length;
+    showSlide(index);
+};
+</script>
 
-<ul>
-<li>Pre wash shampoo</li>
-<li>Snow wash shampoo</li>
-<li>Clay cloth processing</li>
-<li>Two layer polishing</li>
-<li>Waxing</li>
-<li>All window degreaser</li>
-<li>Interior cleaning</li>
-<li>Air disinfectant</li>
-<li>Engine bay detailing</li>
-<li>(Crystal coating)</li>
-<li>Rim wash</li>
-<li>Tyre shine</li>
-</ul>
-
-</div>
-
-<!-- INTERIOR -->
-
-<div class="card">
-
-<h3>Interior Conditioner</h3>
-
-<div class="price">
-Sedan RM188<br>
-SUV / MPV RM288<br>
-Large MPV / 4x4 RM388
-</div>
-
-<ul>
-<li>Deep interior cleaning</li>
-<li>Seat cleaning</li>
-<li>Dashboard treatment</li>
-<li>Interior vacuum</li>
-<li>Air disinfectant</li>
-</ul>
-
-</div>
-
-<!-- INTERIOR - COATING -->
-
-<div class="card">
-
-<h3>Interior Coating</h3>
-
-<div class="price">
-RM288 / RM388 / RM488
-</div>
-
-<ul>
-<li>Deep interior cleaning</li>
-<li>Seat cleaning</li>
-<li>Dashboard treatment</li>
-<li>Interior vacuum</li>
-<li>Air disinfectant</li>
-</ul>
-
-</div>
-
-<!-- GRAPHENE COATING -->
-
-<div class="card">
-
-<h3>Graphene Coating</h3>
-
-<div class="price">
-2 Years : RM688 / RM788 / RM888<br>
-3 Years : RM888 / RM988 / RM1088
-</div>
-
-<ul>
-<li>Full polishing preparation</li>
-<li>Graphene coating protection</li>
-<li>Paint gloss enhancement</li>
-<li>Water repellent protection</li>
-<li>The coating resists the adhesion <br>
-ofcontaminants such as dirt, grease, <br>
-bird droppings, and resin, making it <br>
-easy clean</li>
-</ul>
-
-</div>
-
-<!-- Disposable Coating -->
-
-<div class="card">
-
-<h3>Disposable Coating</h3>
-
-<div class="price">
-1 Years : RM488 / RM588 / RM688<br>
-2 Years : RM588 / RM688 / RM788<br>
-3 Years : RM788 / RM888 / RM988
-</div>
-
-<ul>
-<li>Full polishing preparation</li>
-<li>Graphene coating protection</li>
-<li>Paint gloss enhancement</li>
-<li>Water repellent protection</li>
-<li>The coating resists the adhesion <br>
-ofcontaminants such as dirt, grease, <br>
-bird droppings, and resin, making it <br>
-easy clean</li>
-</ul>
-
-</div>
-
-</div>
-
+</body>
 </html>
