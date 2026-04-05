@@ -75,15 +75,61 @@ body {
     z-index:1;
 }
 
+/* ================= HERO CENTER FIX ================= */
 .home {
-    text-align:center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    min-height: 100vh; /* full screen height */
+    padding: 120px 20px 60px; /* space for navbar */
+
     background: linear-gradient(45deg,#111,#2a0f3a,#111);
 }
 
+.logo {
+    display: block;
+    margin: 0 auto;
+    width: 40vw;   /* 40% of screen width */
+    max-width: 360px;
+    height: auto;
+}
+
+/* TITLE */
 .home h1 {
-    color:#ffd700;
-    font-size:40px;
+    font-size: 42px;
+    color: #be2ed6;
+    margin: 10px 0;
+
     animation: glow 2s infinite alternate;
+}
+
+/* SUBTEXT */
+.home p {
+    font-size: 18px;
+    color: #ccc;
+}
+
+/* ================= MOBILE OPTIMIZATION ================= */
+@media (max-width: 600px) {
+
+    .logo {
+        width: 100px;
+    }
+
+    .home h1 {
+        font-size: 26px;
+    }
+
+    .home p {
+        font-size: 14px;
+    }
+
+    .section {
+        padding: 70px 20px;
+    }
 }
 
 @keyframes glow {
@@ -179,10 +225,20 @@ body {
     text-align: center; /* centers text + inline elements */
 }
 
-.logo {
-    width: 120px;
+.card-link {
+    text-decoration: none;
+    color: inherit;
     display: block;
-    margin: 0 auto 15px; /* centers logo */
+}
+
+.card {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
 </style>
 </head>
@@ -203,37 +259,46 @@ body {
 </div>
 
 <!-- HOME -->
-
 <div class="section home" id="home">
 
-    <!-- LOGO -->
-    <img src="your-logo.png" alt="Shine Master Logo" class="logo">
+    <img src="{{ url_for('static', filename='logoa.png') }}" alt="Shine Master Logo" class="logo">
 
     <h1>✨ SHINE MASTER SOLUTION ✨</h1>
-    <p>Polishing - Coating - Waxing</p>
+
+    <p>Polishing • Coating • Waxing</p>
 
 </div>
+
+
 <!-- PACKAGE -->
 <div class="section" id="package">
     <h2>Packages</h2>
 
+
     <div class="card-container">
-        <div class="card">
-            <h3>1 Year Wash</h3>
-            <p>24 Wash + Maintenance</p>
-            <p>RM480</p>
-        </div>
+        <a onclick="goToLaunch()" class="card-link">
+        
+            <div class="card">
+                <h3>DISPO Graphene Coating</h3>
+                <p> RECOMMENDED PACKAGES </p>
+                <p> Discount RM200 up to first 100 cars </p>
+            </div>
+        </a>
+        
+        <a onclick="goToMembers()" class="card-link">    
+            <div class="card">
+                <h3>Membership Packages</h3>
+                <p> Washing </p>
+                <p> Including Snow Wash And Interior Touch </p>
+            </div>
+        </a>
 
         <div class="card">
-            <h3>2 Years Wash</h3>
-            <p>48 Wash + Polish</p>
-            <p>RM960</p>
-        </div>
-
-        <div class="card">
-            <h3>Full Detailing</h3>
+        <a onclick="goToCoating()" class="card-link">
+            <h3>Detailings Packages</h3>
             <p>Interior + Exterior Premium</p>
-            <p>Custom Price</p>
+            <p>Interior And Exterior Touch Up</p>
+        </a>
         </div>
     </div>
 </div>
@@ -290,6 +355,19 @@ function createRain() {
 }
 
 createRain();
+
+function goToLaunch() {
+    window.location.href = "/launch_page";
+}
+
+function goToMembers() {
+    window.location.href = "/members";
+}
+
+function goToCoating() {
+    window.location.href = "/coating";
+}
+
 </script>
 
 </body>
