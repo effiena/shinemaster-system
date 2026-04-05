@@ -359,7 +359,9 @@ def members():
 def coating():
     return render_template('coating.html')
 
-
+@app.route('/dispo')
+def dispo():
+    return render_template('dispo.html')
 # ==== QR-CODE ======
 @app.route('/qr_booking')
 def qr_booking():
