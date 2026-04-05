@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master Solution</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #0f0f0f;
+    color: white;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a1a;
+    padding: 15px 30px;
+}
+
+.navbar h2 {
+    color: #ffd700;
+}
+
+.navbar a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.navbar a:hover {
+    color: #a855f7;
+}
+
+/* SECTIONS */
+.section {
+    padding: 60px 40px;
+}
+
+/* HOME */
+.home {
+    background: linear-gradient(to right, #1a1a1a, #2a0f3a);
+    text-align: center;
+}
+
+.home h1 {
+    font-size: 40px;
+    color: #ffd700;
+}
+
+/* CARDS */
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 12px;
+    flex: 1 1 250px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    background: #2a0f3a;
+}
+
+/* BUTTON */
+.btn {
+    background: #ffd700;
+    color: black;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #a855f7;
+    color: white;
+}
+
+/* BOOKING FORM */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+}
+
+/* LIVE CHAT */
+.chat-box {
+    background: #1a1a1a;
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.chat-input {
+    display: flex;
+    margin-top: 10px;
+}
+
+.chat-input input {
+    flex: 1;
+}
+
+/* MAP */
+iframe {
+    width: 100%;
+    height: 300px;
+    border-radius: 10px;
+    border: none;
+}
+
+/* CHAT BUTTON */
+.chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #a855f7;
+    color: white;
+    font-size: 22px;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(168,85,247,0.6);
+    z-index: 999;
+}
+
+/* CHAT BOX */
+.chat-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 15px;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    z-index: 999;
+}
+
+/* HEADER */
+.chat-header {
+    background: #a855f7;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* BODY */
+.chat-body {
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    color: black;
+}
+
+/* FOOTER */
+.chat-footer {
+    display: flex;
+    border-top: 1px solid #ddd;
+}
+
+.chat-footer input {
+    flex: 1;
+    border: none;
+    padding: 10px;
+}
+
+.chat-footer button {
+    background: #a855f7;
+    color: white;
+    border: none;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <h2>Shine Master</h2>
+    <div>
+        <a href="#home">Home</a>
+        <a href="#profile">Profile</a>
+        <a href="#package">Package</a>
+        <a href="#hours">Open Hours</a>
+        <a href="#booking">Booking</a>
+        <a href="#chat">Live Chat</a>
+        <a href="#location">Location</a>
+    </div>
+</div>
+
+<!-- HOME -->
+<div class="section home" id="home">
+    <h1>Welcome to Shine Master Solution ✨</h1>
+    <p>Premium Car Wash & Detailing Service</p>
+</div>
+
+<!-- PROFILE -->
+<div class="section" id="profile">
+    <h2>Profile</h2>
+    <p>We provide professional car detailing, polishing, and coating services using high-quality materials.</p>
+</div>
+
+<!-- PACKAGE INFO -->
+<div class="section" id="package">
+    <h2>Packages</h2>
+
+    <div class="card-container">
+        <div class="card">
+            <h3>1 Year Wash</h3>
+            <p>24 Wash + Free Maintenance</p>
+            <p>From RM480</p>
+        </div>
+
+        <div class="card">
+            <h3>2 Years Wash</h3>
+            <p>48 Wash + Free Polishing</p>
+            <p>From RM960</p>
+        </div>
+
+        <div class="card">
+            <h3>Full Detailing</h3>
+            <p>Interior + Exterior Premium Care</p>
+            <p>Custom Price</p>
+        </div>
+    </div>
+</div>
+
+<!-- OPEN HOURS -->
+<div class="section" id="hours">
+    <h2>Open Hours</h2>
+    <p>Mon - Fri: 9AM - 7PM</p>
+    <p>Sat - Sun: 10AM - 6PM</p>
+</div>
+
+<!-- BOOKING -->
+<div class="section" id="booking">
+    <h2>Booking</h2>
+
+    <input type="text" placeholder="Your Name">
+    <input type="date">
+    <textarea placeholder="Service Needed"></textarea>
+
+    <button class="btn">Book Now</button>
+</div>
+
+<!-- LIVE CHAT -->
+<div class="section" id="chat">
+    <h2>Live Chat</h2>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="chat-input">
+        <input type="text" id="msg" placeholder="Type message...">
+        <button class="btn" onclick="sendMsg()">Send</button>
+    </div>
+</div>
+
+<!-- LOCATION -->
+<div class="section" id="location">
+    <h2>Our Location</h2>
+
+    <iframe 
+        src="https://maps.google.com/maps?q=Johor&t=&z=13&ie=UTF8&iwloc=&output=embed">
+    </iframe>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+function sendMsg() {
+    let msg = document.getElementById("msg").value;
+    let box = document.getElementById("chatBox");
+
+    if (msg.trim() !== "") {
+        box.innerHTML += "<p><b>You:</b> " + msg + "</p>";
+        document.getElementById("msg").value = "";
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+
+function createRain() {
+    const rain = document.querySelector('.rain');
+
+    for (let i = 0; i < 100; i++) {
+        let drop = document.createElement('div');
+        drop.classList.add('drop');
+
+        drop.style.left = Math.random() * 100 + 'vw';
+        drop.style.animationDuration = (0.5 + Math.random()) + 's';
+        drop.style.opacity = Math.random();
+
+        rain.appendChild(drop);
+    }
+}
+
+createRain();
+function toggleChat() {
+    let chat = document.getElementById("chatBox");
+    chat.style.display = (chat.style.display === "flex") ? "none" : "flex";
+}
+
+function sendMessage() {
+    let input = document.getElementById("chatInput");
+    let msg = input.value;
+    let box = document.getElementById("chatMessages");
+
+    if (msg.trim() !== "") {
+        box.innerHTML += "<p><b>You:</b> " + msg + "</p>";
+        input.value = "";
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+
+var socket = io();
+
+// ⚠️ Replace with real logged-in user later
+var user_id = Math.floor(Math.random() * 1000);
+
+socket.emit("join", {user_id: user_id});
+
+// SEND
+function sendMessage() {
+    let input = document.getElementById("chatInput");
+    let msg = input.value;
+
+    if (msg.trim() !== "") {
+        socket.emit("send_message", {
+            user_id: user_id,
+            message: msg
+        });
+        input.value = "";
+    }
+}
+
+// RECEIVE (admin reply)
+socket.on("receive_message", function(data) {
+    let box = document.getElementById("chatMessages");
+
+    box.innerHTML += `<p><b>${data.sender}:</b> ${data.message}</p>`;
+    box.scrollTop = box.scrollHeight;
+});
+
+
+</script>
+<!-- Floating Chat Button -->
+<div class="chat-toggle" onclick="toggleChat()">💬</div>
+
+<!-- Chat Box -->
+<div class="chat-container" id="chatBox">
+    <div class="chat-header">
+        Live Chat
+        <span onclick="toggleChat()">✖</span>
+    </div>
+
+    <div class="chat-body" id="chatMessages"></div>
+
+    <div class="chat-footer">
+        <input type="text" id="chatInput" placeholder="Type message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+</body>
+</html>
