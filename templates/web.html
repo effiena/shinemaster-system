@@ -1,16 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-1682589334458752"
-     data-ad-slot="1234567890"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1682589334458752"
+     crossorigin="anonymous"></script>
 
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shine Master Solution</title>
@@ -58,34 +51,53 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 12px 20px; /* tighter padding */
-    background: rgba(20,20,20,0.7);
+    padding: 10px 20px;
+    background: rgba(20,20,20,0.75);
     backdrop-filter: blur(12px);
 
     z-index: 1000;
-    box-sizing: border-box;
 }
 
-/* FIX RIGHT SIDE LINKS */
-.navbar div {
+/* LEFT TITLE */
+.nav-left h2 {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+/* RIGHT MENU */
+.nav-right {
     display: flex;
     gap: 15px;
 }
 
-/* CLEAN LINKS */
-.navbar a {
+/* LINKS */
+.nav-right a {
     color: #be2ed6;
     text-decoration: none;
     font-size: 14px;
-    transition: 0.2s;
 }
 
-.navbar a:hover {
+.nav-right a:hover {
     color: #ffd700;
+}
+@media (max-width: 768px) {
+
+    .nav-left h2 {
+        font-size: 13px;
+    }
+
+    .nav-right {
+        gap: 10px;
+    }
+
+    .nav-right a {
+        font-size: 12px;
+    }
 }
 
 /* ================= SECTIONS ================= */
@@ -106,8 +118,8 @@ body {
 
     min-height: 100vh;
 
-    /* IMPORTANT: prevent navbar overlap */
-    padding-top: 90px;
+    /* FIX: better spacing */
+    padding-top: 100px;
     padding-bottom: 40px;
 
     background: linear-gradient(45deg,#111,#2a0f3a,#111);
@@ -117,7 +129,7 @@ body {
     width: 35vw;
     max-width: 260px;
     min-width: 140px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 
     /* glow base */
     filter: drop-shadow(0 0 10px #be2ed6);
@@ -156,7 +168,7 @@ body {
 
 /* SUBTEXT */
 .home p {
-    font-size: 18px;
+    font-size: 10px;
     color: #ccc;
 }
 
@@ -390,13 +402,17 @@ body {
 
 <!-- NAVBAR -->
 <div class="navbar">
-    <h2 class="shine">SHINE MASTER SOLUTION (SA0650100-H)</h2>
-    <div>
+    <div class="nav-left">
+        <h2 class="shine">SHINE MASTER SOLUTION</h2>
+    </div>
+
+    <div class="nav-right">
         <a href="#home">Home</a>
         <a href="#package">Package</a>
         <a href="#location">Location</a>
     </div>
 </div>
+
 
 <!-- HOME -->
 <div class="section home" id="home">
@@ -470,6 +486,7 @@ body {
         <div class="map-info">
             <h3>Visit Us</h3>
             <p>Shine Master Solution</p>
+            <p>(SA0650100-H)</p>
             <p>68, Jalan Putra 1</p>
             <p>Taman Tan Sri Yaacob</p>
             <p>81300 Skudai, Johor</p>
