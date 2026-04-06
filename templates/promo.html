@@ -7,8 +7,8 @@
 
 <style>
 * {
-    margin: 2;
-    padding: 2;
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
     font-family: Arial, sans-serif;
 }
@@ -25,22 +25,24 @@ body {
     margin: 0 auto;
 }
 
-.video-container {
+/* IMAGE CONTAINER (REPLACED VIDEO) */
+.image-container {
     width: 100%;
     max-width: 500px;
     margin: 0 auto;
     background: #000;
 }
 
-/* FIX: prevent cropping */
-video {
+.image-container img {
     width: 100%;
     height: auto;
     display: block;
-
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    object-fit: cover;
 }
 
-/* CONTENT SAME WIDTH AS VIDEO */
+/* CONTENT SAME WIDTH AS IMAGE */
 .content {
     width: 100%;
     text-align: center;
@@ -55,7 +57,7 @@ video {
     margin-top: 10px;
 }
 
-/* TEXT (SMALL + BALANCED) */
+/* TEXT */
 h1 {
     font-size: 22px;
     margin-bottom: 6px;
@@ -83,6 +85,7 @@ h1 {
     color: #ddd;
 }
 
+/* BUTTON */
 .cta {
     display: inline-block;
     padding: 14px 35px;
@@ -107,11 +110,9 @@ h1 {
 
 <div class="wrapper">
 
-    <!-- VIDEO -->
-    <div class="video-container">
-        <video autoplay muted loop playsinline>
-            <source src="/static/audio/team.mp4" type="video/mp4">
-        </video>
+    <!-- IMAGE (REPLACES VIDEO) -->
+    <div class="image-container">
+        <img src="/static/4.png" alt="Shine Master Banner">
     </div>
 
     <!-- CONTENT -->
@@ -132,6 +133,7 @@ h1 {
 
 </div>
 
+<!-- AUDIO -->
 <audio id="bg-music" loop>
     <source src="{{ url_for('static', filename='audio/wetted.m4a') }}" type="audio/mp4">
 </audio>
@@ -140,7 +142,7 @@ h1 {
 let music = document.getElementById("bg-music");
 let started = false;
 
-/* 🎵 START MUSIC ON FIRST INTERACTION */
+/* START MUSIC ON FIRST CLICK */
 function startMusic() {
     if (started) return;
     started = true;
@@ -148,10 +150,8 @@ function startMusic() {
     if (!music) return;
 
     music.volume = 0;
-
     music.play().catch(err => console.log("Autoplay blocked:", err));
 
-    // smooth fade in
     let fade = setInterval(() => {
         if (music.volume < 1) {
             music.volume = Math.min(music.volume + 0.03, 1);
@@ -167,7 +167,7 @@ function startMusic() {
 document.addEventListener("click", startMusic);
 document.addEventListener("touchstart", startMusic);
 
-/* 🔊 TOGGLE SOUND */
+/* OPTIONAL TOGGLE */
 function toggleSound() {
     if (!music) return;
     music.muted = !music.muted;
