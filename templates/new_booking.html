@@ -368,8 +368,7 @@ function selectMode(el){
 
 /* CALENDAR */
 let startDate = new Date();
-
-function generateWeek(){
+async function generateWeek(){
     const cal = document.getElementById("calendar");
     cal.innerHTML = "";
 
@@ -379,25 +378,39 @@ function generateWeek(){
 
         let dateStr = d.toISOString().split('T')[0];
 
+        // 🔥 CALL BACKEND
+        let res = await fetch(`/get_slots?date=${dateStr}`);
+        let data = await res.json();
+
+        let isFull = data.booked.length >= 1; // 🔥 1 slot = full
+
         let div = document.createElement("div");
         div.className = "day";
+
+        if(isFull){
+            div.classList.add("full");
+        }
 
         div.innerHTML = `
             <div>${d.toLocaleDateString('en-US',{weekday:'short'})}</div>
             <div>${d.getDate()}</div>
+            ${isFull ? "<div style='font-size:10px;color:red;'>FULL</div>" : ""}
         `;
 
-        div.onclick = () => {
-            document.querySelectorAll('.day').forEach(x=>x.classList.remove('selected'));
-            div.classList.add('selected');
-            document.getElementById("booking_date").value = dateStr;
-        };
+        if(!isFull){
+            div.onclick = () => {
+                document.querySelectorAll('.day').forEach(x=>x.classList.remove('selected'));
+                div.classList.add('selected');
+                document.getElementById("booking_date").value = dateStr;
+            };
+        }
 
         cal.appendChild(div);
     }
 
     updateMonthLabel(startDate);
 }
+
 
 function updateMonthLabel(date){
     const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
