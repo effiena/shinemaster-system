@@ -743,7 +743,7 @@ def check_loyalty(car_plate):
     return jsonify({"paid": paid, "eligible": eligible})
 
 # ================= DASHBOARD =================
-# Mapping service codes to human-readable names
+
 SERVICE_NAMES = {
     "wash_basic": "CAR WASH - BASIC",
     "wash_special": "CAR WASH - SPECIAL",
@@ -753,63 +753,79 @@ SERVICE_NAMES = {
     "coat3": "COATING - 3 YEAR",
     "disp2": "DISPOSABLE - 2 YEAR",
     "disp3": "DISPOSABLE - 3 YEAR",
+    "DISPO_GRAPHENE_PROMO": "DISPO GRAPHENE COATING PROMO",
     "wax": "WAXING",
     "int_detail": "INTERIOR DETAILING",
     "int_coat": "INTERIOR COATING"
 }
+
+def safe_invoice(row):
+    inv = row["invoice_no"] if row["invoice_no"] else ""
+    if not inv or inv.strip() == "":
+        return f"INV-{row['id']:05d}"
+    return inv
 
 @app.route("/dashboard")
 def dashboard():
     if session.get("role") != "admin":
         return redirect("/pos")
 
-    # Revenue & recent sales
     data = get_revenue_data()
     low_stock = get_low_stock()
 
-    # Latest 5 confirmed bookings
     conn = get_db_connection()
-    raw_bookings = conn.execute("""
+
+    bookings_raw = conn.execute("""
         SELECT car_plate, service_type, booking_date, booking_time, type
         FROM bookings
         WHERE LOWER(status)='confirmed'
         ORDER BY id DESC
-        LIMIT 20
+        LIMIT 10
     """).fetchall()
-    promo_raw = conn.execute("""
-        SELECT car_plate, service_type, booking_date, booking_time, type
-        FROM bookings
-        WHERE LOWER(status)='confirmed'
-        ORDER BY id DESC
-        LIMIT 20
+
+    recent_sales_raw = conn.execute("""
+        SELECT
+            id,
+            invoice_no,
+            car_plate,
+            car_type,
+            service_type,
+            payment_method,
+            price,
+            created_at,
+            payment_status
+        FROM orders
+        ORDER BY created_at DESC, id DESC
+        LIMIT 10
     """).fetchall()
 
     conn.close()
 
-
-   # Map service codes to human-readable names
     new_bookings = []
-    for b in raw_bookings:
+    for b in bookings_raw:
         new_bookings.append({
             "car_plate": b["car_plate"] or "-",
-            "service": SERVICE_NAMES.get(b["service_type"], b["service_type"] or "-"),
+            "service": SERVICE_NAMES.get(b["service_type"], b["service_type"]),
             "date": b["booking_date"] or "-",
             "time": b["booking_time"] or "-",
             "type": b["type"] or "normal"
         })
-    promo_bookings = []
-    for b in promo_raw:
-        promo_bookings.append({
-            "car_plate": b["car_plate"] or "-",
-            "service": SERVICE_NAMES.get(b["service_type"], b["service_type"] or "-"),
-            "date": b["booking_date"] or "-",
-            "time": b["booking_time"] or "-",
-            "type": "promo"
+
+    recent_sales = []
+
+    for r in recent_sales_raw:
+        recent_sales.append({
+            "id": r["id"],
+            "invoice": safe_invoice(r),
+            "car_plate": r["car_plate"] or "-",
+            "car_type": r["car_type"] or "-",
+            "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
+            "payment_method": r["payment_method"] or "-",
+            "price": r["price"] or 0,
+            "date": r["created_at"][:10] if r["created_at"] else "-",
+            "time": r["created_at"][11:19] if r["created_at"] else "-",
+            "status": r["payment_status"] or "-"
         })
-
-
-    new_bookings = promo_bookings + new_bookings
-
 
     return render_template(
         "dashboard.html",
@@ -817,66 +833,93 @@ def dashboard():
         week_revenue=data["week_revenue"],
         month_revenue=data["month_revenue"],
         cars_today=data["cars_today"],
-        recent_sales=data["recent_sales"],
+        recent_sales=recent_sales,
         new_bookings=new_bookings,
         low_stock=low_stock
     )
 
-@app.route("/dashboard_data")
-def dashboard_data():
-    if session.get("role") != "admin":
-        return jsonify({"error": "Unauthorized"}), 403
-    return jsonify(get_revenue_data())
+# ================= REVENUE + RECENT SALES =================
 
 def get_revenue_data():
     conn = get_db_connection()
     now = now_kul()
+
     today = now.strftime("%Y-%m-%d")
     week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
     month_key = now.strftime("%Y-%m")
 
-    # Revenue
-    today_revenue = conn.execute(
-        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND DATE(reported_date)=? """,
-        (today,)
-    ).fetchone()[0]
+    # ================= REVENUE (PAID ONLY) =================
+    today_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0)
+        FROM orders
+        WHERE payment_status='Paid'
+        AND DATE(reported_date)=?
+    """, (today,)).fetchone()[0]
 
-    week_revenue = conn.execute(
-        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND DATE(reported_date) BETWEEN ? AND ? """,
-        (week_start, today)
-    ).fetchone()[0]
+    week_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0)
+        FROM orders
+        WHERE payment_status='Paid'
+        AND DATE(reported_date) BETWEEN ? AND ?
+    """, (week_start, today)).fetchone()[0]
 
-    month_revenue = conn.execute(
-        """ SELECT IFNULL(SUM(price), 0) FROM orders WHERE payment_status='Paid' AND strftime('%Y-%m', reported_date)=? """,
-        (month_key,)
-    ).fetchone()[0]
+    month_revenue = conn.execute("""
+        SELECT IFNULL(SUM(price),0)
+        FROM orders
+        WHERE payment_status='Paid'
+        AND strftime('%Y-%m', reported_date)=?
+    """, (month_key,)).fetchone()[0]
 
-    cars_today = conn.execute(
-        """ SELECT COUNT(*) FROM orders WHERE payment_status='Paid' AND DATE(reported_date)=? """,
-        (today,)
-    ).fetchone()[0]
+    cars_today = conn.execute("""
+        SELECT COUNT(*)
+        FROM orders
+        WHERE payment_status='Paid'
+        AND DATE(reported_date)=?
+    """, (today,)).fetchone()[0]
 
-    # Recent sales
-    recent_sales_raw = conn.execute(
-        """
-        SELECT id, invoice_no, car_plate, service_type, price, created_at
-        FROM orders WHERE payment_status='Paid' ORDER BY created_at DESC, id DESC LIMIT 10
-        """
-    ).fetchall()
+    # ================= RECENT SALES (FULL INVOICE SAFE) =================
+    recent_sales_raw = conn.execute("""
+        SELECT
+            id,
+            COALESCE(invoice_no, '') AS invoice_no,
+            COALESCE(car_plate, '-') AS car_plate,
+            COALESCE(car_type, '-') AS car_type,
+            COALESCE(service_type, '-') AS service_type,
+            COALESCE(payment_method, '-') AS payment_method,
+            COALESCE(price, 0) AS price,
+            invoice_date,
+            reported_date,
+            created_at,
+            COALESCE(loyalty_status, '-') AS loyalty_status,
+            COALESCE(payment_status, '-') AS payment_status
+        FROM orders
+        ORDER BY created_at DESC, id DESC
+        LIMIT 10
+    """).fetchall()
 
     recent_sales = []
+
     for row in recent_sales_raw:
-        dt_text = row["created_at"] or ""
-        date_part = dt_text[:10] if len(dt_text) >= 10 else "-"
-        time_part = dt_text[11:19] if len(dt_text) >= 19 else "-"
+
+        # ✅ GUARANTEE INVOICE ALWAYS EXISTS
+        invoice = row["invoice_no"] if row["invoice_no"] else f"INV-{row['id']:05d}"
+
+        created = row["created_at"] or ""
+
         recent_sales.append({
             "id": row["id"],
-            "invoice": row["invoice_no"] or "-",
-            "car_plate": row["car_plate"] or "-",
+            "invoice": invoice,
+            "car_plate": row["car_plate"],
+            "car_type": row["car_type"],
             "service_type": SERVICE_NAMES.get(row["service_type"], row["service_type"]),
-            "price": row["price"] or 0,
-            "date": date_part,
-            "time": time_part
+            "payment_method": row["payment_method"],
+            "price": row["price"],
+            "invoice_date": row["invoice_date"] or "-",
+            "reported_date": row["reported_date"] or "-",
+            "date": created[:10] if len(created) >= 10 else "-",
+            "time": created[11:19] if len(created) >= 19 else "-",
+            "status": row["payment_status"],
+            "loyalty_status": row["loyalty_status"]
         })
 
     conn.close()
@@ -889,6 +932,12 @@ def get_revenue_data():
         "recent_sales": recent_sales
     }
 
+def get_low_stock():
+    conn = get_db_connection()
+    rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5 AND is_deleted = 0 ORDER BY quantity ASC, item ASC").fetchall()
+    conn.close()
+    return [dict(x) for x in rows]
+
 @app.route("/recent_sales")
 def recent_sales():
     if session.get("role") != "admin":
@@ -899,42 +948,66 @@ def recent_sales():
     date_to = request.args.get("date_to", "")
 
     conn = get_db_connection()
+
     query = """
-        SELECT id, invoice_no, car_plate, car_type, service_type, payment_method, price, invoice_date, reported_date, created_at, loyalty_status
+        SELECT
+            id,
+            invoice_no,
+            car_plate,
+            car_type,
+            service_type,
+            payment_method,
+            price,
+            invoice_date,
+            reported_date,
+            created_at,
+            loyalty_status,
+            payment_status
         FROM orders
         WHERE payment_status='Paid'
     """
+
     params = []
 
     if date_from and date_to:
         if filter_type == "invoice":
             query += " AND DATE(invoice_date) BETWEEN ? AND ?"
-            params.extend([date_from, date_to])
         elif filter_type == "reported":
             query += " AND DATE(reported_date) BETWEEN ? AND ?"
-            params.extend([date_from, date_to])
-        else: # Default to created_at
+        else:
             query += " AND DATE(created_at) BETWEEN ? AND ?"
-            params.extend([date_from, date_to])
+        params.extend([date_from, date_to])
 
     query += " ORDER BY created_at DESC, id DESC"
-    sales_rows = conn.execute(query, params).fetchall()
+
+    rows = conn.execute(query, params).fetchall()
     conn.close()
+
+    sales = []
+
+    for r in rows:
+        sales.append({
+            "id": r["id"],
+            "invoice": safe_invoice(r),
+            "car_plate": r["car_plate"] or "-",
+            "car_type": r["car_type"] or "-",
+            "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
+            "payment_method": r["payment_method"] or "-",
+            "price": r["price"] or 0,
+            "invoice_date": r["invoice_date"] or "-",
+            "reported_date": r["reported_date"] or "-",
+            "date": r["created_at"][:10] if r["created_at"] else "-",
+            "time": r["created_at"][11:19] if r["created_at"] else "-",
+            "status": r["payment_status"] or "-"
+        })
 
     return render_template(
         "recent_sales.html",
-        sales=sales_rows,
+        sales=sales,
         filter_type=filter_type,
         date_from=date_from,
         date_to=date_to
     )
-
-def get_low_stock():
-    conn = get_db_connection()
-    rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5 AND is_deleted = 0 ORDER BY quantity ASC, item ASC").fetchall()
-    conn.close()
-    return [dict(x) for x in rows]
-
 # ================= RECEIPT =================
 @app.route("/receipt/<invoice>")
 def receipt(invoice):
