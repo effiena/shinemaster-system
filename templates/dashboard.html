@@ -241,17 +241,24 @@ color:#aaa;
 <th>Time</th>
 </tr>
 
-
 <tbody id="recentSales">
 
 {% for sale in recent_sales %}
 
 <tr>
-<td>{{sale.invoice_no}}</td>
-<td>{{sale.car_plate}}</td>
-<td>{{sale.service_type}}</td>
-<td>RM {{sale.price}}</td>
-<td>{{sale.time}}</td>
+<td>{{ sale.invoice }}</td>
+<td>{{ sale.car_plate }}</td>
+<td>{{ sale.service_type }}</td>
+<td>RM {{ sale.price }}</td>
+<td>{{ sale.time }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+<td colspan="5" style="text-align:center; color:#aaa;">
+No recent sales
+</td>
 </tr>
 
 {% endfor %}
