@@ -1067,110 +1067,97 @@ def package_special():
 def inventory():
     if "username" not in session:
         return redirect("/login")
+
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row # Ensure row_factory is set for easier dictionary access
 
     filter_type = request.args.get("filter_type", "all")
-    filter_month = request.args.get("filter_month", "").strip()
-    filter_year = request.args.get("filter_year", "").strip()
-    filter_start = request.args.get("filter_start", "").strip()
-    filter_end = request.args.get("filter_end", "").strip()
+    filter_month = request.args.get("filter_month", "")
+    filter_year = request.args.get("filter_year", "")
+    filter_start = request.args.get("filter_start", "")
+    filter_end = request.args.get("filter_end", "")
 
-    query = "SELECT * FROM inventory WHERE is_deleted = 0"
+    query = "SELECT * FROM inventory WHERE is_deleted=0"
     params = []
-    
-    filter_label = "All Dates" # Default label
 
-    if filter_type == "month" and filter_month:
-        query += " AND strftime('%Y-%m', purchase_date) = ?"
+    if filter_type == "month":
+        query += " AND strftime('%Y-%m', purchase_date)=?"
         params.append(filter_month)
-        filter_label = filter_month
-    elif filter_type == "year" and filter_year:
-        query += " AND strftime('%Y', purchase_date) = ?"
+
+    elif filter_type == "year":
+        query += " AND strftime('%Y', purchase_date)=?"
         params.append(filter_year)
-        filter_label = filter_year
-    elif filter_type == "custom" and filter_start and filter_end:
+
+    elif filter_type == "custom":
         query += " AND purchase_date BETWEEN ? AND ?"
-        params.extend([filter_start, filter_end])
-        filter_label = f"{filter_start} to {filter_end}"
-    
-    query += " ORDER BY purchase_date DESC, id DESC"
-    
-    # Execute the filtered query for items
+        params += [filter_start, filter_end]
+
+    query += " ORDER BY id DESC"
+
     items = conn.execute(query, params).fetchall()
 
-    # Calculate total spent based on the current filter criteria
-    total_spent_query = "SELECT COALESCE(SUM(quantity * price),0) FROM inventory WHERE is_deleted = 0"
-    total_spent_params = []
-
-    if filter_type == "month" and filter_month:
-        total_spent_query += " AND strftime('%Y-%m', purchase_date) = ?"
-        total_spent_params.append(filter_month)
-    elif filter_type == "year" and filter_year:
-        total_spent_query += " AND strftime('%Y', purchase_date) = ?"
-        total_spent_params.append(filter_year)
-    elif filter_type == "custom" and filter_start and filter_end:
-        total_spent_query += " AND purchase_date BETWEEN ? AND ?"
-        total_spent_params.extend([filter_start, filter_end])
-
-    total_spent = conn.execute(total_spent_query, total_spent_params).fetchone()[0]
+    total = conn.execute("""
+        SELECT COALESCE(SUM(total_amount),0)
+        FROM inventory WHERE is_deleted=0
+    """).fetchone()[0]
 
     conn.close()
+
     return render_template(
         "inventory.html",
         items=items,
-        total_spent=f"{total_spent:.2f}",
-        filter_label=filter_label,
-        filter_type=filter_type, # Pass filter type back to retain selection
-        filter_month=filter_month, # Pass filter values back to retain selection
-        filter_year=filter_year,
-        filter_start=filter_start,
-        filter_end=filter_end
+        total_spent=f"{total:.2f}"
     )
 
 
 @app.route("/inventory/save", methods=["POST"])
 def save_item():
     data = request.json
-    item_id = data.get("id")
-    name = data.get("item") # Changed from 'name' to 'item' based on form field
-    quantity = data.get("quantity")
-    price = data.get("price")
-    company = data.get("company", "")
-    phone = data.get("phone", "")
-    address = data.get("address", "")
-    purchase_date = data.get("purchase_date", "")
-    serial_number = data.get("serial_number", "")
-    category = data.get("category", "")
-    unit = data.get("unit", "")
-    last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
-
     conn = get_db_connection()
+
     try:
-        conn.execute(
-            """
-            UPDATE inventory SET 
-                item=?, company=?, phone=?, address=?, purchase_date=?, 
-                quantity=?, price=?, serial_number=?, category=?, unit=?, last_updated=? 
+        conn.execute("""
+            UPDATE inventory SET
+                item=?, company=?, phone=?, address=?, purchase_date=?,
+                quantity=?, price=?, total_amount=?,
+                serial_number=?, category=?, unit=?, last_updated=?
             WHERE id=?
-            """,
-            (name, company, phone, address, purchase_date, 
-             quantity, price, serial_number, category, unit, last_updated, item_id)
-        )
+        """, (
+            data["item"],
+            data.get("company", ""),
+            data.get("phone", ""),
+            data.get("address", ""),
+            data.get("purchase_date", ""),
+            int(data.get("quantity", 0)),
+            float(data.get("price", 0)),
+            float(data.get("quantity", 0)) * float(data.get("price", 0)),
+            data.get("serial_number", ""),
+            data.get("category", ""),
+            data.get("unit", ""),
+            now_kul().strftime("%Y-%m-%d %H:%M:%S"),
+            data["id"]
+        ))
+
         conn.commit()
         return jsonify({"success": True})
+
     except Exception as e:
         conn.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)})
+
     finally:
         conn.close()
 
 @app.route("/inventory/delete", methods=["POST"])
 def delete_item():
     data = request.json
-    item_id = data.get("id")
     conn = get_db_connection()
-    conn.execute("UPDATE inventory SET is_deleted=1, last_updated=? WHERE id=?", (now_kul().strftime("%Y-%m-%d %H:%M:%S"), item_id))
+
+    conn.execute("""
+        UPDATE inventory
+        SET is_deleted=1, last_updated=?
+        WHERE id=?
+    """, (now_kul().strftime("%Y-%m-%d %H:%M:%S"), data["id"]))
+
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -1250,7 +1237,7 @@ def add_inventory():
             quantity, price, total_amount, serial_number, category, unit,
             reference_no, last_updated
         ))
-
+    print("DB PATH:", DB_PATH)
     conn.commit()
     conn.close()
 
