@@ -25,6 +25,8 @@ COMPANY_INFO = {
 }
 
 TZ = ZoneInfo("Asia/Kuala_Lumpur")
+INVOICE_DB = {}
+INVOICE_COUNTER = 1
 
 @app.context_processor
 def inject_company():
@@ -32,7 +34,11 @@ def inject_company():
 
 # ================= DATABASE =================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "shine.db")
+
+if os.getenv("RAILWAY_ENVIRONMENT"):
+    DB_PATH = "/app/data/shine.db"
+else:
+    DB_PATH = os.path.join(BASE_DIR, "shine.db")
 
 def now_kul():
     return datetime.now(TZ)
@@ -765,6 +771,7 @@ def safe_invoice(row):
         return f"INV-{row['id']:05d}"
     return inv
 
+
 @app.route("/dashboard")
 def dashboard():
     if session.get("role") != "admin":
@@ -1062,6 +1069,61 @@ def package_polishing():
 def package_special():
     return render_template("special_package.html")
 
+
+def generate_invoice_no(counter):
+    date_part = datetime.now().strftime("%Y%m%d")
+    return f"INV.NO-{date_part}-SMS3234-{counter:04d}"
+
+
+# =========================
+# INVOICE HOME (CREATE PAGE)
+# =========================
+@app.route("/invoice_new")
+def invoice_new():
+    return render_template("invoice_new.html")
+
+
+# =========================
+# CREATE INVOICE (FROM UI)
+# =========================
+@app.route("/invoice/create", methods=["POST"])
+def create_invoice():
+    global INVOICE_COUNTER
+
+    data = request.json
+
+    invoice_no = generate_invoice_no(INVOICE_COUNTER)
+    INVOICE_COUNTER += 1
+
+    INVOICE_DB[invoice_no] = {
+        "invoice_no": invoice_no,
+        "customer_name": data.get("customer_name"),
+        "customer_phone": data.get("customer_phone"),
+        "customer_company": data.get("customer_company"),
+        "car_plate": data.get("car_plate"),
+        "car_type": data.get("car_type"),
+        "items": data.get("items", []),
+        "total": float(data.get("total", 0)),
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    return jsonify({"invoice_no": invoice_no})
+
+
+# =========================
+# VIEW INVOICE (PRINT PAGE)
+# =========================
+@app.route("/invoice/<invoice_no>")
+def invoice_page(invoice_no):
+
+    data = INVOICE_DB.get(invoice_no)
+
+    if not data:
+        return "Invoice not found", 404
+
+    return render_template("invoice_new.html", **data)
+
+
 # ================= INVENTORY =================
 @app.route("/inventory")
 def inventory():
@@ -1229,6 +1291,7 @@ def add_inventory():
             INSERT INTO inventory (
                 item, company, phone, address, purchase_date,
                 quantity, price, total_amount, serial_number, category, unit,
+
                 reference_no, last_updated, is_deleted
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
