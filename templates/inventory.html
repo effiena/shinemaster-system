@@ -35,6 +35,7 @@
                 <th>Address</th>
                 <th>Quantity</th>
                 <th>Price</th>
+                <th>Reference No</th> <!-- ✅ NEW -->
                 <th class="action-column">Actions</th>
             </tr>
         </thead>
@@ -48,7 +49,13 @@
         <td>{{ item.company }}</td>
         <td>{{ item.address }}</td>
         <td>{{ item.quantity }}</td>
-        <td>{{ item.price }}</td>
+
+        <!-- ✅ FORMAT PRICE -->
+        <td>RM {{ "%.2f"|format(item.price) }}</td>
+
+        <!-- ✅ NEW REFERENCE NO -->
+        <td>{{ item.reference_no }}</td>
+
         <td class="action-buttons">
             <a href="/edit_inventory/{{ item.id }}" class="btn btn-edit">Edit</a>
             <a href="/delete_inventory/{{ item.id }}"
@@ -58,16 +65,9 @@
             </a>
         </td>
     </tr>
+
     {% endfor %}
 </tbody>
-
-
-
-
-
-
-
-
 
 
     </table>
@@ -105,7 +105,7 @@
     #filterForm,
     #addInventoryForm,
     .action-column,
-    .buttons,
+    .action-buttons, /* ✅ ADD THIS */
     nav,
     header,
     footer,
@@ -131,30 +131,10 @@
         width: 100%;
     }
 
-    #printTitle {
-        margin-bottom: 5px;
-    }
-
-    #printDateTime {
-        margin-bottom: 10px;
-        font-size: 14px;
-    }
-
-    #printTotal {
-        margin-bottom: 15px;
-        font-size: 20px;
-    }
-
-    #inventoryTable {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
     #inventoryTable th,
     #inventoryTable td {
         border: 1px solid black;
         padding: 6px;
-        text-align: left;
     }
 }
 
@@ -189,6 +169,8 @@
 .btn-delete:hover {
     background-color: #c0392b;
 }
+</style>
+<script>
 function updatePrintDateTime() {
     const now = new Date();
     const formatted = now.toLocaleString("en-MY", {
@@ -199,11 +181,14 @@ function updatePrintDateTime() {
         minute: "2-digit",
         second: "2-digit"
     });
-    document.getElementById("printDateTime").innerText = "Printed on: " + formatted;
+
+    const el = document.getElementById("printDateTime");
+    if (el) {
+        el.innerText = "Printed on: " + formatted;
+    }
 }
 
 window.addEventListener("beforeprint", updatePrintDateTime);
 window.onload = updatePrintDateTime;
-</style>
-
+</script>
 {% endblock %}
