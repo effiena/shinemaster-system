@@ -8,23 +8,22 @@
 <!-- FILTER & PRINT -->
 <form method="GET" action="/inventory" id="filterForm">
     <label>Filter by:</label>
-    <input type="date" name="filter_start" id="filterStart">
-    <input type="date" name="filter_end" id="filterEnd">
+    <input type="date" name="filter_start">
+    <input type="date" name="filter_end">
 
     <button type="submit">Filter</button>
     <button type="button" onclick="window.print()">Print</button>
-    <button class="save-btn">Save</button>
 </form>
 
-<!-- TOTAL SPENT-->
+<!-- REPORT AREA -->
 <div id="printArea">
     <h2 id="printTitle">Inventory Report</h2>
     <p id="printFilter">Filtered Date: {{ filter_label }}</p>
-    </p>
+    <p id="printDateTime"></p>
+
     <h3 id="printTotal">Total Inventory Spent: RM {{ total_spent }}</h3>
 
-    <h3 class="screen-only">Inventory List</h3>
-    <table border="1" cellpadding="5" cellspacing="0" id="inventoryTable">
+    <table id="inventoryTable">
         <thead>
             <tr>
                 <th>Line</th>
@@ -33,45 +32,43 @@
                 <th>Item</th>
                 <th>Company</th>
                 <th>Address</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Amount</th>
-                <th>Reference No</th> <!-- ✅ NEW -->
+                <th>Qty</th>
+                <th>Price (RM)</th>
+                <th>Amount (RM)</th>
+                <th>Ref No</th>
                 <th class="action-column">Actions</th>
             </tr>
         </thead>
-<tbody>
-    {% for item in items %}
-    <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ item.purchase_date }}</td>
-        <td>{{ item.serial_number }}</td>
-        <td>{{ item.item }}</td>
-        <td>{{ item.company }}</td>
-        <td>{{ item.address }}</td>
-        <td>{{ item.quantity }}</td>
 
-        <!-- ✅ FORMAT PRICE -->
-        <td>RM {{ "%.2f"|format(item.price) }}</td>
-        <!-- ✅ AMOUNT=QTY * PRICE -->
-        <td>RM {{ "%.2f"|format(item.quantity * item.price) }}</td>
-        <!-- ✅ NEW REFERENCE NO -->
-        <td>{{ item.reference_no }}</td>
+        <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.purchase_date }}</td>
+            <td>{{ item.serial_number }}</td>
+            <td>{{ item.item }}</td>
+            <td>{{ item.company }}</td>
+            <td>{{ item.address }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ "%.2f"|format(item.price) }}</td>
+            <td>{{ "%.2f"|format(item.quantity * item.price) }}</td>
+            <td>{{ item.reference_no }}</td>
 
-        <td class="action-buttons">
-            <a href="/edit_inventory/{{ item.id }}" class="btn btn-edit">Edit</a>
-            <a href="/delete_inventory/{{ item.id }}"
-               class="btn btn-delete"
-               onclick="return confirm('Are you sure you want to delete this item?')">
-               Delete
-            </a>
-        </td>
-    </tr>
+            <td class="action-buttons">
+                <a href="/edit_inventory/{{ item.id }}" class="icon-btn edit-btn" title="Edit">
+                    ✏️
+                </a>
 
-    {% endfor %}
-</tbody>
-
-
+                <a href="/delete_inventory/{{ item.id }}"
+                   class="icon-btn delete-btn"
+                   title="Delete"
+                   onclick="return confirm('Delete this item?')">
+                   ❌
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
     </table>
 </div>
 
@@ -80,39 +77,200 @@
 <!-- ADD INVENTORY -->
 <form method="POST" action="/add_inventory" id="addInventoryForm">
     <h3>Add Item</h3>
+
     <label>Item</label><br>
     <input type="text" name="item" required><br>
+
     <label>Company</label><br>
     <input type="text" name="company"><br>
+
     <label>Phone</label><br>
     <input type="text" name="phone"><br>
+
     <label>Address</label><br>
     <input type="text" name="address"><br>
+
     <label>Purchase Date</label><br>
     <input type="date" name="purchase_date"><br>
+
     <label>Quantity</label><br>
     <input type="number" name="quantity"><br>
+
     <label>Price</label><br>
     <input type="number" step="0.01" name="price"><br>
+
     <label>Serial Number</label><br>
     <input type="text" name="serial_number"><br><br>
+
     <button type="submit">Add Item</button>
 </form>
 
 <hr>
 
-
 <style>
+
+/* =========================
+   GLOBAL TABLE (SCREEN + PRINT)
+========================= */
+
+#inventoryTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+#inventoryTable th,
+#inventoryTable td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+/* SMALL */
+#inventoryTable th:nth-child(1),
+#inventoryTable td:nth-child(1) {
+    width: 4%;
+    text-align: center;
+}
+
+#inventoryTable th:nth-child(7),
+#inventoryTable td:nth-child(7) {
+    width: 6%;
+    text-align: center;
+}
+
+/* MEDIUM */
+#inventoryTable th:nth-child(2),
+#inventoryTable td:nth-child(2) {
+    width: 10%;
+}
+
+#inventoryTable th:nth-child(8),
+#inventoryTable td:nth-child(8),
+#inventoryTable th:nth-child(9),
+#inventoryTable td:nth-child(9) {
+    width: 10%;
+}
+
+/* LARGE */
+#inventoryTable th:nth-child(3),
+#inventoryTable td:nth-child(3) {
+    width: 14%;
+}
+
+#inventoryTable th:nth-child(4),
+#inventoryTable td:nth-child(4) {
+    width: 18%;
+}
+
+#inventoryTable th:nth-child(6),
+#inventoryTable td:nth-child(6) {
+    width: 20%;
+}
+
+/* COMPANY */
+#inventoryTable th:nth-child(5),
+#inventoryTable td:nth-child(5) {
+    width: 12%;
+}
+
+/* REF */
+#inventoryTable th:nth-child(10),
+#inventoryTable td:nth-child(10) {
+    width: 10%;
+}
+
+/* ACTION */
+#inventoryTable th:nth-child(11),
+#inventoryTable td:nth-child(11) {
+    width: 10%;
+}
+
+/* TEXT WRAP */
+#inventoryTable td {
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* HOVER EFFECT */
+#inventoryTable tr:hover {
+    background: #f9f9f9;
+}
+
+/* BUTTONS */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-decoration: none;
+    color: white;
+}
+
+.btn-edit {
+    background: #f1c40f;
+    color: #222;
+}
+
+.btn-delete {
+    background: #e74c3c;
+}
+
+/* FORCE ICONS IN ONE ROW */
+.action-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* ICON BUTTON STYLE */
+.icon-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+/* EDIT */
+.edit-btn {
+    background: #f1c40f;
+    color: #222;
+}
+
+.edit-btn:hover {
+    background: #d4ac0d;
+}
+
+/* DELETE */
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+/* =========================
+   PRINT ONLY
+========================= */
+
 @media print {
+
     #filterForm,
     #addInventoryForm,
     .action-column,
-    .action-buttons, /* ✅ ADD THIS */
+    .action-buttons,
     nav,
     header,
     footer,
-    .screen-only,
-    h2:not(#printTitle),
     hr {
         display: none !important;
     }
@@ -133,64 +291,91 @@
         width: 100%;
     }
 
+    /* ✅ FULL TABLE BORDER */
     #inventoryTable th,
     #inventoryTable td {
         border: 1px solid black;
         padding: 6px;
     }
+
+    /* ✅ KEEP REF NO IN ONE LINE */
+    #inventoryTable th:nth-child(10),
+    #inventoryTable td:nth-child(10) {
+        white-space: nowrap;
+    }
 }
 
-.action-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.btn {
-    padding: 7px 14px;
-    border-radius: 8px;
+/* ICON BUTTONS */
+.icon-btn {
+    display: inline-block;
+    padding: 6px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 13px;
-    font-weight: bold;
-    transition: 0.2s ease;
+    font-size: 14px;
+    text-align: center;
+    width: 28px;
+    height: 28px;
+    line-height: 16px;
 }
 
-.btn-edit {
-    background-color: #f1c40f;
+/* EDIT */
+.edit-btn {
+    background: #f1c40f;
     color: #222;
 }
 
-.btn-edit:hover {
-    background-color: #d4ac0d;
+.edit-btn:hover {
+    background: #d4ac0d;
 }
 
-.btn-delete {
-    background-color: #e74c3c;
-    color: #fff;
+/* DELETE */
+.delete-btn {
+    background: #e74c3c;
+    color: white;
 }
 
-.btn-delete:hover {
-    background-color: #c0392b;
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+/* REF NO CLEAN */
+#inventoryTable th:nth-child(10),
+#inventoryTable td:nth-child(10) {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* AMOUNT ALIGN RIGHT (PRO STYLE) */
+#inventoryTable th:nth-child(9),
+#inventoryTable td:nth-child(9) {
+    text-align: right;
+}
+
+/* PRICE ALIGN RIGHT */
+#inventoryTable th:nth-child(8),
+#inventoryTable td:nth-child(8) {
+    text-align: right;
 }
 </style>
+
 <script>
 function updatePrintDateTime() {
     const now = new Date();
     const formatted = now.toLocaleString("en-MY", {
+        day: "2-digit",
+        month: "short",
         year: "numeric",
-        month: "long",
-        day: "numeric",
         hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+        minute: "2-digit"
     });
 
-    const el = document.getElementById("printDateTime");
-    if (el) {
-        el.innerText = "Printed on: " + formatted;
-    }
+    document.getElementById("printDateTime").innerText = "Printed: " + formatted;
 }
 
 window.addEventListener("beforeprint", updatePrintDateTime);
 window.onload = updatePrintDateTime;
 </script>
-{% endblock %}
+
+{% endblock %} 
+
+
