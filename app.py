@@ -1193,15 +1193,42 @@ def add_inventory():
     last_updated = now_kul().strftime("%Y-%m-%d %H:%M:%S")
 
     conn = get_db_connection()
-    
-    # Check for existing item that might have been soft-deleted
-    existing = conn.execute(
-        "SELECT id, is_deleted FROM inventory WHERE item=? COLLATE NOCASE", (item,) # Use COLLATE NOCASE for case-insensitive check
+    conn.row_factory = sqlite3.Row
+
+    # =====================================================
+    # 🔥 SAFE LOCKED AUTO INCREMENT (FIXES RANDOM NUMBERS)
+    # =====================================================
+    conn.execute("BEGIN IMMEDIATE")
+
+    counter = conn.execute(
+        "SELECT last_number FROM ref_counter WHERE id=1"
     ).fetchone()
 
+    if counter:
+        last_number = counter["last_number"]
+    else:
+        last_number = 0
 
+    new_number = last_number + 1
+    reference_no = f"REF-{new_number:04d}"
+
+    conn.execute(
+        "UPDATE ref_counter SET last_number=? WHERE id=1",
+        (new_number,)
+    )
+
+    # =====================================================
+    # 🔍 CHECK EXISTING ITEM (SOFT DELETE RESTORE)
+    # =====================================================
+    existing = conn.execute(
+        "SELECT id, is_deleted FROM inventory WHERE item=? COLLATE NOCASE",
+        (item,)
+    ).fetchone()
+
+    # =====================================================
+    # ♻️ RESTORE OLD ITEM
+    # =====================================================
     if existing and existing["is_deleted"] == 1:
-        # If soft-deleted item with the same name exists, restore and update it
         conn.execute(
             """
             UPDATE inventory SET 
@@ -1214,22 +1241,31 @@ def add_inventory():
                 serial_number, category, unit, last_updated, existing["id"]
             )
         )
+
+    # =====================================================
+    # ➕ INSERT NEW ITEM (WITH REF)
+    # =====================================================
     else:
-        # Insert as a new item
         conn.execute(
             """
-            INSERT INTO inventory (item, company, phone, address, purchase_date, quantity, price, serial_number, category, unit, last_updated, is_deleted)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            INSERT INTO inventory (
+                item, company, phone, address, purchase_date,
+                quantity, price, serial_number, category, unit,
+                reference_no, last_updated, is_deleted
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             """,
             (
-                item, company, phone, address, purchase_date, quantity, price,
-                serial_number, category, unit, last_updated
+                item, company, phone, address, purchase_date,
+                quantity, price, serial_number, category, unit,
+                reference_no, last_updated
             )
         )
+
     conn.commit()
     conn.close()
-    return redirect("/inventory")
 
+    return redirect("/inventory")
 
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
