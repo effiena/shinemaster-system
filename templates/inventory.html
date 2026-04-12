@@ -35,6 +35,7 @@
                 <th>Address</th>
                 <th>Quantity</th>
                 <th>Price</th>
+                <th>Amount</th>
                 <th>Reference No</th> <!-- ✅ NEW -->
                 <th class="action-column">Actions</th>
             </tr>
@@ -52,7 +53,8 @@
 
         <!-- ✅ FORMAT PRICE -->
         <td>RM {{ "%.2f"|format(item.price) }}</td>
-
+        <!-- ✅ AMOUNT=QTY * PRICE -->
+        <td>RM {{ "%.2f"|format(item.quantity * item.price) }}</td>
         <!-- ✅ NEW REFERENCE NO -->
         <td>{{ item.reference_no }}</td>
 
