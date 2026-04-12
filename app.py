@@ -34,11 +34,7 @@ def inject_company():
 
 # ================= DATABASE =================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-if os.getenv("RAILWAY_ENVIRONMENT"):
-    DB_PATH = "/app/data/shine.db"
-else:
-    DB_PATH = os.path.join(BASE_DIR, "shine.db")
+DB_PATH = os.path.join(BASE_DIR, "shine.db")
 
 def now_kul():
     return datetime.now(TZ)
