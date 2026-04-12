@@ -1187,6 +1187,7 @@ def add_inventory():
     purchase_date = request.form.get("purchase_date", "")
     quantity = int(request.form.get("quantity", 0))
     price = float(request.form.get("price", 0))
+    total_amount = quantity * price
     serial_number = request.form.get("serial_number", "")
     category = request.form.get("category", "")
     unit = request.form.get("unit", "")
@@ -1240,13 +1241,13 @@ def add_inventory():
         conn.execute("""
             INSERT INTO inventory (
                 item, company, phone, address, purchase_date,
-                quantity, price, serial_number, category, unit,
+                quantity, price, total_amount, serial_number, category, unit,
                 reference_no, last_updated, is_deleted
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
         """, (
             item, company, phone, address, purchase_date,
-            quantity, price, serial_number, category, unit,
+            quantity, price, total_amount, serial_number, category, unit,
             reference_no, last_updated
         ))
 
@@ -1254,6 +1255,7 @@ def add_inventory():
     conn.close()
 
     return redirect("/inventory")
+
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
     if session.get("role") != "admin":
