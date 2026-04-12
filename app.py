@@ -1196,26 +1196,20 @@ def add_inventory():
     conn.row_factory = sqlite3.Row
 
     # =====================================================
-    # 🔥 SAFE LOCKED AUTO INCREMENT (FIXES RANDOM NUMBERS)
+    # 🔒 SAFE: GET NEXT REF FROM EXISTING DATA ONLY
     # =====================================================
     conn.execute("BEGIN IMMEDIATE")
 
-    counter = conn.execute(
-        "SELECT last_number FROM ref_counter WHERE id=1"
-    ).fetchone()
+    row = conn.execute("""
+        SELECT COALESCE(
+            MAX(CAST(SUBSTR(reference_no, 5) AS INTEGER)),
+            0
+        )
+        FROM inventory
+    """).fetchone()
 
-    if counter:
-        last_number = counter["last_number"]
-    else:
-        last_number = 0
-
-    new_number = last_number + 1
+    new_number = row[0] + 1
     reference_no = f"REF-{new_number:04d}"
-
-    conn.execute(
-        "UPDATE ref_counter SET last_number=? WHERE id=1",
-        (new_number,)
-    )
 
     # =====================================================
     # 🔍 CHECK EXISTING ITEM (SOFT DELETE RESTORE)
@@ -1226,47 +1220,40 @@ def add_inventory():
     ).fetchone()
 
     # =====================================================
-    # ♻️ RESTORE OLD ITEM
+    # ♻️ RESTORE ITEM (NO NEW REF)
     # =====================================================
     if existing and existing["is_deleted"] == 1:
-        conn.execute(
-            """
+        conn.execute("""
             UPDATE inventory SET 
                 company=?, phone=?, address=?, purchase_date=?, quantity=?, price=?, 
                 serial_number=?, category=?, unit=?, is_deleted=0, last_updated=? 
             WHERE id=?
-            """,
-            (
-                company, phone, address, purchase_date, quantity, price,
-                serial_number, category, unit, last_updated, existing["id"]
-            )
-        )
+        """, (
+            company, phone, address, purchase_date, quantity, price,
+            serial_number, category, unit, last_updated, existing["id"]
+        ))
 
     # =====================================================
-    # ➕ INSERT NEW ITEM (WITH REF)
+    # ➕ INSERT NEW ITEM (WITH SAFE REF)
     # =====================================================
     else:
-        conn.execute(
-            """
+        conn.execute("""
             INSERT INTO inventory (
                 item, company, phone, address, purchase_date,
                 quantity, price, serial_number, category, unit,
                 reference_no, last_updated, is_deleted
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-            """,
-            (
-                item, company, phone, address, purchase_date,
-                quantity, price, serial_number, category, unit,
-                reference_no, last_updated
-            )
-        )
+        """, (
+            item, company, phone, address, purchase_date,
+            quantity, price, serial_number, category, unit,
+            reference_no, last_updated
+        ))
 
     conn.commit()
     conn.close()
 
     return redirect("/inventory")
-
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
     if session.get("role") != "admin":
