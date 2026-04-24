@@ -239,10 +239,10 @@ def sync_old_orders_data():
     conn.close()
 
 # ================= HELPERS =================
-def generate_invoice_no(order_id, dt=None):
-    if dt is None:
-        dt = now_kul()
-    return f"INV{dt.strftime('%Y%m%d')}{order_id:04d}"
+def generate_invoice_no(order_id, now=None):
+    if now is None:
+        now = datetime.now()
+    return f"INV-{now.strftime('%Y%m%d')}-{order_id}"
 
 def insert_order_record(
     car_plate, car_type, service_type, payment_method,
@@ -557,6 +557,7 @@ def pos():
         conn.commit()
         order_id = cur.lastrowid
         invoice_no = generate_invoice_no(order_id, now)
+
         cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
         conn.commit()
 
@@ -1065,10 +1066,6 @@ def package_polishing():
 def package_special():
     return render_template("special_package.html")
 
-
-def generate_invoice_no(counter):
-    date_part = datetime.now().strftime("%Y%m%d")
-    return f"INV.NO-{date_part}-SMS3234-{counter:04d}"
 
 
 # =========================
