@@ -481,9 +481,14 @@ body{
        >
     <div id="balance_display">Balance: RM 0.00</div>
 </div>
+<div id="qr_box" style="display:none;">
+    <img id="qr_image"
+         src="{{ url_for('static', filename='tngqr.jpeg') }}"
+         style="width:160px; border-radius:10px;">
 
-<div id="qr_box">
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=PAYMENT">
+    <p id="qr_label" style="font-size:12px; margin-top:5px;">
+        Scan to Pay (TNG)
+    </p>
 </div>
 <button class="pay-btn" onclick="completePayment()">COMPLETE PAYMENT</button>
 <button class="pay-btn" style="background:#4CAF50;" onclick="printCopy()">
@@ -594,19 +599,40 @@ function calculatePrice(){
 /* =========================
    PAYMENT SELECT
 ========================= */
-function selectPayment(el,method){
+function selectPayment(el, method){
 
     document.querySelectorAll('.pay-option')
-        .forEach(b=>b.classList.remove('active'));
+        .forEach(b => b.classList.remove('active'));
 
     el.classList.add('active');
     selectedPayment = method;
 
-    document.getElementById('cash_box').style.display =
-        (method==='Cash') ? 'block':'none';
+    const cashBox = document.getElementById('cash_box');
+    const qrBox = document.getElementById('qr_box');
+    const qrImage = document.getElementById('qr_image');
+    const qrLabel = document.getElementById('qr_label');
 
-    document.getElementById('qr_box').style.display =
-        (method==='E-Wallet'||method==='QR Code') ? 'block':'none';
+    // Toggle cash
+    cashBox.style.display = (method === 'Cash') ? 'block' : 'none';
+
+    // QR logic
+    if(method === 'E-Wallet'){
+        qrBox.style.display = 'block';
+
+        // 👉 Show TNG QR
+        qrImage.src = "/static/tngqr.jpeg";
+        qrLabel.textContent = "Scan with Touch 'n Go";
+
+    } else if(method === 'QR Code'){
+        qrBox.style.display = 'block';
+
+        // 👉 Show DuitNow QR
+        qrImage.src = "/static/duitnowqr.jpeg";
+        qrLabel.textContent = "Scan with DuitNow / Bank";
+
+    } else {
+        qrBox.style.display = 'none';
+    }
 }
 
 function applyDiscount(){
