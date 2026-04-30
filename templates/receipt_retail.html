@@ -3,53 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <title>Receipt - Retail POS</title>
+
 <style>
-body { font-family: monospace; width:180px; margin:auto; font-size:14px; }
-.company { text-align:center; font-weight:bold; font-size:18px; }
+body {
+  font-family: monospace;
+  width: 220px;
+  margin: auto;
+  font-size: 14px;
+  background: #1c1c1c;
+  color: #fff;
+}
+
+.company {
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.small {
+  text-align: center;
+  font-size: 12px;
+}
+
 .line { width:100%; }
 .left { float:left; }
 .right { float:right; }
 .clear { clear:both; }
-hr { border-top:1px dashed black; }
-.buttons { text-align:center; margin-top:10px; }
-@media print { .no-print{ display:none; } body{ width:180px; } }
+
+hr {
+  border: none;
+  border-top: 1px dashed #fff;
+}
+
+/* PRINT FIX */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    width: 180px;
+  }
+
+  .company, .small {
+    color: #000 !important;
+  }
+
+  hr {
+    border-top: 2px solid #000 !important;
+  }
+
+  .no-print { display:none !important; }
+}
 </style>
 </head>
+
 <body>
 
 <div class="company">SHINE MASTER SOLUTION</div>
+<div class="small">
+68, Jalan Putra 1, Taman Tan Sri Yaacob,<br>
+81300 Skudai, Johor<br>
+Reg No: SA0650100-H
+</div>
+
 <hr>
 
-<div class="line"><span class="left">Invoice</span><span class="right">{{ order.invoice_no }}</span><div class="clear"></div></div>
-<div class="line"><span class="left">Date</span><span class="right">{{ order.date }}</span><div class="clear"></div></div>
+<!-- INVOICE -->
+<div class="line">
+  <span class="left">Invoice</span>
+  <span class="right">
+    {% set inv_date = order.date[:10] %}
+    RETCRYS{{ inv_date.replace('-','') }}{{ order.invoice_no }}
+  </span>
+  <div class="clear"></div>
+</div>
+
+<div class="line">
+  <span class="left">Date</span>
+  <span class="right">{{ order.date }}</span>
+  <div class="clear"></div>
+</div>
+
 <hr>
 
 <h4>Items</h4>
-{% for item in order.items %}
+
+{% for item in order['items'] %}
 <div class="line">
   <span class="left">{{ item.item }} x{{ item.qty }}</span>
-  <span class="right">RM {{ "%.2f"|format(item.subtotal) }}</span>
+  <span class="right">RM {{ "%.2f"|format(item.subtotal | float) }}</span>
   <div class="clear"></div>
 </div>
 {% endfor %}
+
 <hr>
 
-<div class="line"><span class="left"><strong>Total</strong></span><span class="right"><strong>RM {{ "%.2f"|format(order.total) }}</strong></span><div class="clear"></div></div>
-<div class="line"><span class="left">Paid</span><span class="right">RM {{ "%.2f"|format(order.paid) }}</span><div class="clear"></div></div>
-<div class="line"><span class="left">Change</span><span class="right">RM {{ "%.2f"|format(order.change) }}</span><div class="clear"></div></div>
+<!-- TOTALS -->
+<div class="line">
+  <span class="left"><strong>Total</strong></span>
+  <span class="right"><strong>RM {{ "%.2f"|format(order.total) }}</strong></span>
+  <div class="clear"></div>
+</div>
+
+<div class="line">
+  <span class="left">Paid</span>
+  <span class="right">RM {{ "%.2f"|format(order.paid) }}</span>
+  <div class="clear"></div>
+</div>
+
+<div class="line">
+  <span class="left">Balance / Change</span>
+  <span class="right">
+    RM {{ "%.2f"|format(order.paid - order.total) }}
+  </span>
+  <div class="clear"></div>
+</div>
+
 <hr>
 
+<!-- QR -->
 {% if order.payment_method == 'ewallet' and order.qr_url %}
 <div style="text-align:center;">
-<p>Scan to Pay via E-Wallet</p>
-<img src="{{ order.qr_url }}">
+  <p>Scan to Pay via E-Wallet</p>
+  <img src="{{ order.qr_url }}">
 </div>
 <hr>
 {% endif %}
 
-<div class="buttons no-print">
-<button onclick="window.print()">Print Receipt</button>
-<a href="/pos_retail"><button>New Order</button></a>
+<!-- BUTTONS -->
+<div class="no-print" style="text-align:center;">
+  <button onclick="window.print()">Print Receipt</button>
+  <a href="/pos_retail"><button>New Order</button></a>
 </div>
 
 </body>
