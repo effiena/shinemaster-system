@@ -768,6 +768,111 @@ def safe_invoice(row):
         return f"INV-{row['id']:05d}"
     return inv
 
+def calculate_revenue(rows):
+    total = 0
+
+    for r in rows:
+        price = r["price"] or 0
+        discount = r["discount"] or 0
+        paid = r["paid_amount"] or 0
+
+        net = price - discount
+        total += min(paid, net)
+
+    return round(total, 2)
+
+
+def get_revenue_data():
+    conn = get_db_connection()
+    now = now_kul()
+
+    today = now.strftime("%Y-%m-%d")
+    week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+    month_key = now.strftime("%Y-%m")
+
+    # ================= GET RAW DATA =================
+    today_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE DATE(reported_date)=?
+    """, (today,)).fetchall()
+
+    week_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE DATE(reported_date) BETWEEN ? AND ?
+    """, (week_start, today)).fetchall()
+
+    month_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE strftime('%Y-%m', reported_date)=?
+    """, (month_key,)).fetchall()
+
+    # ================= CALCULATE CORRECT REVENUE =================
+    today_revenue = calculate_revenue(today_rows)
+    week_revenue = calculate_revenue(week_rows)
+    month_revenue = calculate_revenue(month_rows)
+
+    # ================= CARS TODAY =================
+    cars_today = conn.execute("""
+        SELECT COUNT(*)
+        FROM orders
+        WHERE paid_amount > 0
+        AND DATE(reported_date)=?
+    """, (today,)).fetchone()[0]
+
+    # ================= RECENT SALES =================
+    recent_sales_raw = conn.execute("""
+        SELECT
+            id,
+            COALESCE(invoice_no, '') AS invoice_no,
+            COALESCE(car_plate, '-') AS car_plate,
+            COALESCE(car_type, '-') AS car_type,
+            COALESCE(service_type, '-') AS service_type,
+            COALESCE(payment_method, '-') AS payment_method,
+            COALESCE(price, 0) AS price,
+            COALESCE(discount, 0) AS discount,
+            COALESCE(paid_amount, 0) AS paid_amount,
+            created_at,
+            COALESCE(payment_status, '-') AS payment_status
+        FROM orders
+        ORDER BY created_at DESC, id DESC
+        LIMIT 10
+    """).fetchall()
+
+    recent_sales = []
+
+    for r in recent_sales_raw:
+        invoice = r["invoice_no"] if r["invoice_no"] else f"INV-{r['id']:05d}"
+        created = r["created_at"] or ""
+
+        net = r["price"] - r["discount"]
+
+        recent_sales.append({
+            "id": r["id"],
+            "invoice": invoice,
+            "car_plate": r["car_plate"],
+            "car_type": r["car_type"],
+            "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
+            "payment_method": r["payment_method"],
+            "price": r["price"],
+            "net": net,
+            "paid": r["paid_amount"],
+            "date": created[:10] if len(created) >= 10 else "-",
+            "time": created[11:19] if len(created) >= 19 else "-",
+            "status": r["payment_status"]
+        })
+
+    conn.close()
+
+    return {
+        "today_revenue": today_revenue,
+        "week_revenue": week_revenue,
+        "month_revenue": month_revenue,
+        "cars_today": cars_today,
+        "recent_sales": recent_sales
+    }
 
 @app.route("/dashboard")
 def dashboard():
@@ -796,6 +901,8 @@ def dashboard():
             service_type,
             payment_method,
             price,
+            discount,
+            paid_amount,
             created_at,
             payment_status
         FROM orders
@@ -818,6 +925,14 @@ def dashboard():
     recent_sales = []
 
     for r in recent_sales_raw:
+
+        price = r["price"] or 0
+        discount = r["discount"] or 0
+        paid = r["paid_amount"] or 0
+
+        net = price - discount
+
+
         recent_sales.append({
             "id": r["id"],
             "invoice": safe_invoice(r),
@@ -825,7 +940,13 @@ def dashboard():
             "car_type": r["car_type"] or "-",
             "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
             "payment_method": r["payment_method"] or "-",
-            "price": r["price"] or 0,
+            # 🔥 IMPORTANT FIELDS
+            "price": price,
+            "discount": discount,
+            "net": net,
+            "paid": paid,
+
+
             "date": r["created_at"][:10] if r["created_at"] else "-",
             "time": r["created_at"][11:19] if r["created_at"] else "-",
             "status": r["payment_status"] or "-"
