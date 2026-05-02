@@ -240,6 +240,8 @@ color:#aaa;
 <th>Car Plate</th>
 <th>Service</th>
 <th>Price</th>
+<th>Net</th>
+<th>Paid</th>
 <th>Time</th>
 </tr>
 
@@ -252,6 +254,8 @@ color:#aaa;
 <td>{{ sale.car_plate }}</td>
 <td>{{ sale.service_type }}</td>
 <td>RM {{ sale.price }}</td>
+<td>RM {{ "%.2f"|format(sale.net) }}</td>
+<td>RM {{ "%.2f"|format(sale.paid) }}</td>
 <td>{{ sale.time }}</td>
 </tr>
 
@@ -383,6 +387,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <td>${sale.car_plate}</td>
                     <td>${sale.service_type}</td>
                     <td>RM ${sale.price}</td>
+                    <td>RM ${sale.net.toFixed(2)}</td>
+                    <td>RM ${sale.paid.toFixed(2)}</td>
                     <td>${sale.time}</td>
                 </tr>
                 `;
