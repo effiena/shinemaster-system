@@ -768,21 +768,11 @@ def safe_invoice(row):
         return f"INV-{row['id']:05d}"
     return inv
 
-def calculate_revenue(rows):
-    total = 0
+@app.route("/dashboard_data")
+def dashboard_data():
+    if session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
 
-    for r in rows:
-        price = r["price"] or 0
-        discount = r["discount"] or 0
-        paid = r["paid_amount"] or 0
-
-        net = price - discount
-        total += min(paid, net)
-
-    return round(total, 2)
-
-
-def get_revenue_data():
     conn = get_db_connection()
     now = now_kul()
 
@@ -790,7 +780,25 @@ def get_revenue_data():
     week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
     month_key = now.strftime("%Y-%m")
 
-    # ================= GET RAW DATA =================
+    # ================= HELPER =================
+    def calculate_revenue(rows):
+        total = 0
+        for r in rows:
+            price = r["price"] or 0
+            discount = r["discount"] or 0
+            paid = r["paid_amount"] or 0
+
+            net = price - discount
+
+            # Prevent negative / overcount
+            if net < 0:
+                net = 0
+
+            total += min(paid, net)
+
+        return round(total, 2)
+
+    # ================= FETCH DATA =================
     today_rows = conn.execute("""
         SELECT price, discount, paid_amount
         FROM orders
@@ -809,7 +817,7 @@ def get_revenue_data():
         WHERE strftime('%Y-%m', reported_date)=?
     """, (month_key,)).fetchall()
 
-    # ================= CALCULATE CORRECT REVENUE =================
+    # ================= CALCULATE =================
     today_revenue = calculate_revenue(today_rows)
     week_revenue = calculate_revenue(week_rows)
     month_revenue = calculate_revenue(month_rows)
@@ -844,10 +852,16 @@ def get_revenue_data():
     recent_sales = []
 
     for r in recent_sales_raw:
+        price = r["price"]
+        discount = r["discount"]
+        paid = r["paid_amount"]
+
+        net = price - discount
+        if net < 0:
+            net = 0
+
         invoice = r["invoice_no"] if r["invoice_no"] else f"INV-{r['id']:05d}"
         created = r["created_at"] or ""
-
-        net = r["price"] - r["discount"]
 
         recent_sales.append({
             "id": r["id"],
@@ -856,9 +870,9 @@ def get_revenue_data():
             "car_type": r["car_type"],
             "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
             "payment_method": r["payment_method"],
-            "price": r["price"],
-            "net": net,
-            "paid": r["paid_amount"],
+            "price": round(price, 2),
+            "net": round(net, 2),
+            "paid": round(paid, 2),
             "date": created[:10] if len(created) >= 10 else "-",
             "time": created[11:19] if len(created) >= 19 else "-",
             "status": r["payment_status"]
@@ -866,13 +880,13 @@ def get_revenue_data():
 
     conn.close()
 
-    return {
+    return jsonify({
         "today_revenue": today_revenue,
         "week_revenue": week_revenue,
         "month_revenue": month_revenue,
         "cars_today": cars_today,
         "recent_sales": recent_sales
-    }
+    })
 
 @app.route("/dashboard")
 def dashboard():
@@ -970,39 +984,63 @@ def get_revenue_data():
     now = now_kul()
 
     today = now.strftime("%Y-%m-%d")
-    week_start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    # ✅ FIX 1: Proper week (Monday → Today)
+    week_start = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d")
+
     month_key = now.strftime("%Y-%m")
 
-    # ================= REVENUE (PAID ONLY) =================
-    today_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM orders
-        WHERE payment_status='Paid'
-        AND DATE(reported_date)=?
-    """, (today,)).fetchone()[0]
+    # ================= HELPER =================
+    def calculate_revenue(rows):
+        total = 0
+        for r in rows:
+            price = r["price"] or 0
+            discount = r["discount"] or 0
+            paid = r["paid_amount"] or 0
 
-    week_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM orders
-        WHERE payment_status='Paid'
-        AND DATE(reported_date) BETWEEN ? AND ?
-    """, (week_start, today)).fetchone()[0]
+            net = price - discount
 
-    month_revenue = conn.execute("""
-        SELECT IFNULL(SUM(price),0)
-        FROM orders
-        WHERE payment_status='Paid'
-        AND strftime('%Y-%m', reported_date)=?
-    """, (month_key,)).fetchone()[0]
+            # ✅ prevent negative values
+            if net < 0:
+                net = 0
 
+            total += min(paid, net)
+
+        return round(total, 2)
+
+    # ================= GET RAW DATA =================
+    today_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE DATE(reported_date)=?
+    """, (today,)).fetchall()
+
+    week_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE DATE(reported_date) BETWEEN ? AND ?
+    """, (week_start, today)).fetchall()
+
+    month_rows = conn.execute("""
+        SELECT price, discount, paid_amount
+        FROM orders
+        WHERE strftime('%Y-%m', reported_date)=?
+    """, (month_key,)).fetchall()
+
+    # ================= CALCULATE =================
+    today_revenue = calculate_revenue(today_rows)
+    week_revenue = calculate_revenue(week_rows)
+    month_revenue = calculate_revenue(month_rows)
+
+    # ================= CARS TODAY =================
     cars_today = conn.execute("""
         SELECT COUNT(*)
         FROM orders
-        WHERE payment_status='Paid'
+        WHERE paid_amount > 0
         AND DATE(reported_date)=?
     """, (today,)).fetchone()[0]
 
-    # ================= RECENT SALES (FULL INVOICE SAFE) =================
+    # ================= RECENT SALES =================
     recent_sales_raw = conn.execute("""
         SELECT
             id,
@@ -1012,10 +1050,9 @@ def get_revenue_data():
             COALESCE(service_type, '-') AS service_type,
             COALESCE(payment_method, '-') AS payment_method,
             COALESCE(price, 0) AS price,
-            invoice_date,
-            reported_date,
+            COALESCE(discount, 0) AS discount,
+            COALESCE(paid_amount, 0) AS paid_amount,
             created_at,
-            COALESCE(loyalty_status, '-') AS loyalty_status,
             COALESCE(payment_status, '-') AS payment_status
         FROM orders
         ORDER BY created_at DESC, id DESC
@@ -1024,27 +1061,33 @@ def get_revenue_data():
 
     recent_sales = []
 
-    for row in recent_sales_raw:
+    for r in recent_sales_raw:
+        price = r["price"]
+        discount = r["discount"]
+        paid = r["paid_amount"]
 
-        # ✅ GUARANTEE INVOICE ALWAYS EXISTS
-        invoice = row["invoice_no"] if row["invoice_no"] else f"INV-{row['id']:05d}"
+        net = price - discount
 
-        created = row["created_at"] or ""
+        # ✅ prevent negative
+        if net < 0:
+            net = 0
+
+        invoice = r["invoice_no"] if r["invoice_no"] else f"INV-{r['id']:05d}"
+        created = r["created_at"] or ""
 
         recent_sales.append({
-            "id": row["id"],
+            "id": r["id"],
             "invoice": invoice,
-            "car_plate": row["car_plate"],
-            "car_type": row["car_type"],
-            "service_type": SERVICE_NAMES.get(row["service_type"], row["service_type"]),
-            "payment_method": row["payment_method"],
-            "price": row["price"],
-            "invoice_date": row["invoice_date"] or "-",
-            "reported_date": row["reported_date"] or "-",
+            "car_plate": r["car_plate"],
+            "car_type": r["car_type"],
+            "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
+            "payment_method": r["payment_method"],
+            "price": round(price, 2),
+            "net": round(net, 2),
+            "paid": round(paid, 2),
             "date": created[:10] if len(created) >= 10 else "-",
             "time": created[11:19] if len(created) >= 19 else "-",
-            "status": row["payment_status"],
-            "loyalty_status": row["loyalty_status"]
+            "status": r["payment_status"]
         })
 
     conn.close()
