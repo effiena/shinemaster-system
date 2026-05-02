@@ -239,10 +239,6 @@ def sync_old_orders_data():
     conn.close()
 
 # ================= HELPERS =================
-def generate_invoice_no(order_id, now=None):
-    if now is None:
-        now = datetime.now()
-    return f"INV-{now.strftime('%Y%m%d')}-{order_id}"
 
 def insert_order_record(
     car_plate, car_type, service_type, payment_method,
@@ -469,22 +465,32 @@ def save_receipt_to_db(car_plate, car_type, service_type, price, payment_method,
 
 ####=====POS ROUTES======#####
 
-@app.route('/pos', methods=['GET','POST'])
+# ===== POS ROUTES =====
+@app.route('/pos', methods=['GET', 'POST'])
 def pos():
     if request.method == 'POST':
+
         # ===== Gather form data =====
         car_plate = request.form['car_plate']
         car_type = request.form['car_type']
         service_type = request.form['service_type']
         price = float(request.form['price'])
         payment_method = request.form['payment_method']
-        receipt_type = request.form.get("receipt_type", "ORIGINAL")  # Default to ORIGINAL
-        paid_amount_input = request.form.get("paid_amount")  # optional form override
+        receipt_type = request.form.get("receipt_type", "ORIGINAL")
         discount = float(request.form.get('discount', 0))
+
+        # ONLY CASH uses input amount
+        paid_amount = float(request.form.get("paid_amount", price))
+
+        # ===== Time setup =====
+        now = datetime.now(TZ)
+        date_str = now.strftime("%Y-%m-%d")
+        time_str = now.strftime("%H:%M:%S")
 
         # ===== Loyalty logic =====
         conn = get_db_connection()
         cur = conn.cursor()
+
         cur.execute("SELECT paid_count FROM loyalty WHERE car_plate=?", (car_plate,))
         loyalty_row = cur.fetchone()
         count = loyalty_row["paid_count"] if loyalty_row else 0
@@ -492,90 +498,104 @@ def pos():
         loyalty_free = False
         loyalty_eligible = False
 
-        # Determine loyalty
         if loyalty_row and loyalty_row["paid_count"] == 5:
-            # This is the free wash
             loyalty_free = True
         elif count >= 4:
             loyalty_eligible = True
 
-        # Increment paid_count only for paid orders
         if not loyalty_free:
             new_count = count + 1
+
             if loyalty_row:
                 cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (new_count, car_plate))
             else:
                 cur.execute("INSERT INTO loyalty (car_plate, paid_count) VALUES (?, ?)", (car_plate, new_count))
-            conn.commit()
 
-            # If new count reaches 5, mark eligible for next visit
             if new_count == 5:
                 loyalty_eligible = True
+
             elif new_count > 5:
-                # Reset after free wash
-                cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
-                conn.commit()
+                cur.execute("UPDATE loyalty SET paid_count=0 WHERE car_plate=?", (car_plate,))
                 new_count = 0
 
             count = new_count
+
         else:
-            # Free wash: display as 6th visit, reset counter after
             count = 6
-            cur.execute("UPDATE loyalty SET paid_count=? WHERE car_plate=?", (0, car_plate))
-            conn.commit()
+            cur.execute("UPDATE loyalty SET paid_count=0 WHERE car_plate=?", (car_plate,))
 
-        # ===== Final loyalty status & effective price =====
-        final_loyalty_status = "Free Wash" if loyalty_free else ("Eligible" if loyalty_eligible else "Not Eligible")
+        conn.commit()
+
+        # ===== Pricing logic =====
         effective_price = 0.0 if loyalty_free else price
-
-        # ===== Paid amount & balance =====
-        paid_amount = float(request.form.get("paid_amount", effective_price))
-        balance = effective_price - paid_amount
-        payment_status = "Paid" if balance <= 0 else "Partial"
-
-
-        # ===== Insert into orders table =====
-        now = datetime.now(TZ)
-        date_str = now.strftime("%Y-%m-%d")
-        time_str = now.strftime("%H:%M:%S")
-        
-
-        print("DEBUG PRICE:", effective_price)
-        print("DEBUG PAID:", paid_amount)
-        print("DEBUG BALANCE:", balance)
-        
-        cur.execute("""
-            INSERT INTO orders
-            (car_plate, car_type, service_type, price, discount, paid_amount, balance, payment_method,
-             payment_status, loyalty_status, created_at, invoice_date, reported_date)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            car_plate, car_type, service_type, effective_price, discount, paid_amount, balance,
-            payment_method, payment_status, final_loyalty_status,
-            now.strftime("%Y-%m-%d %H:%M:%S"), date_str, date_str
-        ))
-        conn.commit()
-        order_id = cur.lastrowid
-        invoice_no = generate_invoice_no(order_id, now)
-
-        cur.execute("UPDATE orders SET invoice_no=? WHERE id=?", (invoice_no, order_id))
-        conn.commit()
-
-
-
-#++++++++=========status payment=================
-
-
-
         net_total = effective_price - discount
 
-        balance = paid_amount - net_total
-
-        if paid_amount >= net_total:
-            payment_status = "PAID"
+        # ===== PAYMENT LOGIC FIX =====
+        # CASH = user input
+        # E-Wallet / QR / Card = always full net_total (no balance issues)
+        if payment_method == "Cash":
+            final_paid = paid_amount
+            balance = net_total - final_paid
         else:
-            payment_status = "PARTIAL"
-        # ===== Prepare order dict for template =====
+            final_paid = net_total
+            balance = 0.0
+
+        payment_status = "PAID" if balance <= 0 else "PARTIAL"
+
+        # ===== DAILY INVOICE SYSTEM (FIXED) =====
+        cur.execute("""
+            SELECT COUNT(*) FROM orders
+            WHERE date = ?
+        """, (date_str,))
+        cur.execute("""
+            SELECT invoice_no
+            FROM orders
+            WHERE invoice_no LIKE ?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (f"INV-{date_str}-%",))
+
+        last = cur.fetchone()
+        if last and last["invoice_no"]:
+            last_seq = int(last["invoice_no"].split("-")[-1])
+            seq = last_seq + 1
+        else:
+            seq = 1
+        
+        invoice_no = f"INV-{date_str.replace('-','')}-{seq}"
+        
+
+        # ===== Insert order =====
+        cur.execute("""
+            INSERT INTO orders
+            (car_plate, car_type, service_type, price, discount, paid_amount, balance,
+             payment_method, payment_status, loyalty_status,
+             created_at, invoice_date, reported_date, date, time, invoice_no)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            car_plate,
+            car_type,
+            service_type,
+            effective_price,
+            discount,
+            final_paid,
+            balance,
+            payment_method,
+            payment_status,
+            "Free Wash" if loyalty_free else ("Eligible" if loyalty_eligible else "Not Eligible"),
+            now.strftime("%Y-%m-%d %H:%M:%S"),
+            date_str,
+            date_str,
+            date_str,
+            time_str,
+            invoice_no
+        ))
+
+        conn.commit()
+        order_id = cur.lastrowid
+        conn.close()
+
+        # ===== Order object for receipt =====
         order = {
             "id": order_id,
             "invoice_no": invoice_no,
@@ -584,7 +604,7 @@ def pos():
             "service_type": service_type,
             "price": effective_price,
             "discount": discount,
-            "paid_amount": paid_amount,
+            "paid_amount": final_paid,
             "balance": balance,
             "payment_method": payment_method,
             "date": date_str,
@@ -592,16 +612,16 @@ def pos():
             "loyalty_count": count,
             "loyalty_free": loyalty_free,
             "loyalty_eligible": loyalty_eligible,
-            "loyalty_status": final_loyalty_status
+            "payment_status": payment_status
         }
 
-        conn.close()
         return render_template("receipt.html", order=order, receipt_type=receipt_type)
 
-    # ===== GET request: show POS page =====
+    # ===== GET POS PAGE =====
     conn = get_db_connection()
     services = conn.execute("SELECT * FROM services ORDER BY name").fetchall()
     conn.close()
+
     return render_template("pos.html", services=services)
 
 
@@ -1177,31 +1197,78 @@ def recent_sales():
         date_to=date_to
     )
 # ================= RECEIPT =================
+# ================= RECEIPT =================
+def generate_invoice_no(conn, now=None):
+    if now is None:
+        now = datetime.now()
+
+    date_str = now.strftime("%Y%m%d")
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT invoice_no
+        FROM orders
+        WHERE invoice_no LIKE ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (f"INV-{date_str}-%",))
+
+    last = cur.fetchone()
+
+    if last and last["invoice_no"]:
+        last_seq = int(last["invoice_no"].split("-")[-1])
+        seq = last_seq + 1
+    else:
+        seq = 1
+
+    return f"INV-{date_str}-{seq}"
+
+
 @app.route("/receipt/<invoice>")
 def receipt(invoice):
     if "username" not in session:
         return redirect("/login")
 
     conn = get_db_connection()
-    row = conn.execute(
-        "SELECT * FROM orders WHERE invoice_no=? ORDER BY id DESC LIMIT 1",
-        (invoice,)
-    ).fetchone()
 
-    if row:
-        # Convert to dict
-        order = dict(row)
-        
-        # Ensure these keys exist for the template
-        order.setdefault("paid_amount", 0.0)
-        order.setdefault("balance", order.get("price", 0.0))
-        order.setdefault("payment_status", "Paid")
-
-        conn.close()
-        return render_template("receipt.html", order=order, is_copy=request.args.get("copy","false").lower()=="true", is_reprint=request.args.get("reprint","false").lower()=="true")
+    row = conn.execute("""
+        SELECT * FROM orders 
+        WHERE invoice_no=? 
+        ORDER BY id DESC 
+        LIMIT 1
+    """, (invoice,)).fetchone()
 
     conn.close()
-    return f"Receipt not found for invoice {invoice}", 404
+
+    if not row:
+        return f"Receipt not found for invoice {invoice}", 404
+
+    order = dict(row)
+
+    # ================= SAFE DEFAULTS =================
+    order.setdefault("paid_amount", 0.0)
+    order.setdefault("price", 0.0)
+    order.setdefault("discount", 0.0)
+    order.setdefault("payment_status", "Paid")
+
+    # ================= FORCE CONSISTENT DATE/TIME =================
+    # ALWAYS use created_at (source of truth)
+    if order.get("created_at"):
+        dt = order["created_at"]
+        order["date"] = dt[:10]
+        order["time"] = dt[11:16]
+
+    # ================= FIX BALANCE PROPERLY =================
+    net = order["price"] - order.get("discount", 0)
+    order["balance"] = order["paid_amount"] - net
+
+    return render_template(
+        "receipt.html",
+        order=order,
+        is_copy=request.args.get("copy", "false").lower() == "true",
+        is_reprint=request.args.get("reprint", "false").lower() == "true"
+    )
 
 # ================= PACKAGES =================
 @app.route("/packages")
