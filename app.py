@@ -1196,7 +1196,72 @@ def recent_sales():
         date_from=date_from,
         date_to=date_to
     )
-# ================= RECEIPT =================
+@app.route("/sales_report_page")
+def sales_report_page():
+    return render_template("sales_report.html")
+
+@app.route("/sales_report")
+def sales_report():
+    if "username" not in session:
+        return redirect("/login")
+
+    date_from = request.args.get("from")
+    date_to = request.args.get("to")
+
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT *
+        FROM recommendations
+        WHERE date BETWEEN ? AND ?
+        ORDER BY id DESC
+    """, (date_from, date_to)).fetchall()
+
+    total_sales = sum(r["payment_amount"] for r in rows)
+    total_commission = sum(r["commission"] for r in rows)
+
+    conn.close()
+
+    return render_template(
+        "sales_report.html",
+        rows=rows,
+        total_sales=total_sales,
+        total_commission=total_commission,
+        date_from=date_from,
+        date_to=date_to
+    )
+# ================= Admin add/update recommendation =================
+@app.route("/update_recommendation/<int:id>", methods=["POST"])
+def update_recommendation(id):
+    if "username" not in session:
+        return redirect("/login")
+
+    payment_transfer = request.form["payment_transfer"]
+
+    conn = get_db_connection()
+    conn.execute("""
+        UPDATE recommendations
+        SET payment_transfer=?
+        WHERE id=?
+    """, (payment_transfer, id))
+    conn.commit()
+    conn.close()
+
+    return redirect("/recommendation_report")
+
+@app.route("/delete_recommendation/<int:id>")
+def delete_recommendation(id):
+    if "username" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    conn.execute("DELETE FROM recommendations WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect("/recommendation_report")
+
+
 # ================= RECEIPT =================
 def generate_invoice_no(conn, now=None):
     if now is None:
@@ -1529,6 +1594,86 @@ def add_inventory():
     conn.close()
 
     return redirect("/inventory")
+
+@app.route("/recommendation_form")
+def recommendation_form():
+    return render_template("recommendation_form.html")
+
+
+@app.route("/add_recommendation", methods=["GET", "POST"])
+def add_recommendation():
+    if "username" not in session:
+        return redirect("/login")
+    invoice_no = request.form.get("invoice_no", "")
+    
+    date = request.form["date"]
+    car_plate = request.form["car_plate"]
+    package_name = request.form["package_name"]
+    sales_person = request.form["sales_person"]
+    payment_amount = float(request.form["payment_amount"])
+    payment_transfer = request.form["payment_transfer"]
+
+    commission = payment_amount * 0.10
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO recommendations (
+            invoice_no, date, car_plate, package_name,
+            sales_person, payment_amount, commission, payment_transfer
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        invoice_no, date, car_plate, package_name,
+        sales_person, payment_amount, commission, payment_transfer
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/recommendation_report")
+
+@app.route("/recommendation_report")
+def recommendation_report():
+    if "username" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    role = session.get("role")
+    sales_person = session.get("sales_person")
+
+    # =========================
+    # ADMIN VIEW (ALL DATA)
+    # =========================
+    if role == "admin":
+        rows = conn.execute("""
+            SELECT * FROM recommendations
+            ORDER BY id DESC
+        """).fetchall()
+
+    # =========================
+    # SALES PERSON VIEW (OWN DATA ONLY)
+    # =========================
+    else:
+        rows = conn.execute("""
+            SELECT * FROM recommendations
+            WHERE sales_person = ?
+            ORDER BY id DESC
+        """, (sales_person,)).fetchall()
+
+    conn.close()
+
+    # totals based on filtered data
+    total_commission = sum(r["commission"] for r in rows)
+    total_sales = sum(r["payment_amount"] for r in rows)
+
+    return render_template(
+        "recommendation_report.html",
+        reports=rows,
+        total_commission=total_commission,
+        total_sales=total_sales
+    )
 
 @app.route("/edit_inventory/<int:id>", methods=["GET", "POST"])
 def edit_inventory(id):
@@ -2071,8 +2216,105 @@ def finance():
 
 
 #=============
-#SOCKET
+#AGENT DASHBOARD
 #=============
+@app.route("/agent_dashboard")
+def agent_dashboard():
+    if "username" not in session:
+        return redirect("/login")
+
+    if session["role"] != "sales":
+        return "Access denied"
+
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT 
+            id,
+            invoice_no,
+            date,
+            car_plate,
+            package_name,
+            sales_person,
+            payment_amount,
+            commission,
+            payment_transfer
+        FROM recommendations
+        WHERE sales_person = ?
+        ORDER BY id DESC
+    """, (session["full_name"],)).fetchall()
+
+    # totals
+    total_commission = sum(r["commission"] for r in rows)
+    total_sales = sum(r["payment_amount"] for r in rows)
+
+    conn.close()
+
+    return render_template(
+        "agent_dashboard.html",
+        rows=rows,
+        total_commission=total_commission,
+        total_sales=total_sales
+    )
+
+@app.route("/recommendations")
+def recommendations():
+    if "username" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM recommendations ORDER BY id DESC")
+    rows = cur.fetchall()
+
+    conn.close()
+
+    return render_template("recommendations.html", rows=rows)
+
+
+@app.route("/agent_report/<sales_person>")
+def agent_report(sales_person):
+    if "username" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT * FROM recommendations
+        WHERE sales_person = ?
+        ORDER BY id DESC
+    """, (sales_person,)).fetchall()
+
+    conn.close()
+
+    # ===== totals =====
+    total_commission = sum(r["commission"] for r in rows)
+    total_paid = sum(r["commission"] for r in rows if r["payment_transfer"] == "Paid")
+    total_pending = sum(r["commission"] for r in rows if r["payment_transfer"] == "Pending")
+
+    return render_template(
+        "agent_report.html",
+        reports=rows,
+        sales_person=sales_person,
+        total_commission=total_commission,
+        total_paid=total_paid,
+        total_pending=total_pending
+    )
+
+@app.route("/agent_select")
+def agent_select():
+    conn = get_db_connection()
+
+    agents = conn.execute("""
+        SELECT DISTINCT sales_person FROM recommendations
+    """).fetchall()
+
+    conn.close()
+
+    return render_template("agent_select.html", agents=agents)
+
+
 # =====================
 # SOCKET EVENTS
 # =====================
