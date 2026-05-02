@@ -464,23 +464,26 @@ body{
 </div>
 
 <div class="payment-grid">
-<div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
-<div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
-<div class="pay-option" onclick="selectPayment(this,'E-Wallet')">📱 E-Wallet</div>
-<div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
+    <div class="pay-option" onclick="selectPayment(this,'Cash')">💵 Cash</div>
+    <div class="pay-option" onclick="selectPayment(this,'Card')">💳 Card</div>
+    <div class="pay-option" onclick="selectPayment(this,'E-Wallet')">📱 E-Wallet</div>
+    <div class="pay-option" onclick="selectPayment(this,'QR Code')">🔳 QR Code</div>
 </div>
 
-<div class="cash-box" id="cash_box" style="display:block;">
-        <input
-            type="number"
-            id="cash_input"
-            name="paid_amount"
-            step="0.01"
-            placeholder="Enter cash"
-            oninput="calculateBalance()"
-       >
+<div class="cash-box" id="cash_box">
+    <input
+        type="number"
+        id="paid_input"
+        name="paid_amount"
+        step="0.01"
+        placeholder="Enter paid amount"
+        oninput="calculateBalance()"
+    >
+
     <div id="balance_display">Balance: RM 0.00</div>
 </div>
+
+
 <div id="qr_box" style="display:none;">
     <img id="qr_image"
          src="{{ url_for('static', filename='tngqr.jpeg') }}"
@@ -613,7 +616,7 @@ function selectPayment(el, method){
     const qrLabel = document.getElementById('qr_label');
 
     // Toggle cash
-    cashBox.style.display = (method === 'Cash') ? 'block' : 'none';
+    cashBox.style.display = 'block';
 
     // QR logic
     if(method === 'E-Wallet'){
@@ -660,12 +663,12 @@ function calculateBalance() {
 
     let price = currentBasePrice;
     let discount = parseFloat(document.getElementById("discount_value").value || 0);
-    let cash = parseFloat(document.getElementById("cash_input").value || 0);
+    let paid = parseFloat(document.getElementById("paid_input").value || 0);
 
     let net = price - discount;
     if(net < 0) net = 0;
 
-    let balance = cash - net;
+    let balance = paid - net;
 
     document.getElementById("balance_display").innerText =
         "Balance: RM " + balance.toFixed(2);
@@ -685,7 +688,7 @@ function completePayment(){
     const plate = document.getElementById('car_plate').value;
     const carType = document.getElementById('car_type').value;
     const price = parseFloat(document.getElementById("price").value || 0);
-    const paid = parseFloat(document.getElementById("cash_input").value || 0);
+    const paid = parseFloat(document.getElementById("paid_input").value || 0);
     const discount = parseFloat(document.getElementById("discount_value").value || 0);
 
     let form = document.createElement("form");
