@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sales Report</title>
+
+<style>
+body{
+font-family:Arial;
+background:#0f0f0f;
+color:white;
+margin:0;
+}
+
+.header{
+background:#ba55d3;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{
+padding:20px;
+}
+
+.section{
+background:#1c1c1c;
+padding:20px;
+border-radius:10px;
+}
+
+input, button{
+padding:10px;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th, td{
+padding:10px;
+border-bottom:1px solid #333;
+}
+
+th{
+background:#2a2a2a;
+}
+
+button{
+background:#ba55d3;
+color:white;
+border:none;
+cursor:pointer;
+border-radius:5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<h2>Sales Report</h2>
+<a href="/"><button>Back</button></a>
+</div>
+
+<div class="container">
+
+<div class="section">
+
+<h3>Filter Date</h3>
+
+<input type="date" id="fromDate">
+<input type="date" id="toDate">
+<button onclick="loadReport()">Search</button>
+<button onclick="window.print()">Print</button>
+
+<table>
+<thead>
+<tr>
+<th>Invoice</th>
+<th>Car Plate</th>
+<th>Service</th>
+<th>Price</th>
+<th>Net</th>
+<th>Paid</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody id="reportBody">
+<tr><td colspan="7" style="text-align:center;">Select date range</td></tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+function loadReport(){
+
+let from = document.getElementById("fromDate").value;
+let to = document.getElementById("toDate").value;
+
+// 🔥 If no date selected → load ALL sales
+let url = "/sales_report";
+
+if (from && to) {
+    url = `/sales_report?from=${from}&to=${to}`;
+}
+
+fetch(url)
+.then(res => res.json())
+.then(data => {
+
+let rows = "";
+
+if(data.length === 0){
+rows = "<tr><td colspan='7'>No data found</td></tr>";
+}
+
+data.forEach(s => {
+rows += `
+<tr>
+<td>${s.invoice}</td>
+<td>${s.car_plate}</td>
+<td>${s.service_type}</td>
+<td>RM ${s.price}</td>
+<td>RM ${s.net.toFixed(2)}</td>
+<td>RM ${s.paid.toFixed(2)}</td>
+<td>${s.date}</td>
+</tr>
+`;
+});
+
+document.getElementById("reportBody").innerHTML = rows;
+
+});
+
+}
+
+
+document.getElementById("reportBody").innerHTML = rows;
+
+});
+
+}
+document.addEventListener("DOMContentLoaded", function () {
+    loadReport(); // 🔥 auto load all sales
+});
+</script>
+
+</body>
+</html>
