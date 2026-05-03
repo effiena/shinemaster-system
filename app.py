@@ -2282,7 +2282,63 @@ def agent_select():
 
     return render_template("agent_select.html", agents=agents)
 
+@app.route("/sales_report")
+def sales_report():
+    if session.get("role") != "admin":
+        return {"error": "unauthorized"}, 403
 
+    from_date = request.args.get("from")
+    to_date = request.args.get("to")
+
+    conn = get_db_connection()
+
+    query = """
+        SELECT
+            id,
+            invoice_no,
+            car_plate,
+            service_type,
+            price,
+            discount,
+            paid_amount,
+            created_at
+        FROM orders
+        WHERE 1=1
+    """
+
+    params = []
+
+    if from_date and to_date:
+        query += " AND DATE(created_at) BETWEEN ? AND ?"
+        params.extend([from_date, to_date])
+
+    query += " ORDER BY id DESC"
+
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+
+    sales = []
+
+    for r in rows:
+        price = r["price"] or 0
+        discount = r["discount"] or 0
+        paid = r["paid_amount"] or 0
+
+        net = price - discount
+        if net < 0:
+            net = 0
+
+        sales.append({
+            "invoice": r["invoice_no"] or f"INV-{r['id']:05d}",
+            "car_plate": r["car_plate"] or "-",
+            "service_type": r["service_type"],
+            "price": round(price, 2),
+            "net": round(net, 2),
+            "paid": round(paid, 2),
+            "date": r["created_at"][:10] if r["created_at"] else "-"
+        })
+
+    return jsonify(sales)
 # =====================
 # SOCKET EVENTS
 # =====================
