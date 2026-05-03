@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Recommendation</title>
+</head>
+<body>
+
+<h2>Add Recommendation</h2>
+
+<form method="POST" action="/add_recommendation">
+
+    <input name="invoice_no" placeholder="Invoice No" required><br><br>
+
+    <input type="date" name="date" required><br><br>
+
+    <input name="car_plate" placeholder="Car Plate" required><br><br>
+
+    <input name="package_name" placeholder="Package Name" required><br><br>
+
+    <input name="sales_person" placeholder="Sales By" required><br><br>
+
+    <input name="payment_amount" placeholder="Payment Amount" required><br><br>
+
+    <select name="payment_transfer">
+        <option value="Pending">Pending</option>
+        <option value="Paid">Paid</option>
+    </select><br><br>
+
+    <button type="submit">Save</button>
+
+</form>
+
+</body>
+</html>
