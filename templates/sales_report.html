@@ -56,6 +56,30 @@ border:none;
 cursor:pointer;
 border-radius:5px;
 }
+
+/* PRINT MODE */
+@media print {
+body{
+background:white;
+color:black;
+}
+
+.header, button, input{
+display:none;
+}
+
+.section{
+background:white;
+}
+
+table{
+color:black;
+}
+
+th{
+background:#ddd;
+}
+}
 </style>
 
 </head>
@@ -71,13 +95,39 @@ border-radius:5px;
 
 <div class="section">
 
+<!-- 🔥 COMPANY HEADER -->
+<div style="text-align:center; margin-bottom:20px; border-bottom:1px solid #444; padding-bottom:15px;">
+
+<h2>SHINE MASTER SOLUTION</h2>
+
+<p>
+68, Jalan Putra 1,<br>
+Taman Tan Sri Yaacob,<br>
+81300 Skudai, Johor
+</p>
+
+<p style="font-size:13px; color:#aaa;">
+Reg. No: SA0650100-H | Contact: 018-2096907
+</p>
+
+<h3>SALES REPORT</h3>
+
+<p style="font-size:12px; color:#aaa;">
+Generated on: <span id="reportDate"></span>
+</p>
+
+</div>
+
+<!-- FILTER -->
 <h3>Filter Date</h3>
 
 <input type="date" id="fromDate">
 <input type="date" id="toDate">
+
 <button onclick="loadReport()">Search</button>
 <button onclick="window.print()">Print</button>
 
+<!-- TABLE -->
 <table>
 <thead>
 <tr>
@@ -118,12 +168,16 @@ function loadReport(){
     .then(data => {
 
         let rows = "";
+        let total = 0;
 
         if(data.length === 0){
             rows = "<tr><td colspan='7'>No data found</td></tr>";
         }
 
         data.forEach(s => {
+
+            total += s.paid;
+
             rows += `
             <tr>
                 <td>${s.invoice}</td>
@@ -137,6 +191,15 @@ function loadReport(){
             `;
         });
 
+        if(data.length > 0){
+            rows += `
+            <tr style="font-weight:bold;">
+                <td colspan="5" style="text-align:right;">TOTAL</td>
+                <td colspan="2">RM ${total.toFixed(2)}</td>
+            </tr>
+            `;
+        }
+
         document.getElementById("reportBody").innerHTML = rows;
 
     })
@@ -148,7 +211,9 @@ function loadReport(){
 // AUTO LOAD
 document.addEventListener("DOMContentLoaded", function () {
     loadReport();
+    document.getElementById("reportDate").innerText = new Date().toLocaleString();
 });
 </script>
+
 </body>
 </html>
