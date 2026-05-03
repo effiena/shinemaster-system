@@ -1,0 +1,29 @@
+<h2>Commission Report</h2>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>ID</th>
+        <th>Invoice</th>
+        <th>Date</th>
+        <th>Car Plate</th>
+        <th>Package</th>
+        <th>Sales By</th>
+        <th>Payment</th>
+        <th>Commission</th>
+        <th>Transfer</th>
+    </tr>
+
+    {% for r in rows %}
+    <tr>
+        <td>{{ r["id"] }}</td>
+        <td>{{ r["invoice_no"] }}</td>
+        <td>{{ r["date"] }}</td>
+        <td>{{ r["car_plate"] }}</td>
+        <td>{{ r["package_name"] }}</td>
+        <td>{{ r["sales_person"] }}</td>
+        <td>RM {{ r["payment_amount"] }}</td>
+        <td>RM {{ r["commission"] }}</td>
+        <td>{{ r["payment_transfer"] }}</td>
+    </tr>
+    {% endfor %}
+</table>
