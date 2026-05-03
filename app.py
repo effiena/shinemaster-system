@@ -544,26 +544,25 @@ def pos():
 
         # ===== DAILY INVOICE SYSTEM (FIXED) =====
         cur.execute("""
-            SELECT COUNT(*) FROM orders
-            WHERE date = ?
-        """, (date_str,))
-        cur.execute("""
             SELECT invoice_no
             FROM orders
             WHERE invoice_no LIKE ?
             ORDER BY id DESC
             LIMIT 1
-        """, (f"INV-{date_str}-%",))
+        """, (f"INV-{date_str.replace('-','')}-%",))
 
         last = cur.fetchone()
-        if last and last["invoice_no"]:
-            last_seq = int(last["invoice_no"].split("-")[-1])
+
+        if last and last[0]:
+            last_seq = int(last[0].split("-")[-1])
             seq = last_seq + 1
         else:
             seq = 1
-        
+
         invoice_no = f"INV-{date_str.replace('-','')}-{seq}"
-        
+
+
+
 
         # ===== Insert order =====
         cur.execute("""
@@ -1200,36 +1199,6 @@ def recent_sales():
 def sales_report_page():
     return render_template("sales_report.html")
 
-@app.route("/sales_report")
-def sales_report():
-    if "username" not in session:
-        return redirect("/login")
-
-    date_from = request.args.get("from")
-    date_to = request.args.get("to")
-
-    conn = get_db_connection()
-
-    rows = conn.execute("""
-        SELECT *
-        FROM recommendations
-        WHERE date BETWEEN ? AND ?
-        ORDER BY id DESC
-    """, (date_from, date_to)).fetchall()
-
-    total_sales = sum(r["payment_amount"] for r in rows)
-    total_commission = sum(r["commission"] for r in rows)
-
-    conn.close()
-
-    return render_template(
-        "sales_report.html",
-        rows=rows,
-        total_sales=total_sales,
-        total_commission=total_commission,
-        date_from=date_from,
-        date_to=date_to
-    )
 # ================= Admin add/update recommendation =================
 @app.route("/update_recommendation/<int:id>", methods=["POST"])
 def update_recommendation(id):
@@ -1268,7 +1237,6 @@ def generate_invoice_no(conn, now=None):
         now = datetime.now()
 
     date_str = now.strftime("%Y%m%d")
-
     cur = conn.cursor()
 
     cur.execute("""
