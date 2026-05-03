@@ -104,56 +104,51 @@ border-radius:5px;
 <script>
 function loadReport(){
 
-let from = document.getElementById("fromDate").value;
-let to = document.getElementById("toDate").value;
+    let from = document.getElementById("fromDate").value;
+    let to = document.getElementById("toDate").value;
 
-// 🔥 If no date selected → load ALL sales
-let url = "/sales_report";
+    let url = "/sales_report";
 
-if (from && to) {
-    url = `/sales_report?from=${from}&to=${to}`;
+    if (from && to) {
+        url = `/sales_report?from=${from}&to=${to}`;
+    }
+
+    fetch(url)
+    .then(res => res.json())
+    .then(data => {
+
+        let rows = "";
+
+        if(data.length === 0){
+            rows = "<tr><td colspan='7'>No data found</td></tr>";
+        }
+
+        data.forEach(s => {
+            rows += `
+            <tr>
+                <td>${s.invoice}</td>
+                <td>${s.car_plate}</td>
+                <td>${s.service_type}</td>
+                <td>RM ${s.price}</td>
+                <td>RM ${s.net.toFixed(2)}</td>
+                <td>RM ${s.paid.toFixed(2)}</td>
+                <td>${s.date}</td>
+            </tr>
+            `;
+        });
+
+        document.getElementById("reportBody").innerHTML = rows;
+
+    })
+    .catch(err => {
+        console.error("FETCH ERROR:", err);
+    });
 }
 
-fetch(url)
-.then(res => res.json())
-.then(data => {
-
-let rows = "";
-
-if(data.length === 0){
-rows = "<tr><td colspan='7'>No data found</td></tr>";
-}
-
-data.forEach(s => {
-rows += `
-<tr>
-<td>${s.invoice}</td>
-<td>${s.car_plate}</td>
-<td>${s.service_type}</td>
-<td>RM ${s.price}</td>
-<td>RM ${s.net.toFixed(2)}</td>
-<td>RM ${s.paid.toFixed(2)}</td>
-<td>${s.date}</td>
-</tr>
-`;
-});
-
-document.getElementById("reportBody").innerHTML = rows;
-
-});
-
-}
-
-
-document.getElementById("reportBody").innerHTML = rows;
-
-});
-
-}
+// AUTO LOAD
 document.addEventListener("DOMContentLoaded", function () {
-    loadReport(); // 🔥 auto load all sales
+    loadReport();
 });
 </script>
-
 </body>
 </html>
