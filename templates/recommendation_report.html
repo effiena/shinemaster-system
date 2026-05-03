@@ -1,0 +1,65 @@
+<h2>Recommendation Report</h2>
+<style>
+@media print {
+    button, a {
+        display: none;
+    }
+}
+</style>
+<button onclick="window.location.href='/recommendation_form'">➕ Add New</button>
+<button onclick="window.print()">🖨️ Print</button>
+
+<br><br>
+
+<p><b>Total Sales:</b> RM {{ total_sales }}</p>
+<p><b>Total Commission:</b> RM {{ total_commission }}</p>
+
+<table border="1" width="100%">
+<tr>
+    <th>Invoice</th>
+    <th>Date</th>
+    <th>Car Plate</th>
+    <th>Package</th>
+    <th>Sales By</th>
+    <th>Payment</th>
+    <th>Commission</th>
+    <th>Transfer</th>
+    <th>Action</th>
+</tr>
+
+{% for r in reports %}
+<tr>
+    <td>{{ r.invoice_no }}</td>
+    <td>{{ r.date }}</td>
+    <td>{{ r.car_plate }}</td>
+    <td>{{ r.package_name }}</td>
+    <td>{{ r.sales_person }}</td>
+    <td>RM {{ r.payment_amount }}</td>
+    <td>RM {{ r.commission }}</td>
+
+    <!-- ✅ UPDATE STATUS -->
+    <td>
+        <form method="POST" action="/update_recommendation/{{ r.id }}">
+            <select name="payment_transfer" onchange="this.form.submit()">
+                <option value="Pending" {% if r.payment_transfer == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Paid" {% if r.payment_transfer == 'Paid' %}selected{% endif %}>Paid</option>
+            </select>
+        </form>
+    </td>
+
+    <!-- ✅ ACTION BUTTONS -->
+    <td>
+        <a href="/delete_recommendation/{{ r.id }}" 
+           onclick="return confirm('Delete this record?')">
+           ❌ Delete
+        </a>
+    </td>
+
+</tr>
+{% endfor %}
+</table>
+
+<br>
+
+<!-- ✅ BACK BUTTON -->
+<button onclick="window.location.href='/dashboard'">⬅ Back</button>
