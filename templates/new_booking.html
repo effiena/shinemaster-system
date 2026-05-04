@@ -363,6 +363,7 @@ function selectMode(el){
 
 /* CALENDAR */
 let startDate = new Date();
+startDate.setHours(0,0,0,0);
 async function generateWeek(){
     const cal = document.getElementById("calendar");
     cal.innerHTML = "";
@@ -370,8 +371,11 @@ async function generateWeek(){
     for(let i=0;i<7;i++){
         let d = new Date(startDate);
         d.setDate(d.getDate()+i);
-
-        let dateStr = d.toISOString().split('T')[0];
+          
+        let dateStr =
+            d.getFullYear() + "-" +
+            String(d.getMonth()+1).padStart(2,'0') + "-" +
+            String(d.getDate()).padStart(2,'0');
 
         // 🔥 CALL BACKEND
         let res = await fetch(`/get_slots?date=${dateStr}`);

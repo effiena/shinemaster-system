@@ -344,6 +344,55 @@ def logout():
     session.clear()
     return redirect("/login")
 
+@app.route("/voucher")
+def voucher():
+    invoice = request.args.get("invoice", "-")
+    car_plate = request.args.get("car_plate", "-")
+    service = request.args.get("service", "-")
+    amount = request.args.get("amount", "0")
+    date = request.args.get("date", "")
+    time = request.args.get("time", "")
+
+    return render_template(
+        "voucher.html",
+        invoice=invoice,
+        car_plate=car_plate,
+        service=service,
+        amount=amount,
+        date=date,
+        time=time
+    )
+
+@app.route("/voucher/<car_plate>")
+def voucher_by_car(car_plate):
+
+    conn = get_db_connection()
+
+    order = conn.execute("""
+        SELECT * FROM orders
+        WHERE car_plate = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (car_plate,)).fetchone()
+
+    conn.close()
+
+    if not order:
+        return "Order not found"
+
+    return render_template(
+        "voucher.html",
+        invoice=order["invoice_no"],
+        car_plate=order["car_plate"],
+        service=order["service_type"],
+        amount=8,   # manual discount RM8
+        date=order["created_at"][:10],
+        time=order["created_at"][11:19]
+    )
+
+@app.route("/counter")
+def counter():
+    return render_template("counter.html")
 # ========= LAUNCH PAGE =============
 @app.route('/launch_page')
 def launch_page():
