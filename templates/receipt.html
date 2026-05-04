@@ -265,40 +265,40 @@ function printLocal(){
 
 function printBluetooth(){
 
-let receipt = `
-SHINE MASTER SOLUTION
----------------------
-Invoice: {{ order["invoice_no"] }}
-Date: {{ order["date"] }}
-Time: {{ order["time"] }}
+let receipt = "";
 
-Car Plate: {{ order["car_plate"] }}
-Service: {{ order["service_type"] }}
+receipt += "SHINE MASTER SOLUTION\n";
+receipt += "---------------------\n";
 
-Total: RM {{ "%.2f"|format(order["price"]) }}
-Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
-Status: {{ order["payment_status"] }}
-
-{% if order["service_type"].startswith("wash_") %}
-Paid Wash: {{ order["loyalty_count"] }}/5
+{% if request.args.get('copy') == 'true' %}
+receipt += "*** COPY RECEIPT ***\n";
 {% endif %}
 
-Thank You!
-`;
+receipt += "Invoice: {{ order['invoice_no'] }}\n";
+receipt += "Date: {{ order['date'] }} {{ order['time'] }}\n";
+
+receipt += "\n";
+receipt += "Car: {{ order['car_plate'] }}\n";
+receipt += "Service: {{ order['service_type'] }}\n";
+
+receipt += "\n";
+receipt += "Total: RM {{ '%.2f'|format(order['price']) }}\n";
+receipt += "Paid: RM {{ '%.2f'|format(order['paid_amount']) }}\n";
+receipt += "Status: PAID\n";
+
+{% if order["payment_method"] == "Cash" %}
+receipt += "Balance: RM {{ '%.2f'|format(order['paid_amount'] - (order['price'] - order.get('discount',0))) }}\n";
+{% endif %}
+
+{% if order["service_type"].startswith("wash_") %}
+receipt += "Wash: {{ order['loyalty_count'] }}/5\n";
+{% endif %}
+
+receipt += "\nThank You\n";
 
 let url = "rawbt://print?text=" + encodeURIComponent(receipt);
 window.location.href = url;
 
-}
-
-window.onload = function(){
-    setTimeout(function(){
-        window.print();
-    },500);
-}
-
-if (window.parent && window.parent.document.getElementById("last_invoice_no")) {
-    window.parent.document.getElementById("last_invoice_no").value = "{{ order.invoice_no }}";
 }
 
 </script>
