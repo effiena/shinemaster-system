@@ -155,7 +155,6 @@ Tel: +6018-2096907
 <p>Not Eligible Yet</p>
 {% endif %}
 
-<!-- ✅ ONLY SHOW FOR WASH SERVICES -->
 {% set is_wash = order["service_type"].startswith("wash_") %}
 
 {% if is_wash %}
@@ -186,14 +185,20 @@ Hope To See You Again 🚗
 <button onclick="printBluetooth()">Bluetooth Print</button>
 <br><br>
 
-<!-- ✅ PRINT COPY BUTTON -->
-<a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank" style=" padding:8px 15px; background:#FF9800; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
+<a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
+style=" padding:8px 15px; background:#FF9800; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
 Print Copy Receipt
 </a>
 
 <br><br>
 
-<a href="{{ url_for('home') }}" style=" padding:8px 15px; background:#4CAF50; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
+<a href="{{ url_for('home') }}" style="
+padding:8px 15px;
+background:#4CAF50;
+color:white;
+text-decoration:none;
+border-radius:5px;
+font-weight:bold;">
 New Order
 </a>
 
@@ -207,7 +212,7 @@ function printLocal(){
 
 function printBluetooth(){
 
-let receipt = SHINE MASTER SOLUTION
+let receipt = `SHINE MASTER SOLUTION
 ---------------------
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
@@ -220,8 +225,7 @@ Status: {{ order["payment_status"] }}
 {% if order["service_type"].startswith("wash_") %}
 Paid Wash: {{ order["loyalty_count"] }}/5
 {% endif %}
-Thank You!
-;
+Thank You!`;
 
 let url = "rawbt://print?text=" + encodeURIComponent(receipt);
 window.location.href = url;
