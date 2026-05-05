@@ -212,8 +212,9 @@ function printLocal(){
 
 function printBluetooth(){
 
-let receipt = `SHINE MASTER SOLUTION
----------------------
+let receipt = `
+SHINE MASTER SOLUTION
+----------------------
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
 Time: {{ order["time"] }}
@@ -221,17 +222,30 @@ Time: {{ order["time"] }}
 Car Plate: {{ order["car_plate"] }}
 Service: {{ order["service_type"] }}
 
-Total: RM {{ "%.2f"|format(order["price"]) }}
-Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
-Status: {{ order["payment_status"] }}
+Subtotal: RM {{ "%.2f"|format(order["price"]) }}
+Discount: RM {{ "%.2f"|format(order.get("discount",0)) }}
+Net Total: RM {{ "%.2f"|format(order["price"] - order.get("discount",0)) }}
 
-{% if order["service_type"].startswith("wash_") %}
-Paid Wash: {{ order["loyalty_count"] }}/5
+Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
+
+{% if order["payment_method"] == "Cash" %}
+Balance: RM {{ "%.2f"|format(order["paid_amount"] - (order["price"] - order.get("discount",0))) }}
 {% endif %}
 
-Thank You!`;
+Status: PAID
 
+{% if order["service_type"].startswith("wash_") %}
+Wash Count: {{ order["loyalty_count"] }}/5
+{% endif %}
+
+----------------------
+Thank You!
+`;
+
+// ⚠️ MUST use encodeURIComponent
 let url = "rawbt://print?text=" + encodeURIComponent(receipt);
+
+// Open via Android intent
 window.location.href = url;
 
 }
