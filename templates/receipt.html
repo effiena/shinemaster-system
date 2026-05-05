@@ -212,25 +212,28 @@ function printLocal(){
 
 function printBluetooth(){
 
-    let receipt = `SHINE MASTER SOLUTION
+let receipt = `SHINE MASTER SOLUTION
 ---------------------
 Invoice: {{ order["invoice_no"] }}
 Date: {{ order["date"] }}
 Time: {{ order["time"] }}
+
 Car Plate: {{ order["car_plate"] }}
 Service: {{ order["service_type"] }}
+
 Total: RM {{ "%.2f"|format(order["price"]) }}
 Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
-Status: {{ order["payment_status"] or "PAID" }}
+Status: {{ order["payment_status"] }}
+
 {% if order["service_type"].startswith("wash_") %}
 Paid Wash: {{ order["loyalty_count"] }}/5
 {% endif %}
+
 Thank You!`;
 
-    // Small delay improves Android Bluetooth intent success rate
-    setTimeout(function(){
-        window.location.href = "rawbt://print?text=" + encodeURIComponent(receipt);
-    }, 150);
+let url = "rawbt://print?text=" + encodeURIComponent(receipt);
+window.location.href = url;
+
 }
 
 // ❌ IMPORTANT FIX: removed auto window.print() (it blocks Bluetooth print on Android)
