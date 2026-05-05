@@ -190,15 +190,31 @@ style=" padding:8px 15px; background:#FF9800; color:white; text-decoration:none;
 Print Copy Receipt
 </a>
 
-<br><br>
+<a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
+style="
+display:block;
+margin:15px 0;
+padding:12px;
+background:#FF9800;
+color:white;
+text-decoration:none;
+border-radius:6px;
+font-weight:bold;
+text-align:center;">
+Print Copy Receipt
+</a>
 
-<a href="{{ url_for('home') }}" style="
-padding:8px 15px;
+<a href="{{ url_for('home') }}"
+style="
+display:block;
+margin:15px 0;
+padding:12px;
 background:#4CAF50;
 color:white;
 text-decoration:none;
-border-radius:5px;
-font-weight:bold;">
+border-radius:6px;
+font-weight:bold;
+text-align:center;">
 New Order
 </a>
 
@@ -212,40 +228,64 @@ function printLocal(){
 
 function printBluetooth(){
 
+function line(left, right){
+    const total = 32; // POS58C3 = 32 chars
+    left = left.toString();
+    right = right.toString();
+
+    let space = total - (left.length + right.length);
+    if(space < 1) space = 1;
+
+    return left + " ".repeat(space) + right;
+}
+
 let receipt = `
-SHINE MASTER SOLUTION
-----------------------
-Invoice: {{ order["invoice_no"] }}
-Date: {{ order["date"] }}
-Time: {{ order["time"] }}
-
-Car Plate: {{ order["car_plate"] }}
-Service: {{ order["service_type"] }}
-
-Subtotal: RM {{ "%.2f"|format(order["price"]) }}
-Discount: RM {{ "%.2f"|format(order.get("discount",0)) }}
-Net Total: RM {{ "%.2f"|format(order["price"] - order.get("discount",0)) }}
-
-Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
-
+        SHINE MASTER SOLUTION
+-------------------------------
+Reg.no:202603063234
+(SA0650100-H)
+No.68 Jalan Putra 1
+Taman Tan Sri Yaacob
+81300 Skudai, Johor
+Tel: +6018-2096907
+-------------------------------
+${line("Invoice", "{{ order['invoice_no'] }}")}
+${line("Date", "{{ order['date'] }}")}
+${line("Time", "{{ order['time'] }}")}
+${line("Order", "#00{{ order['id'] }}")}
+-------------------------------
+${line("Car Plate", "{{ order['car_plate'] }}")}
+${line("Car Type", "{{ order.get('car_type','-') }}")}
+${line("Service", "{{ order['service_type'] }}")}
+${line("Payment", "{{ order['payment_method'] }}")}
+-------------------------------
+${line("Subtotal", "RM {{ '%.2f'|format(order['price']) }}")}
+${line("Discount", "RM {{ '%.2f'|format(order.get('discount',0)) }}")}
+${line("Net Total", "RM {{ '%.2f'|format(order['price'] - order.get('discount',0)) }}")}
+${line("Paid", "RM {{ '%.2f'|format(order['paid_amount']) }}")}
 {% if order["payment_method"] == "Cash" %}
-Balance: RM {{ "%.2f"|format(order["paid_amount"] - (order["price"] - order.get("discount",0))) }}
+${line("Balance", "RM {{ '%.2f'|format(order['paid_amount'] - (order['price'] - order.get('discount',0))) }}")}
 {% endif %}
-
-Status: PAID
+${line("Status", "PAID")}
+-------------------------------
+LOYALTY STATUS
+{% if order["loyalty_free"] %}
+*** FREE WASH TODAY ***
+{% elif order["loyalty_eligible"] %}
+Eligible for Free Wash
+{% else %}
+Not Eligible Yet
+{% endif %}
 
 {% if order["service_type"].startswith("wash_") %}
-Wash Count: {{ order["loyalty_count"] }}/5
+${line("Wash Count", "{{ order['loyalty_count'] }}/5")}
 {% endif %}
-
-----------------------
-Thank You!
+-------------------------------
+   Thank You For Your Support!
+        See You Again!
 `;
 
-// ⚠️ MUST use encodeURIComponent
 let url = "rawbt://print?text=" + encodeURIComponent(receipt);
-
-// Open via Android intent
 window.location.href = url;
 
 }
