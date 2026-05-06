@@ -2,69 +2,71 @@
 <html>
 <head>
 <title>Receipt</title>
-<style>
-body{ font-family: monospace; width:180px; margin:auto; font-size:14px; }
-.company{ text-align:center; font-weight:bold; font-size:18px; }
-.center{text-align:center;}
-.line{width:100%;}
-.left{float:left;}
-.right{float:right;}
-.clear{clear:both;}
-hr{ border-top:1px dashed black; }
-.buttons{ text-align:center; margin-top:10px; }
-@media print {
-    .no-print {
-        display: none;
-    }
 
-    body {
+<style>
+
+body{
+    font-family: monospace;
+    width: 58mm;
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+}
+
+.center{ text-align:center; }
+
+.line{ width:100%; }
+
+.left{ float:left; }
+
+.right{ float:right; }
+
+.clear{ clear:both; }
+
+hr{
+    border-top:1px dashed black;
+}
+
+/* hide buttons in print */
+.no-print{
+    display:none;
+}
+
+@media print{
+    body{
         width: 58mm;
         margin: 0;
         padding: 0;
-        font-family: monospace;
+    }
+
+    .no-print{
+        display:none;
     }
 }
 
-@page {
+@page{
     size: 58mm auto;
     margin: 0;
 }
 
 </style>
 </head>
+
 <body>
 
-<!-- ================= HEADER TYPE ================= -->
-{% if is_copy %}
-<p class="center"><strong>*** COPY OF RECEIPT ***</strong></p>
-{% elif request.args.get('copy') == 'true' %}
-<p class="center"><strong>*** PRINT COPY RECEIPT ***</strong></p>
-{% elif request.args.get('reprint') == 'true' %}
-<p class="center"><strong>*** REPRINT RECEIPT ***</strong></p>
-{% else %}
-<p class="center"><strong>*** ORIGINAL RECEIPT ***</strong></p>
-{% endif %}
-
-{% set is_wash = order["service_type"].startswith("wash_") %}
-{% set is_cash = order["payment_method"] == "Cash" %}
-{% set net_total = order["price"] - order.get("discount", 0) %}
-{% set balance = order["paid_amount"] - net_total %}
-
-<!-- ================= COMPANY ================= -->
-<div class="company"> SHINE MASTER SOLUTION<br> </div>
+<!-- ================= HEADER ================= -->
 <div class="center">
------------------<br>
-Reg.no:202603063234<br>
+<b>SHINE MASTER SOLUTION</b><br>
+----------------------<br>
+Reg: 202603063234<br>
 (SA0650100-H)<br>
-No.68 Jalan Putra 1<br>
-Taman Tan Sri Yaacob<br>
-81300 Skudai, Johor<br>
-Tel: +6018-2096907
+Tel: 018-2096907<br>
+----------------------
 </div>
 
 <hr>
 
-<!-- ================= BASIC INFO ================= -->
+<!-- ================= INFO ================= -->
 <div class="line">
 <span class="left">Invoice</span>
 <span class="right">{{ order["invoice_no"] }}</span>
@@ -91,16 +93,10 @@ Tel: +6018-2096907
 
 <hr>
 
-<!-- ================= CAR INFO ================= -->
+<!-- ================= CAR ================= -->
 <div class="line">
-<span class="left">Car Plate</span>
+<span class="left">Car</span>
 <span class="right">{{ order["car_plate"] }}</span>
-<div class="clear"></div>
-</div>
-
-<div class="line">
-<span class="left">Car Type</span>
-<span class="right">{{ order.get("car_type","-") }}</span>
 <div class="clear"></div>
 </div>
 
@@ -118,10 +114,10 @@ Tel: +6018-2096907
 
 <hr>
 
-<!-- ================= PRICING ================= -->
+<!-- ================= PRICE ================= -->
 <div class="line">
-<span class="left"><strong>Subtotal</strong></span>
-<span class="right"><strong>RM {{ "%.2f"|format(order["price"]) }}</strong></span>
+<span class="left">Subtotal</span>
+<span class="right">RM {{ "%.2f"|format(order["price"]) }}</span>
 <div class="clear"></div>
 </div>
 
@@ -132,8 +128,8 @@ Tel: +6018-2096907
 </div>
 
 <div class="line">
-<span class="left"><strong>Net Total</strong></span>
-<span class="right"><strong> RM {{ "%.2f"|format(order["price"] - order.get("discount",0)) }} </strong></span>
+<span class="left"><b>Net Total</b></span>
+<span class="right"><b>RM {{ "%.2f"|format(order["price"] - order.get("discount",0)) }}</b></span>
 <div class="clear"></div>
 </div>
 
@@ -145,24 +141,24 @@ Tel: +6018-2096907
 
 <hr>
 
-{% if order["payment_method"] == "Cash" %}
 <div class="line">
 <span class="left">Balance</span>
-<span class="right"> RM {{ "%.2f"|format( order["paid_amount"] - (order["price"] - order.get("discount",0)) ) }} </span>
+<span class="right">
+RM {{ "%.2f"|format(order["paid_amount"] - (order["price"] - order.get("discount",0))) }}
+</span>
 <div class="clear"></div>
 </div>
-{% endif %}
 
 <div class="line">
 <span class="left">Status</span>
-<span class="right">PAID</span>
+<span class="right">{{ order["payment_status"] }}</span>
 <div class="clear"></div>
 </div>
 
 <hr>
 
 <!-- ================= LOYALTY ================= -->
-<p><strong>Loyalty Status</strong></p>
+<p><b>Loyalty Status</b></p>
 
 {% if order["loyalty_free"] %}
 <p class="center">🎉 FREE WASH TODAY 🎉</p>
@@ -172,139 +168,75 @@ Tel: +6018-2096907
 <p>Not Eligible Yet</p>
 {% endif %}
 
-{% set is_wash = order["service_type"].startswith("wash_") %}
-
-{% if is_wash %}
 <p>Paid Washes: {{ order["loyalty_count"] }} / 5</p>
-{% endif %}
 
 <hr>
 
 <!-- ================= THANK YOU ================= -->
 <p class="center">
-Thank You For Your Supports!<br>
-Hope To See You Again 🚗
+THANK YOU<br>
+SEE YOU AGAIN 🚗
 </p>
 
+<hr>
+
 <!-- ================= QR ================= -->
-<div style="text-align:center;margin-top:20px">
-<b>BOOK YOUR NEXT SERVICE</b><br>
+<div class="center">
+<b>BOOK NEXT SERVICE</b><br>
+
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://shinemaster-system-production.up.railway.app/booking?plate={{order.car_plate}}">
-<p>Scan to reserve your time slot 🚗</p>
+
+<p>Scan to book</p>
 </div>
+
+<hr>
 
 <!-- ================= BUTTONS ================= -->
-<div class="buttons no-print">
+<div class="no-print" style="text-align:center;margin-top:10px">
 
-<button onclick="printLocal()">Print (PC)</button>
-<br><br>
-
-<button onclick="window.print()">Print Receipt</button>
-<br><br>
-
-
-<a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
-style="
-display:block;
-margin:15px 0;
-padding:12px;
-background:#FF9800;
-color:white;
-text-decoration:none;
-border-radius:6px;
-font-weight:bold;
-text-align:center;">
-Print Copy Receipt
-</a>
-
-<a href="{{ url_for('pos') }}"
-style="
-display:block;
-margin:15px 0;
-padding:12px;
-background:#4CAF50;
-color:white;
-text-decoration:none;
-border-radius:6px;
-font-weight:bold;
-text-align:center;">
-New Order
-</a>
+<button onclick="printPOS()">PRINT RECEIPT</button>
 
 </div>
 
+<!-- ================= SCRIPT ================= -->
 <script>
 
-function printLocal(){
-    window.print();
-}
+// =============================
+// ESC/POS PRINT FUNCTION
+// =============================
+function printPOS(){
 
-function printBluetooth(){
-    window.print();
-}
+    let receipt =
+`SHINE MASTER SOLUTION
+----------------------
+Invoice: {{ order["invoice_no"] }}
+Date: {{ order["date"] }}
+Time: {{ order["time"] }}
 
+Car: {{ order["car_plate"] }}
+Service: {{ order["service_type"] }}
 
-function line(left, right){
-    const total = 32; // POS58C3 = 32 chars
-    left = left.toString();
-    right = right.toString();
+Subtotal: RM {{ "%.2f"|format(order["price"]) }}
+Discount: RM {{ "%.2f"|format(order.get("discount",0)) }}
+Total: RM {{ "%.2f"|format(order["price"] - order.get("discount",0)) }}
+Paid: RM {{ "%.2f"|format(order["paid_amount"]) }}
+Balance: RM {{ "%.2f"|format(order["paid_amount"] - (order["price"] - order.get("discount",0))) }}
 
-    let space = total - (left.length + right.length);
-    if(space < 1) space = 1;
-
-    return left + " ".repeat(space) + right;
-}
-
-let receipt = `
-        SHINE MASTER SOLUTION
--------------------------------
-Reg.no:202603063234
-(SA0650100-H)
-No.68 Jalan Putra 1
-Taman Tan Sri Yaacob
-81300 Skudai, Johor
-Tel: +6018-2096907
--------------------------------
-${line("Invoice", "{{ order['invoice_no'] }}")}
-${line("Date", "{{ order['date'] }}")}
-${line("Time", "{{ order['time'] }}")}
-${line("Order", "#00{{ order['id'] }}")}
--------------------------------
-${line("Car Plate", "{{ order['car_plate'] }}")}
-${line("Car Type", "{{ order.get('car_type','-') }}")}
-${line("Service", "{{ order['service_type'] }}")}
-${line("Payment", "{{ order['payment_method'] }}")}
--------------------------------
-${line("Subtotal", "RM {{ '%.2f'|format(order['price']) }}")}
-${line("Discount", "RM {{ '%.2f'|format(order.get('discount',0)) }}")}
-${line("Net Total", "RM {{ '%.2f'|format(order['price'] - order.get('discount',0)) }}")}
-${line("Paid", "RM {{ '%.2f'|format(order['paid_amount']) }}")}
-{% if order["payment_method"] == "Cash" %}
-${line("Balance", "RM {{ '%.2f'|format(order['paid_amount'] - (order['price'] - order.get('discount',0))) }}")}
-{% endif %}
-${line("Status", "PAID")}
--------------------------------
-LOYALTY STATUS
-{% if order["loyalty_free"] %}
-*** FREE WASH TODAY ***
-{% elif order["loyalty_eligible"] %}
-Eligible for Free Wash
-{% else %}
-Not Eligible Yet
-{% endif %}
-
-{% if order["service_type"].startswith("wash_") %}
-${line("Wash Count", "{{ order['loyalty_count'] }}/5")}
-{% endif %}
--------------------------------
-   Thank You For Your Support!
-        See You Again!
+THANK YOU
+SEE YOU AGAIN
 `;
 
+    // ESC/POS Bluetooth Print Service (Android)
+    let url = "intent://print?text=" + encodeURIComponent(receipt)
+        + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
 
-// ❌ IMPORTANT FIX: removed auto window.print() (it blocks Bluetooth print on Android)
+    window.location.href = url;
+}
 
-// Update parent window invoice (safe)
+
+// =============================
+// OPTIONAL AUTO UPDATE INVOICE
+// =============================
 if (window.parent && window.parent.document.getElementById("last_invoice_no")) {
     window.parent.document.getElementById("last_invoice_no").value = "{{ order.invoice_no }}";
 }
