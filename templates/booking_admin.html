@@ -213,33 +213,72 @@ h1{
     margin-top:8px;
 }
 
+
+/* Tablet */
 @media (max-width: 1100px){
     .calendar{
         grid-template-columns:repeat(4, 1fr);
     }
 }
 
-@media (max-width: 800px){
+/* Small tablet */
+@media (max-width: 900px){
+    .calendar{
+        grid-template-columns:repeat(3, 1fr);
+    }
+}
+
+/* Mobile grid view */
+@media (max-width: 700px){
     .calendar{
         grid-template-columns:repeat(2, 1fr);
+        gap:10px;
     }
 
     .day-header{
         display:none;
     }
+
+    .day-cell{
+        min-height:140px;
+        padding:10px;
+    }
+
+    .day-number{
+        font-size:16px;
+    }
+
+    .booking-card{
+        font-size:11px;
+        padding:6px;
+    }
 }
 
-@media (max-width: 500px){
+/* Small phones */
+@media (max-width: 420px){
     .calendar{
         grid-template-columns:1fr;
     }
 
     body{
-        padding:12px;
+        padding:10px;
     }
 
     .day-cell{
         min-height:auto;
+    }
+}
+
+.mobile-day-name{
+    font-size:11px;
+    color:#bbb;
+    margin-top:2px;
+}
+
+/* Hide on desktop */
+@media (min-width: 701px){
+    .mobile-day-name{
+        display:none;
     }
 }
 </style>
@@ -277,16 +316,37 @@ h1{
                     {% set day_bookings = grouped_bookings.get(day_key, []) %}
 
                     <div class="day-cell">
-                        <div class="day-number">{{ day }}</div>
+                        <div class="day-number">
+                            {{ day }} 
+                            <div class="mobile-day-name">
+                                {{ ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][loop.index0 % 7] }}
+                            </div>
+                        </div>
+
+
+
 
                         {% if day_bookings %}
-                            {% for b in day_bookings %}
-                                <div class="booking-card">
-                                    <div class="time">{{ b.booking_time }}</div>
-                                    <div class="service">{{ b.service_type }}</div>
-                                    <div>Plate: {{ b.car_plate }}</div>
+                            {% for b in bookings %}
+                                <div class="booking-item"
+                                    data-car_plate="{{ b.car_plate }}"
+                                    data-contact="{{ b.contact_number }}"
+                                    data-service="{{ b.service_type }}"
+                                    data-price="{{ b.price }}"
+                                    data-date="{{ b.date }}"
+                                    data-time="{{ b.time }}">
+
+                                    <b>{{ b.car_plate }}</b><br>
+                                    {{ b.service_type }}<br>
+                                    {{ b.price }}
+
                                 </div>
                             {% endfor %}
+
+
+
+
+
 
                             <div class="count-badge">{{ day_bookings|length }}/3 Confirmed</div>
 
@@ -330,6 +390,35 @@ h1{
         </div>
     </div>
 </div>
+
+<button onclick="saveAllBookings()">💾 Save All Bookings</button>
+
+<script>
+function saveAllBookings() {
+    let bookings = [];
+
+    document.querySelectorAll(".booking-item").forEach(el => {
+        bookings.push({
+            car_plate: el.dataset.car_plate,
+            contact_number: el.dataset.contact,
+            service_type: el.dataset.service,
+            price: el.dataset.price,
+            date: el.dataset.date,
+            time: el.dataset.time
+        });
+    });
+
+    fetch("/save_all_bookings", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(bookings)
+    })
+    .then(res => res.text())
+    .then(msg => alert(msg));
+}
+</script>
 
 </body>
 </html>
