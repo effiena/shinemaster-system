@@ -12,7 +12,24 @@ body{ font-family: monospace; width:180px; margin:auto; font-size:14px; }
 .clear{clear:both;}
 hr{ border-top:1px dashed black; }
 .buttons{ text-align:center; margin-top:10px; }
-@media print{ .no-print{display:none;} body{width:180px;} }
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    body {
+        width: 58mm;
+        margin: 0;
+        padding: 0;
+        font-family: monospace;
+    }
+}
+
+@page {
+    size: 58mm auto;
+    margin: 0;
+}
+
 </style>
 </head>
 <body>
@@ -182,7 +199,7 @@ Hope To See You Again 🚗
 <button onclick="printLocal()">Print (PC)</button>
 <br><br>
 
-<button onclick="printBluetooth()">Bluetooth Print</button>
+<button onclick="window.print()">Print Receipt</button>
 <br><br>
 
 <a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
@@ -285,8 +302,8 @@ ${line("Wash Count", "{{ order['loyalty_count'] }}/5")}
         See You Again!
 `;
 
-let url = "rawbt://print?text=" + encodeURIComponent(receipt);
-window.location.href = url;
+function printBluetooth(){
+    window.print();
 
 }
 
