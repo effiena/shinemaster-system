@@ -323,18 +323,16 @@ h1{
                             </div>
                         </div>
 
-
-
-
                         {% if day_bookings %}
-                            {% for b in bookings %}
+                            {% for b in day_bookings %}
+
                                 <div class="booking-item"
                                     data-car_plate="{{ b.car_plate }}"
                                     data-contact="{{ b.contact_number }}"
                                     data-service="{{ b.service_type }}"
                                     data-price="{{ b.price }}"
-                                    data-date="{{ b.date }}"
-                                    data-time="{{ b.time }}">
+                                    data-date="{{ b.booking_date }}"
+                                    data-time="{{ b.booking_time }}"
 
                                     <b>{{ b.car_plate }}</b><br>
                                     {{ b.service_type }}<br>
