@@ -202,10 +202,6 @@ Hope To See You Again 🚗
 <button onclick="window.print()">Print Receipt</button>
 <br><br>
 
-<a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
-style=" padding:8px 15px; background:#FF9800; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
-Print Copy Receipt
-</a>
 
 <a href="/receipt/{{ order['invoice_no'] }}?copy=true" target="_blank"
 style="
@@ -221,7 +217,7 @@ text-align:center;">
 Print Copy Receipt
 </a>
 
-<a href="{{ url_for('home') }}"
+<a href="{{ url_for('pos') }}"
 style="
 display:block;
 margin:15px 0;
