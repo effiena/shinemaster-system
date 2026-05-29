@@ -1168,6 +1168,7 @@ def get_revenue_data():
         "recent_sales": recent_sales
     }
 
+
 def get_low_stock():
     conn = get_db_connection()
     rows = conn.execute("SELECT * FROM inventory WHERE quantity <= 5 AND is_deleted = 0 ORDER BY quantity ASC, item ASC").fetchall()
@@ -1230,6 +1231,7 @@ def recent_sales():
             "service_type": SERVICE_NAMES.get(r["service_type"], r["service_type"]),
             "payment_method": r["payment_method"] or "-",
             "price": r["price"] or 0,
+            "net": price,
             "invoice_date": r["invoice_date"] or "-",
             "reported_date": r["reported_date"] or "-",
             "date": r["created_at"][:10] if r["created_at"] else "-",
@@ -1475,6 +1477,33 @@ def inventory():
         items=items,
         total_spent=f"{total:.2f}"
     )
+
+@app.route('/save_all_bookings', methods=['POST'])
+def save_all_bookings():
+    data = request.get_json()
+
+    conn = sqlite3.connect('shine.db')
+    cur = conn.cursor()
+
+    for b in data:
+        cur.execute("""
+            INSERT INTO bookings 
+            (car_plate, contact_number, service_type, price, date, time)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            b['car_plate'],
+            b['contact_number'],
+            b['service_type'],
+            b['price'],
+            b['date'],
+            b['time']
+        ))
+
+    conn.commit()
+    conn.close()
+
+    return "All bookings saved successfully!"
+
 
 
 @app.route("/inventory/save", methods=["POST"])
@@ -2388,6 +2417,92 @@ def sales_report():
         })
 
     return jsonify(sales)
+
+@app.route("/car_list_100")
+def car_list_100():
+    return render_template("car_list_100.html")
+
+
+@app.route("/print_car_list_100")
+def print_car_list_100():
+    import sqlite3
+
+    conn = sqlite3.connect("shine.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM dispo_promo ORDER BY id DESC")
+    rows = cur.fetchall()
+
+    conn.close()
+
+    return render_template("print_car_list_100.html", rows=rows)
+
+@app.route("/save_car_list_100", methods=["POST"])
+def save_car_list_100():
+    import sqlite3
+
+    data = request.json
+
+    conn = sqlite3.connect("shine.db")
+    cur = conn.cursor()
+
+    for row in data["rows"]:
+        if row["car_plate"]:  # skip empty rows
+            cur.execute("""
+                INSERT INTO dispo_promo
+                (car_plate, invoice_id, refer_by, date_booking, paid_amount, task)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                row["car_plate"],
+                row["invoice_id"],
+                row["refer_by"],
+                row["date_booking"],
+                row["paid_amount"],
+                row["task"]
+            ))
+
+    conn.commit()
+    conn.close()
+
+    return {"status":"success"}
+
+
+# PAYSLIP PAGE
+@app.route("/payslip")
+def payslip():
+    return render_template("payslip.html")
+
+
+# PRINT PAYSLIP
+@app.route("/print_payslip", methods=["POST"])
+def print_payslip():
+
+    employee_name = request.form.get("employee_name")
+    payment_date = request.form.get("payment_date")
+    basic_salary = request.form.get("basic_salary")
+    overtime = request.form.get("overtime")
+    payment_amount = request.form.get("payment_amount")
+    nett_salary = request.form.get("nett_salary")
+    payment_method = request.form.get("payment_method")
+    account_details = request.form.get("account_details")
+
+    return render_template(
+        "payslip.html",
+        employee_name=employee_name,
+        payment_date=payment_date,
+        basic_salary=basic_salary,
+        overtime=overtime,
+        payment_amount=payment_amount,
+        nett_salary=nett_salary,
+        payment_method=payment_method,
+        account_details=account_details,
+        print_mode=True
+    )
+
+@app.route("/form_promo")
+def form_promo():
+    return render_template("form_promo.html")
+
 # =====================
 # SOCKET EVENTS
 # =====================
