@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Invoice - Shine Master Solution</title>
+<title>Shine Master Solution Invoice</title>
 
 <style>
 body{
-    font-family: Arial, sans-serif;
-    background:#eaeaea;
-    margin:0;
-    padding:20px;
+    font-family:Arial,sans-serif;
+    margin:20px;
+    background:#f5f5f5;
 }
 
-/* A4 SHEET */
-.a4{
-    width:210mm;
-    min-height:297mm;
+.invoice{
+    max-width:800px;
     margin:auto;
-    background:white;
-    padding:20px;
-    box-shadow:0 0 10px rgba(0,0,0,0.2);
+    background:#fff;
+    padding:30px;
+    border:1px solid #ddd;
 }
 
-/* HEADER */
 .header{
     display:flex;
     justify-content:space-between;
@@ -31,347 +27,220 @@ body{
 }
 
 .company{
-    font-size:12px;
-    line-height:1.5;
+    font-size:13px;
+    line-height:1.6;
 }
 
-.invoice-title{
+.title{
     text-align:right;
 }
 
-/* BOX */
-.box{
-    border:1px solid #ddd;
-    padding:10px;
-    border-radius:6px;
+.info{
+    margin-top:20px;
 }
 
-/* FORM */
-.form-section{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-top:15px;
-}
-
-input, select{
+.info table{
     width:100%;
-    padding:8px;
-    margin-top:5px;
-    border:1px solid #ccc;
-    border-radius:5px;
 }
 
-/* TABLE */
-table{
+.info td{
+    padding:8px 0;
+}
+
+input{
+    border:none;
+    border-bottom:1px solid #000;
+    width:250px;
+    font-size:14px;
+    padding:4px;
+}
+
+.service-table{
     width:100%;
     border-collapse:collapse;
-    margin-top:15px;
+    margin-top:25px;
 }
 
-th{
+.service-table th{
     background:#111;
-    color:white;
-    padding:8px;
-    font-size:13px;
+    color:#fff;
+    padding:10px;
 }
 
-td{
-    border-bottom:1px solid #ddd;
-    padding:8px;
-    font-size:13px;
-}
-
-/* BUTTON */
-.add-btn{
-    margin-top:10px;
-    padding:8px 12px;
-    background:#6A1B9A;
-    color:white;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.actions{
-    margin-top:20px;
-    display:flex;
-    gap:10px;
-}
-
-button{
-    padding:10px 15px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.save{background:#6A1B9A;color:white;}
-.print{background:#4CAF50;color:white;}
-
-/* TOTAL */
-.total{
-    text-align:right;
-    font-size:18px;
-    font-weight:bold;
-    margin-top:10px;
-}
-
-/* NOTICE */
-.notice{
-    margin-top:20px;
-    font-size:12px;
-    line-height:1.6;
+.service-table td{
     border:1px solid #ddd;
     padding:10px;
-    border-radius:6px;
-    background:#fafafa;
 }
 
-/* PRINT */
+.total-box{
+    margin-top:20px;
+    text-align:right;
+}
+
+.total-box div{
+    margin-bottom:8px;
+}
+
+.nett{
+    font-size:22px;
+    font-weight:bold;
+}
+
+.notice{
+    margin-top:30px;
+    border:1px solid #ddd;
+    padding:15px;
+    font-size:12px;
+    line-height:1.6;
+}
+
+.signature{
+    margin-top:50px;
+}
+
+.print-btn{
+    margin-top:20px;
+    padding:10px 20px;
+    background:#6A1B9A;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+}
+
 @media print{
-    .actions, .add-btn{display:none;}
-    body{background:white;}
-    .a4{box-shadow:none;}
-
-
-    /* show print text */
-    .print-text {
-        display: block;
-        font-size: 13px;
-        margin-top: 4px;
+    .print-btn{
+        display:none;
     }
 
-
-   /* remove input box look */
-    input, select {
-        border: none !important;
-        background: transparent !important;
-        outline: none !important;
-        box-shadow: none !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        font-size: 13px;
-        padding: 0;
-        margin-top: 4px;
-        margin-bottom: 4px; 
-
-   }
-
-    /* remove dropdown arrow */
-    select {
-        background-image: none !important;
+    body{
+        background:#fff;
     }
 
-    /* hide placeholder text */
-    input::placeholder {
-        color: transparent;
+    .invoice{
+        border:none;
     }
 
-
-
-    /* hide print text on screen */
-    .print-text {
-        display: none;
+    input{
+        border:none;
     }
-
 }
-
-
-
-
 </style>
 </head>
 
 <body>
 
-<div class="a4">
+<div class="invoice">
 
-<!-- HEADER -->
-<div class="header">
+    <div class="header">
 
-    <div class="company">
-        <b>SHINE MASTER SOLUTION</b><br>
-        Reg No: 202603063234 (SA0650100-H)<br>
-        No.68 Jalan Putra 1<br>
-        Taman Tan Sri Yaacob<br>
-        81300 Skudai, Johor<br>
-        Tel: +6018-2096907
+        <div class="company">
+            <b>SHINE MASTER SOLUTION</b><br>
+            Reg No: 202603063234 (SA0650100-H)<br>
+            No.68 Jalan Putra 1<br>
+            Taman Tan Sri Yaacob<br>
+            81300 Skudai, Johor<br>
+            Tel: +6018-2096907
+        </div>
+
+        <div class="title">
+            <h2>INVOICE</h2>
+        </div>
+
     </div>
 
-    <div class="invoice-title">
-        <h2>INVOICE</h2>
-        <b id="invoice_no">
-            {{ invoice_no if invoice_no else 'DRAFT' }}</b>
-       <span>
-            {{ date if date else '' }}
-       </span>
+    <div class="info">
+        <table>
+            <tr>
+                <td><b>Invoice No:</b></td>
+                <td><input type="text"></td>
+
+                <td><b>Date:</b></td>
+                <td><input type="text"></td>
+            </tr>
+
+            <tr>
+                <td><b>Customer Name:</b></td>
+                <td><input type="text"></td>
+
+                <td><b>Phone Number:</b></td>
+                <td><input type="text"></td>
+            </tr>
+
+            <tr>
+                <td><b>Vehicle Plate:</b></td>
+                <td><input type="text"></td>
+
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
     </div>
 
-</div>
-
-<!-- CUSTOMER + VEHICLE -->
-<div class="form-section">
-
-    <div class="box">
-        <b>Customer Information</b>
-        <input id="customer_name" placeholder="Customer Name">
-        <input id="customer_phone" placeholder="Phone Number">
-        <input id="customer_company" placeholder="Company (Optional)">
-    </div>
-
-    <div class="box">
-        <b>Vehicle Information</b>
-        <input id="car_plate" placeholder="Car Plate">
-        <select id="car_type">
-            <option value="Sedan">Sedan</option>
-            <option value="SUV_MPV">SUV / MPV</option>
-            <option value="LARGE-MPV_4X4">4X4</option>
-        </select>
-    </div>
-
-</div>
-
-<!-- ITEMS -->
-<h3>Services</h3>
-
-<table id="itemTable">
-<tr>
-    <th>Service</th>
-    <th>Qty</th>
-    <th>Price</th>
-    <th>Total</th>
-    <th>Action</th>
-</tr>
-</table>
-
-<button class="add-btn" onclick="addItem()">+ Add Service</button>
-
-<div class="total">
-TOTAL: RM <span id="total">0.00</span>
-</div>
-
-<!-- ACTION -->
-<div class="actions">
-    <button class="save" onclick="saveInvoice()">SAVE INVOICE</button>
-    <button class="print" onclick="window.print()">PRINT</button>
-</div>
-
-<!-- NOTICE -->
-<div class="notice">
-    <b>Important Notice</b><br><br>
-
-    This is a computer-generated invoice. No signature required.<br><br>
-
-    All payments are <b>non-refundable</b> and <b>non-transferable</b>.<br><br>
-
-    Payment made to:<br>
-    <b>Shine Master Solution (Reg No: 202603063234)</b><br><br>
-
-    Bank Transfer:<br>
-    <b>Hong Leong Bank</b><br>
-    Account No: <b>19700184667</b>
-</div>
-
-</div>
-
-<script>
-let items = [];
-
-const priceTable = {
-wash_basic:{Sedan:20,SUV_MPV:24,"LARGE-MPV_4X4":28},
-wash_special:{Sedan:48,SUV_MPV:58,"LARGE-MPV_4X4":68},
-wash_maintain:{Sedan:98,SUV_MPV:108,"LARGE-MPV_4X4":118},
-coat1:{Sedan:488,SUV_MPV:588,"LARGE-MPV_4X4":688},
-coat2:{Sedan:688,SUV_MPV:788,"LARGE-MPV_4X4":888},
-coat3:{Sedan:888,SUV_MPV:988,"LARGE-MPV_4X4":1088},
-wax:{Sedan:288,SUV_MPV:388,"LARGE-MPV_4X4":488}
-};
-
-document.getElementById("date_now").innerText =
-new Date().toLocaleString();
-
-function addItem(){
-    const service = prompt("Service key (e.g. wash_basic)");
-
-    if(!priceTable[service]){
-        alert("Invalid service");
-        return;
-    }
-
-    const type = document.getElementById("car_type").value;
-    const price = priceTable[service][type];
-
-    items.push({
-        name:service,
-        qty:1,
-        price:price,
-        total:price
-    });
-
-    render();
-}
-
-function render(){
-    let html = "";
-    let total = 0;
-
-    items.forEach((i,idx)=>{
-        total += i.total;
-
-        html += `
+    <table class="service-table">
         <tr>
-            <td>${i.name}</td>
-            <td>${i.qty}</td>
-            <td>RM ${i.price}</td>
-            <td>RM ${i.total}</td>
-            <td><button onclick="removeItem(${idx})">X</button></td>
-        </tr>`;
-    });
+            <th>Service Description</th>
+            <th>Amount (RM)</th>
+        </tr>
 
-    document.getElementById("itemTable").innerHTML = `
-    <tr>
-        <th>Service</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Total</th>
-        <th>Action</th>
-    </tr>` + html;
+        <tr>
+            <td>DISPO Coating + Polishing Promo Package</td>
+            <td>688.00</td>
+        </tr>
 
-    document.getElementById("total").innerText = total.toFixed(2);
-}
+        <tr>
+            <td>Promotional Discount</td>
+            <td>-200.00</td>
+        </tr>
+    </table>
 
-function removeItem(i){
-    items.splice(i,1);
-    render();
-}
+    <div class="total-box">
+        <div>Original Price : RM 688.00</div>
+        <div>Discount : RM 200.00</div>
+        <div class="nett">NETT PRICE : RM 488.00</div>
+    </div>
 
-function saveInvoice(){
+    <hr>
 
-    const data = {
-        customer_name: document.getElementById("customer_name").value,
-        customer_phone: document.getElementById("customer_phone").value,
-        customer_company: document.getElementById("customer_company").value,
-        car_plate: document.getElementById("car_plate").value,
-        car_type: document.getElementById("car_type").value,
-        items: items,
-        total: document.getElementById("total").innerText
-    };
+    <table style="width:100%;margin-top:15px;">
+        <tr>
+            <td><b>Payment Method</b></td>
+            <td>DuitNow</td>
+        </tr>
 
-    fetch("/invoice/create",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(data)
-    })
-    .then(res=>res.json())
-    .then(res=>{
-        alert("Invoice Created: " + res.invoice_no);
-        window.location.href = "/invoice/" + res.invoice_no;
-    });
+        <tr>
+            <td><b>Amount Paid</b></td>
+            <td>RM 488.00</td>
+        </tr>
 
-}
+        <tr>
+            <td><b>Payment Status</b></td>
+            <td>PAID</td>
+        </tr>
 
-</script>
+        <tr>
+            <td><b>Sales Agent</b></td>
+            <td>Lee</td>
+        </tr>
+    </table>
+
+    <div class="notice">
+        <b>Important Notice</b><br><br>
+
+        This is a computer-generated invoice. No signature required.<br><br>
+
+        All payments are non-refundable and non-transferable.<br><br>
+
+        Payment made to:<br>
+        <b>Shine Master Solution</b><br>
+        Hong Leong Bank<br>
+        Account No: <b>19700184667</b>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+        PRINT INVOICE
+    </button>
+
+</div>
 
 </body>
 </html>

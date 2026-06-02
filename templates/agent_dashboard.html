@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Agent Dashboard</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+    margin: 0;
+}
+
+.header {
+    background: #222;
+    color: white;
+    padding: 15px;
+}
+
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background: #333;
+    color: white;
+}
+
+.total {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    👤 Agent: {{ session.full_name }}
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <div class="total">Total Sales: RM {{ total_sales }}</div>
+        <div class="total">Total Commission: RM {{ total_commission }}</div>
+    </div>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Invoice</th>
+            <th>Date</th>
+            <th>Car Plate</th>
+            <th>Package</th>
+            <th>Sales By</th>
+            <th>Payment</th>
+            <th>Commission</th>
+            <th>Transfer</th>
+        </tr>
+
+        {% for r in rows %}
+        <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.invoice_no }}</td>
+            <td>{{ r.date }}</td>
+            <td>{{ r.car_plate }}</td>
+            <td>{{ r.package_name }}</td>
+            <td>{{ r.sales_person }}</td>
+            <td>RM {{ r.payment_amount }}</td>
+            <td>RM {{ r.commission }}</td>
+            <td>{{ r.payment_transfer }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>

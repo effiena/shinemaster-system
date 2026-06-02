@@ -75,6 +75,7 @@ main {flex:1; display:flex; gap:20px; padding:20px; height:calc(100% - 80px);}
     <option value="card">Card</option>
     <option value="ewallet">E-Wallet</option>
   </select>
+  <input type="number" id="paidAmount" placeholder="PAID AMOUNT (RM)" style="padding:12px; font-size:18px; border-radius:6px; width:100%; box-sizing:border-box;">
 </div>
 
 <!-- MIDDLE PANEL: Calculator -->
@@ -194,25 +195,32 @@ function clearCart(){ cart=[]; paid=0; calcPrice=0; displayText=""; quantityInpu
 
 // Checkout: generates receipt
 function checkout(){
-  if(cart.length===0){ alert("Cart empty"); return; }
-  const payment_method = document.getElementById("payment_method").value;
-  const totalAmount = parseFloat(totalDisplay.innerText.replace("Total: ",""));
-  if(payment_method==='ewallet'){
-    // Generate dummy QR code (can integrate with actual e-wallet later)
-    const qrDiv = document.getElementById("qrCode");
-    qrDiv.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Pay RM ${totalAmount} via E-Wallet">`;
-  } else {
-    // Regular receipt
-    fetch("/pos_retail",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ cart, payment_method, paid: totalAmount })
-    }).then(res=>res.text()).then(html=>{
-      clearCart();
-      document.body.innerHTML = html;
-    });
+  if(cart.length===0){
+    alert("Cart empty");
+    return;
   }
+
+  const payment_method = document.getElementById("payment_method").value;
+  const paidAmount = parseFloat(document.getElementById("paidAmount").value || 0);
+
+  const totalAmount = cart.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
+
+  fetch("/pos_retail", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      cart,
+      payment_method,
+      paid: paidAmount
+    })
+  })
+  .then(res => res.text())
+  .then(html => {
+    clearCart();
+    document.body.innerHTML = html;
+  });
 }
+
 </script>
 </body>
 </html>

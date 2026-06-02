@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shine Master Solution Payslip</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    padding:20px;
+    background:#f2f2f2;
+    font-family:Arial,sans-serif;
+}
+
+.payslip-container{
+    max-width:900px;
+    margin:auto;
+}
+
+.print-btn{
+    background:#120018;
+    color:white;
+    border:none;
+    padding:14px 22px;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-bottom:20px;
+}
+
+.payslip{
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+.header{
+    background:linear-gradient(135deg,#120018,#2d0047);
+    color:white;
+    padding:30px;
+}
+
+.company-name{
+    font-size:32px;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.company-info{
+    font-size:14px;
+    line-height:1.8;
+}
+
+.content{
+    padding:30px;
+}
+
+.section-title{
+    font-size:20px;
+    font-weight:bold;
+    margin-top:30px;
+    margin-bottom:15px;
+    color:#120018;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.input-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.input-group label{
+    margin-bottom:8px;
+    font-size:14px;
+    font-weight:bold;
+    color:#555;
+}
+
+.input-group input,
+.input-group select{
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:15px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+
+th{
+    background:#120018;
+    color:white;
+    padding:14px;
+    text-align:left;
+}
+
+td{
+    padding:14px;
+    border-bottom:1px solid #eee;
+}
+
+td:last-child,
+th:last-child{
+    text-align:right;
+}
+
+table input{
+    width:140px;
+    padding:8px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    text-align:right;
+}
+
+.total-row{
+    background:#f7f1ff;
+    font-weight:bold;
+}
+
+.summary{
+    margin-top:30px;
+    display:grid;
+    grid-template-columns:1fr 320px;
+    gap:20px;
+}
+
+.payment-box{
+    background:#fafafa;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:25px;
+}
+
+.net-box{
+    background:linear-gradient(135deg,#120018,#2d0047);
+    color:white;
+    border-radius:12px;
+    padding:25px;
+    text-align:center;
+}
+
+.net-title{
+    font-size:16px;
+    margin-bottom:10px;
+}
+
+.net-amount{
+    font-size:40px;
+    font-weight:bold;
+}
+
+.net-amount input{
+    width:180px;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    text-align:center;
+    font-size:24px;
+}
+
+.signature-section{
+    margin-top:50px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+}
+
+.signature-box{
+    padding-top:50px;
+    border-top:1px solid #999;
+    text-align:center;
+    font-size:14px;
+}
+
+.footer{
+    background:#fafafa;
+    border-top:1px solid #eee;
+    padding:25px;
+    font-size:13px;
+    line-height:1.8;
+    color:#555;
+}
+
+@media(max-width:768px){
+
+    .grid,
+    .summary,
+    .signature-section{
+        grid-template-columns:1fr;
+    }
+
+    .company-name{
+        font-size:24px;
+    }
+
+    .net-amount{
+        font-size:28px;
+    }
+
+}
+
+@media print{
+
+    body{
+        background:white;
+        padding:0;
+    }
+
+    .print-btn{
+        display:none;
+    }
+
+    .payslip{
+        box-shadow:none;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="payslip-container">
+
+    <button class="print-btn" onclick="window.print()">
+        🖨 Print Payslip
+    </button>
+
+    <div class="payslip">
+
+        <div class="header">
+
+            <div class="company-name">
+                SHINE MASTER SOLUTION
+            </div>
+
+            <div class="company-info">
+                SSM No: 202603063234 (SA0650100-H)<br>
+                No.68, Jalan Putra 1,<br>
+                Taman Tan Sri Yaacob,<br>
+                81300 Skudai, Johor Darul Takzim.
+            </div>
+
+        </div>
+
+        <div class="content">
+
+            <div class="section-title">
+                Employee Details
+            </div>
+
+            <div class="grid">
+
+                <div class="input-group">
+                    <label>Employee Name</label>
+                    <input type="text" placeholder="Enter employee name">
+                </div>
+
+                <div class="input-group">
+                    <label>Payment Date</label>
+                    <input type="date">
+                </div>
+
+            </div>
+
+            <div class="section-title">
+                Earnings
+            </div>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (RM)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Basic Salary</td>
+                        <td>
+                            <input type="number" value="1200">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Overtime</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Allowance</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Commission</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td>Payment Amount</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+            <div class="section-title">
+                Deductions
+            </div>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (RM)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>EPF</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>SOCSO</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>EIS</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Advance / Loan</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td>Total Deductions</td>
+                        <td>
+                            <input type="number" placeholder="0">
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+            <div class="summary">
+
+                <div class="payment-box">
+
+                    <div class="section-title" style="margin-top:0;">
+                        Payment Details
+                    </div>
+
+                    <div class="input-group">
+                        <label>Payment Method</label>
+
+                        <select>
+                            <option>Cash</option>
+                            <option>QR</option>
+                            <option>Bank Transfer</option>
+                        </select>
+                    </div>
+
+                    <br>
+
+                    <div class="input-group">
+                        <label>Account Details</label>
+                        <input type="text" placeholder="Enter payment details">
+                    </div>
+
+                </div>
+
+                <div class="net-box">
+
+                    <div class="net-title">
+                        NETT SALARY
+                    </div>
+
+                    <div class="net-amount">
+                        RM<br><br>
+                        <input type="number" placeholder="0.00">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="signature-section">
+
+                <div class="signature-box">
+                    Employer Acknowledgement<br><br>
+                    I acknowledge payment as indicated above.
+                </div>
+
+                <div class="signature-box">
+                    Employee Signature
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="footer">
+
+            This payslip is confidential and intended only for the employee stated above.<br>
+            Unauthorized sharing, copying, or distribution of salary information is strictly prohibited.<br>
+            Please keep this payslip for future reference.
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

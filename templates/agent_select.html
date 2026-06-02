@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Agent</title>
+</head>
+<body>
+
+<h2>Select Sales Agent</h2>
+
+<form action="/agent_report" method="GET">
+
+    <select name="sales_person" required>
+        <option value="">-- Select Agent --</option>
+        <option>John</option>
+        <option>Ahmad</option>
+        <option>Ali</option>
+    </select>
+
+    <button type="submit">View Report</button>
+
+</form>
+
+<br>
+<button onclick="window.location.href='/dashboard'">⬅ Back</button>
+
+</body>
+</html>

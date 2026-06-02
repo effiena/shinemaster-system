@@ -3,6 +3,8 @@
 <head>
 <title>Sales Report</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{
 font-family:Arial;
@@ -57,6 +59,13 @@ cursor:pointer;
 border-radius:5px;
 }
 
+canvas{
+background:#111;
+border-radius:10px;
+padding:10px;
+margin-bottom:20px;
+}
+
 /* PRINT MODE */
 @media print {
 body{
@@ -64,16 +73,15 @@ background:white;
 color:black;
 }
 
-.header, button, input{
+.header,
+button,
+input,
+canvas{
 display:none;
 }
 
 .section{
 background:white;
-}
-
-table{
-color:black;
 }
 
 th{
@@ -95,7 +103,7 @@ background:#ddd;
 
 <div class="section">
 
-<!-- 🔥 COMPANY HEADER -->
+<!-- COMPANY HEADER -->
 <div style="text-align:center; margin-bottom:20px; border-bottom:1px solid #444; padding-bottom:15px;">
 
 <h2>SHINE MASTER SOLUTION</h2>
@@ -113,7 +121,8 @@ Reg. No: SA0650100-H | Contact: 018-2096907
 <h3>SALES REPORT</h3>
 
 <p style="font-size:12px; color:#aaa;">
-Generated on: <span id="reportDate"></span>
+Generated on:
+<span id="reportDate"></span>
 </p>
 
 </div>
@@ -127,8 +136,12 @@ Generated on: <span id="reportDate"></span>
 <button onclick="loadReport()">Search</button>
 <button onclick="window.print()">Print</button>
 
+<!-- CHART -->
+<canvas id="netChart" height="120"></canvas>
+
 <!-- TABLE -->
 <table>
+
 <thead>
 <tr>
 <th>Invoice</th>
@@ -142,7 +155,11 @@ Generated on: <span id="reportDate"></span>
 </thead>
 
 <tbody id="reportBody">
-<tr><td colspan="7" style="text-align:center;">Select date range</td></tr>
+<tr>
+<td colspan="7" style="text-align:center;">
+Loading...
+</td>
+</tr>
 </tbody>
 
 </table>
@@ -152,6 +169,10 @@ Generated on: <span id="reportDate"></span>
 </div>
 
 <script>
+
+let chart;
+
+// LOAD REPORT
 function loadReport(){
 
     let from = document.getElementById("fromDate").value;
@@ -159,7 +180,7 @@ function loadReport(){
 
     let url = "/sales_report";
 
-    if (from && to) {
+    if(from && to){
         url = `/sales_report?from=${from}&to=${to}`;
     }
 
@@ -168,51 +189,175 @@ function loadReport(){
     .then(data => {
 
         let rows = "";
-        let total = 0;
+        let totalNet = 0;
+
+        // JAN - DEC structure
+        let monthlyData = {
+            "Jan": 0,
+            "Feb": 0,
+            "Mar": 0,
+            "Apr": 0,
+            "May": 0,
+            "Jun": 0,
+            "Jul": 0,
+            "Aug": 0,
+            "Sep": 0,
+            "Oct": 0,
+            "Nov": 0,
+            "Dec": 0
+        };
 
         if(data.length === 0){
-            rows = "<tr><td colspan='7'>No data found</td></tr>";
+            rows = `
+            <tr>
+                <td colspan="7" style="text-align:center;">
+                    No data found
+                </td>
+            </tr>
+            `;
         }
 
         data.forEach(s => {
 
-            total += s.paid;
+            let price = Number(s.price || 0);
+            let net = Number(s.net || 0);
+            let paid = Number(s.paid || 0);
+
+            totalNet += net;
+
+            // MONTHLY GROUPING
+            let rawDate = s.date || "";
+
+            let monthNumber = rawDate.slice(5,7);
+
+            let monthMap = {
+                "01":"Jan",
+                "02":"Feb",
+                "03":"Mar",
+                "04":"Apr",
+                "05":"May",
+                "06":"Jun",
+                "07":"Jul",
+                "08":"Aug",
+                "09":"Sep",
+                "10":"Oct",
+                "11":"Nov",
+                "12":"Dec"
+            };
+
+            let monthName = monthMap[monthNumber];
+
+            if(monthName){
+                monthlyData[monthName] += net;
+            }
 
             rows += `
             <tr>
                 <td>${s.invoice}</td>
                 <td>${s.car_plate}</td>
                 <td>${s.service_type}</td>
-                <td>RM ${s.price}</td>
-                <td>RM ${s.net.toFixed(2)}</td>
-                <td>RM ${s.paid.toFixed(2)}</td>
+                <td>RM ${price.toFixed(2)}</td>
+                <td>RM ${net.toFixed(2)}</td>
+                <td>RM ${paid.toFixed(2)}</td>
                 <td>${s.date}</td>
             </tr>
             `;
         });
 
+        // TOTAL NETT ROW
         if(data.length > 0){
+
             rows += `
-            <tr style="font-weight:bold;">
-                <td colspan="5" style="text-align:right;">TOTAL</td>
-                <td colspan="2">RM ${total.toFixed(2)}</td>
+            <tr style="font-weight:bold; background:#2a2a2a;">
+                <td colspan="4" style="text-align:right;">
+                    TOTAL NETT
+                </td>
+
+                <td>
+                    RM ${totalNet.toFixed(2)}
+                </td>
+
+                <td colspan="2"></td>
             </tr>
             `;
         }
 
         document.getElementById("reportBody").innerHTML = rows;
 
+        updateChart(monthlyData);
+
     })
     .catch(err => {
         console.error("FETCH ERROR:", err);
+    });
+
+}
+
+// UPDATE CHART
+function updateChart(monthlyData){
+
+    let labels = Object.keys(monthlyData);
+    let values = Object.values(monthlyData);
+
+    if(chart){
+        chart.destroy();
+    }
+
+    chart = new Chart(document.getElementById("netChart"), {
+
+        type: 'bar',
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                label: 'Monthly Net Revenue (RM)',
+                data: values,
+                backgroundColor: '#ba55d3'
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+
+            scales: {
+
+                x: {
+                    ticks: {
+                        color: 'white'
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
     });
 }
 
 // AUTO LOAD
 document.addEventListener("DOMContentLoaded", function () {
+
     loadReport();
-    document.getElementById("reportDate").innerText = new Date().toLocaleString();
+
+    document.getElementById("reportDate").innerText =
+        new Date().toLocaleString();
+
 });
+
 </script>
 
 </body>

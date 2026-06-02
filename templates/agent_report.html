@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent Commission</title>
+
+    <style>
+        body { font-family: Arial; }
+
+        .summary {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #333;
+            color: white;
+        }
+
+        .paid { color: green; font-weight: bold; }
+        .pending { color: orange; font-weight: bold; }
+
+        @media print {
+            button { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<h2>Commission Report - {{ sales_person }}</h2>
+
+<div class="summary">
+    <p><b>Total Commission:</b> RM {{ total_commission }}</p>
+    <p><b>Paid:</b> RM {{ total_paid }}</p>
+    <p><b>Pending:</b> RM {{ total_pending }}</p>
+</div>
+
+<button onclick="window.print()">🖨️ Print</button>
+<button onclick="window.history.back()">⬅ Back</button>
+
+<br><br>
+
+<table>
+<tr>
+    <th>Invoice</th>
+    <th>Date</th>
+    <th>Car Plate</th>
+    <th>Package</th>
+    <th>Payment</th>
+    <th>Commission</th>
+    <th>Status</th>
+</tr>
+
+{% for r in reports %}
+<tr>
+    <td>{{ r.invoice_no }}</td>
+    <td>{{ r.date }}</td>
+    <td>{{ r.car_plate }}</td>
+    <td>{{ r.package_name }}</td>
+    <td>RM {{ r.payment_amount }}</td>
+    <td>RM {{ r.commission }}</td>
+
+    <td>
+        {% if r.payment_transfer == "Paid" %}
+            <span class="paid">Paid</span>
+        {% else %}
+            <span class="pending">Pending</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>

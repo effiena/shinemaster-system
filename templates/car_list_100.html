@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>car_list_100</title>
+
+<style>
+body{
+    font-family: Arial;
+    padding:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+th,td{
+    border:1px solid #ccc;
+    padding:6px;
+    text-align:center;
+}
+
+th{background:#f2f2f2;}
+
+input,select{
+    width:100%;
+    padding:5px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    color:white;
+    font-weight:bold;
+}
+
+.save{background:#2196F3;}
+.print{background:#4CAF50;}
+
+@media print {
+    button{display:none;}
+}
+</style>
+</head>
+
+<body>
+
+<h2>DISPO PROMO RM200</h2>
+
+<table>
+<thead>
+<tr>
+    <th>No</th>
+    <th>Car Plate</th>
+    <th>Invoice ID</th>
+    <th>Refer By</th>
+    <th>Date</th>
+    <th>Paid</th>
+    <th>Task</th>
+</tr>
+</thead>
+
+<tbody id="rows"></tbody>
+</table>
+
+<button class="save" onclick="saveData()">SAVE TO DATABASE</button>
+<button class="print" onclick="window.print()">PRINT A4 REPORT</button>
+
+<script>
+// generate 100 rows
+let rows = document.getElementById("rows");
+
+for(let i=1;i<=100;i++){
+    rows.innerHTML += `
+    <tr>
+        <td>${i}</td>
+        <td><input></td>
+        <td><input></td>
+        <td><input></td>
+        <td><input type="date"></td>
+        <td><input type="number"></td>
+        <td>
+            <select>
+                <option>Pending</option>
+                <option>Completed</option>
+            </select>
+        </td>
+    </tr>`;
+}
+
+// SAVE TO FLASK (SQLite)
+function saveData(){
+
+let data = [];
+
+document.querySelectorAll("tbody tr").forEach(r=>{
+    let i = r.querySelectorAll("input, select");
+
+    data.push({
+        car_plate: i[0].value,
+        invoice_id: i[1].value,
+        refer_by: i[2].value,
+        date_booking: i[3].value,
+        paid_amount: i[4].value,
+        task: i[5].value
+    });
+});
+
+fetch("/save_car_list_100",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({rows:data})
+})
+.then(r=>r.json())
+.then(res=>{
+    alert("Saved to SQLite successfully!");
+});
+
+}
+</script>
+
+</body>
+</html>
