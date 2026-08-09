@@ -1,247 +1,544 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Shine Master Solution Invoice</title>
+<div class="header">
 
-<style>
-body{
-    font-family:Arial,sans-serif;
-    margin:20px;
-    background:#f5f5f5;
-}
-
-.invoice{
-    max-width:800px;
-    margin:auto;
-    background:#fff;
-    padding:30px;
-    border:1px solid #ddd;
-}
-
-.header{
-    display:flex;
-    justify-content:space-between;
-    border-bottom:2px solid #000;
-    padding-bottom:10px;
-}
-
-.company{
-    font-size:13px;
-    line-height:1.6;
-}
-
-.title{
-    text-align:right;
-}
-
-.info{
-    margin-top:20px;
-}
-
-.info table{
-    width:100%;
-}
-
-.info td{
-    padding:8px 0;
-}
-
-input{
-    border:none;
-    border-bottom:1px solid #000;
-    width:250px;
-    font-size:14px;
-    padding:4px;
-}
-
-.service-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:25px;
-}
-
-.service-table th{
-    background:#111;
-    color:#fff;
-    padding:10px;
-}
-
-.service-table td{
-    border:1px solid #ddd;
-    padding:10px;
-}
-
-.total-box{
-    margin-top:20px;
-    text-align:right;
-}
-
-.total-box div{
-    margin-bottom:8px;
-}
-
-.nett{
-    font-size:22px;
-    font-weight:bold;
-}
-
-.notice{
-    margin-top:30px;
-    border:1px solid #ddd;
-    padding:15px;
-    font-size:12px;
-    line-height:1.6;
-}
-
-.signature{
-    margin-top:50px;
-}
-
-.print-btn{
-    margin-top:20px;
-    padding:10px 20px;
-    background:#6A1B9A;
-    color:#fff;
-    border:none;
-    cursor:pointer;
-}
-
-@media print{
-    .print-btn{
-        display:none;
-    }
-
-    body{
-        background:#fff;
-    }
-
-    .invoice{
-        border:none;
-    }
-
-    input{
-        border:none;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<div class="invoice">
-
-    <div class="header">
-
-        <div class="company">
-            <b>SHINE MASTER SOLUTION</b><br>
-            Reg No: 202603063234 (SA0650100-H)<br>
-            No.68 Jalan Putra 1<br>
-            Taman Tan Sri Yaacob<br>
-            81300 Skudai, Johor<br>
-            Tel: +6018-2096907
-        </div>
-
-        <div class="title">
-            <h2>INVOICE</h2>
-        </div>
-
+    <div class="company">
+        <b>SHINE MASTER SOLUTION</b><br>
+        Reg No: 202603063234 (SA0650100-H)<br>
+        No.68 Jalan Putra 1<br>
+        Taman Tan Sri Yaacob<br>
+        81300 Skudai, Johor<br>
+        Tel: +6018-2096907
     </div>
 
-    <div class="info">
-        <table>
-            <tr>
-                <td><b>Invoice No:</b></td>
-                <td><input type="text"></td>
-
-                <td><b>Date:</b></td>
-                <td><input type="text"></td>
-            </tr>
-
-            <tr>
-                <td><b>Customer Name:</b></td>
-                <td><input type="text"></td>
-
-                <td><b>Phone Number:</b></td>
-                <td><input type="text"></td>
-            </tr>
-
-            <tr>
-                <td><b>Vehicle Plate:</b></td>
-                <td><input type="text"></td>
-
-                <td></td>
-                <td></td>
-            </tr>
-        </table>
+    <div class="title">
+        <h2>INVOICE</h2>
     </div>
-
-    <table class="service-table">
-        <tr>
-            <th>Service Description</th>
-            
-            <th>Amount (RM)</th>
-        </tr>
-
-        <tr>
-            <td>DISPO Car Coating + Polishing Promo Package</td>
-            <td>588.00</td>
-        </tr>
-
-        <tr>
-            <td>Promotional Discount</td>
-            <td>-200.00</td>
-        </tr>
-    </table>
-
-    <div class="total-box">
-        <div>Original Price : RM 588.00</div>
-        <div>Discount : RM 200.00</div>
-        <div class="nett">NETT PRICE : RM 388.00</div>
-    </div>
-
-    <hr>
-
-    <table style="width:100%;margin-top:15px;">
-        <tr>
-            <td><b>Payment Method</b></td>
-            <td>DuitNow/E-Wallet</td>
-        </tr>
-
-        <tr>
-            <td><b>Amount Paid</b></td>
-            <td>RM 388.00</td>
-        </tr>
-
-        <tr>
-            <td><b>Payment Status</b></td>
-            <td>PAID</td>
-        </tr>
-
-        <tr>
-            <td><b>Issued by Shine Master Solution</b></td>
-            <td></td>
-        </tr>
-    </table>
-
-    <div class="notice">
-        <b>Important Notice</b><br><br>
-
-        This is a computer-generated invoice. No signature required.<br><br>
-
-        All payments are non-refundable and non-transferable.<br><br>
-
-        Payment made to:<br>
-        <b>Shine Master Solution</b><br>
-        Hong Leong Bank<br>
-        Account No: <b>19700184667</b>
-    </div>
-
-    <button class="print-btn" onclick="window.print()">
-        PRINT INVOICE
-    </button>
 
 </div>
 
-</body>
-</html>
+
+<!-- CUSTOMER INFORMATION -->
+<div class="info">
+    <table>
+
+        <tr>
+            <td><b>Invoice No:</b></td>
+            <td>
+                <input type="text" placeholder="INV-0001">
+            </td>
+
+            <td><b>Date:</b></td>
+            <td>
+                <input type="date">
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Customer Name:</b></td>
+            <td>
+                <input type="text" placeholder="Customer Name">
+            </td>
+
+            <td><b>Phone Number:</b></td>
+            <td>
+                <input type="text" placeholder="01X-XXXXXXX">
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Vehicle Plate:</b></td>
+            <td>
+                <input type="text" placeholder="Vehicle Plate">
+            </td>
+
+            <td></td>
+            <td></td>
+        </tr>
+
+    </table>
+</div>
+
+
+<!-- SERVICE TABLE -->
+<table class="service-table" id="serviceTable">
+
+    <thead>
+        <tr>
+            <th style="width:50%;">
+                Service Description
+            </th>
+
+            <th style="width:15%;">
+                Qty
+            </th>
+
+            <th style="width:20%;">
+                Unit Price (RM)
+            </th>
+
+            <th style="width:15%;">
+                Amount (RM)
+            </th>
+        </tr>
+    </thead>
+
+
+    <tbody id="serviceRows">
+
+
+        <!-- SERVICE ROW 1 -->
+        <tr class="service-row">
+
+            <td>
+                <input
+                    type="text"
+                    class="service-description"
+                    placeholder="Enter service description">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="qty"
+                    value="1"
+                    min="1"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="unit-price"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="text"
+                    class="row-total"
+                    value="0.00"
+                    readonly>
+            </td>
+
+        </tr>
+
+
+        <!-- SERVICE ROW 2 -->
+        <tr class="service-row">
+
+            <td>
+                <input
+                    type="text"
+                    class="service-description"
+                    placeholder="Enter service description">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="qty"
+                    value="1"
+                    min="1"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="unit-price"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="text"
+                    class="row-total"
+                    value="0.00"
+                    readonly>
+            </td>
+
+        </tr>
+
+
+        <!-- SERVICE ROW 3 -->
+        <tr class="service-row">
+
+            <td>
+                <input
+                    type="text"
+                    class="service-description"
+                    placeholder="Enter service description">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="qty"
+                    value="1"
+                    min="1"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="unit-price"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="text"
+                    class="row-total"
+                    value="0.00"
+                    readonly>
+            </td>
+
+        </tr>
+
+
+        <!-- SERVICE ROW 4 -->
+        <tr class="service-row">
+
+            <td>
+                <input
+                    type="text"
+                    class="service-description"
+                    placeholder="Enter service description">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="qty"
+                    value="1"
+                    min="1"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    class="unit-price"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateInvoice()">
+            </td>
+
+            <td>
+                <input
+                    type="text"
+                    class="row-total"
+                    value="0.00"
+                    readonly>
+            </td>
+
+        </tr>
+
+    </tbody>
+
+</table>
+
+
+<!-- TOTAL -->
+<div class="total-box">
+
+    <div>
+        <b>Original Price :</b>
+        RM <span id="originalPrice">0.00</span>
+    </div>
+
+
+    <div>
+        <b>Discount :</b>
+        RM
+
+        <input
+            type="number"
+            id="discount"
+            value="0"
+            min="0"
+            step="0.01"
+            oninput="calculateInvoice()">
+    </div>
+
+
+    <div class="nett">
+
+        <b>NETT PRICE :</b>
+
+        RM <span id="nettPrice">0.00</span>
+
+    </div>
+
+</div>
+
+
+<hr>
+
+
+<!-- PAYMENT -->
+<table style="width:100%;margin-top:15px;">
+
+    <tr>
+
+        <td>
+            <b>Payment Method</b>
+        </td>
+
+        <td>
+
+            <select id="paymentMethod">
+
+                <option>DuitNow / E-Wallet</option>
+                <option>Cash</option>
+                <option>Credit / Debit Card</option>
+                <option>Bank Transfer</option>
+
+            </select>
+
+        </td>
+
+    </tr>
+
+
+    <tr>
+
+        <td>
+            <b>Amount Paid</b>
+        </td>
+
+        <td>
+
+            RM
+
+            <input
+                type="number"
+                id="amountPaid"
+                value="0.00"
+                min="0"
+                step="0.01"
+                oninput="calculateBalance()">
+
+        </td>
+
+    </tr>
+
+
+    <tr>
+
+        <td>
+            <b>Balance / Change</b>
+        </td>
+
+        <td>
+
+            RM <span id="balance">0.00</span>
+
+        </td>
+
+    </tr>
+
+
+    <tr>
+
+        <td>
+            <b>Payment Status</b>
+        </td>
+
+        <td>
+
+            <select id="paymentStatus">
+
+                <option>PAID</option>
+                <option>PARTIALLY PAID</option>
+                <option>UNPAID</option>
+
+            </select>
+
+        </td>
+
+    </tr>
+
+
+    <tr>
+
+        <td>
+            <b>Issued by Shine Master Solution</b>
+        </td>
+
+        <td></td>
+
+    </tr>
+
+</table>
+
+
+<!-- NOTICE -->
+<div class="notice">
+
+    <b>Important Notice</b><br><br>
+
+    This is a computer-generated invoice.
+    No signature required.<br><br>
+
+    All payments are non-refundable and non-transferable.<br><br>
+
+    Payment made to:<br>
+
+    <b>Shine Master Solution</b><br>
+
+    Hong Leong Bank<br>
+
+    Account No: <b>19700184667</b>
+
+</div>
+
+
+<!-- PRINT -->
+<button
+    class="print-btn"
+    onclick="window.print()">
+
+    PRINT INVOICE
+
+</button>
+
+
+<script>
+
+
+/* =========================================
+   CALCULATE SERVICE TOTALS
+========================================= */
+
+function calculateInvoice() {
+
+    let rows =
+        document.querySelectorAll(".service-row");
+
+    let originalPrice = 0;
+
+
+    rows.forEach(function(row) {
+
+        let qty =
+            parseFloat(
+                row.querySelector(".qty").value
+            ) || 0;
+
+
+        let unitPrice =
+            parseFloat(
+                row.querySelector(".unit-price").value
+            ) || 0;
+
+
+        let total =
+            qty * unitPrice;
+
+
+        /* Put calculated amount inside box */
+
+        row.querySelector(".row-total").value =
+            total.toFixed(2);
+
+
+        originalPrice += total;
+
+    });
+
+
+    /* DISCOUNT */
+
+    let discount =
+        parseFloat(
+            document.getElementById("discount").value
+        ) || 0;
+
+
+    /* NETT PRICE */
+
+    let nettPrice =
+        originalPrice - discount;
+
+
+    if (nettPrice < 0) {
+
+        nettPrice = 0;
+
+    }
+
+
+    /* DISPLAY ORIGINAL PRICE */
+
+    document.getElementById("originalPrice").innerText =
+        originalPrice.toFixed(2);
+
+
+    /* DISPLAY NETT PRICE */
+
+    document.getElementById("nettPrice").innerText =
+        nettPrice.toFixed(2);
+
+
+    /* Recalculate balance */
+
+    calculateBalance();
+
+}
+
+
+
+/* =========================================
+   CALCULATE BALANCE / CHANGE
+========================================= */
+
+function calculateBalance() {
+
+    let nettPrice =
+        parseFloat(
+            document.getElementById("nettPrice").innerText
+        ) || 0;
+
+
+    let amountPaid =
+        parseFloat(
+            document.getElementById("amountPaid").value
+        ) || 0;
+
+
+    let balance =
+        amountPaid - nettPrice;
+
+
+    document.getElementById("balance").innerText =
+        balance.toFixed(2);
+
+}
+
+
+
+/* =========================================
+   INITIAL CALCULATION
+========================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        calculateInvoice();
+
+    }
+);
+
+</script>
